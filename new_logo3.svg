@@ -1,0 +1,51 @@
+<svg width="1941" height="1771" viewBox="0 0 1941 1771" fill="none" xmlns="http://www.w3.org/2000/svg">
+<g filter="url(#filter0_n_2018_103)">
+<path d="M1037.04 341.531L471.256 1096.22C379.935 1218.03 404.217 1388.61 525.491 1477.22C646.765 1565.83 819.108 1538.91 910.429 1417.1L1476.21 662.407C1567.53 540.594 1543.25 370.015 1421.98 281.408C1300.7 192.801 1128.36 219.719 1037.04 341.531Z" fill="url(#paint0_linear_2018_103)" stroke="url(#paint1_linear_2018_103)" stroke-width="27.858"/>
+<path d="M1186.13 1049.34L902.461 1427.73C810.856 1549.92 639.173 1576.73 517.522 1487.85C395.871 1398.97 371.682 1229.04 463.287 1106.85L744.868 731.253" fill="url(#paint2_linear_2018_103)"/>
+<path d="M733.312 722.813L1191.65 1068.14Z" fill="url(#paint3_linear_2018_103)"/>
+<path d="M733.312 722.813L1191.65 1068.14" stroke="white" stroke-width="27.6139"/>
+<path opacity="0.759" d="M1180.84 302.647L870.061 717.195C861.259 728.936 863.599 745.377 875.288 753.918C886.977 762.458 903.588 759.863 912.391 748.123L1223.17 333.574C1231.97 321.833 1229.63 305.392 1217.94 296.852C1206.26 288.311 1189.64 290.906 1180.84 302.647Z" fill="url(#paint4_linear_2018_103)"/>
+</g>
+<defs>
+<filter id="filter0_n_2018_103" x="401.938" y="215.357" width="1143.59" height="1327.91" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+<feFlood flood-opacity="0" result="BackgroundImageFix"/>
+<feBlend mode="normal" in="SourceGraphic" in2="BackgroundImageFix" result="shape"/>
+<feTurbulence type="fractalNoise" baseFrequency="2 2" stitchTiles="stitch" numOctaves="3" result="noise" seed="9022" />
+<feComponentTransfer in="noise" result="coloredNoise1">
+<feFuncR type="linear" slope="2" intercept="-0.5" />
+<feFuncG type="linear" slope="2" intercept="-0.5" />
+<feFuncB type="linear" slope="2" intercept="-0.5" />
+<feFuncA type="discrete" tableValues="0 0 0 0 0 0 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 "/>
+</feComponentTransfer>
+<feComposite operator="in" in2="shape" in="coloredNoise1" result="noise1Clipped" />
+<feComponentTransfer in="noise1Clipped" result="color1">
+<feFuncA type="table" tableValues="0 0.15" />
+</feComponentTransfer>
+<feMerge result="effect1_noise_2018_103">
+<feMergeNode in="shape" />
+<feMergeNode in="color1" />
+</feMerge>
+</filter>
+<linearGradient id="paint0_linear_2018_103" x1="754.147" y1="718.876" x2="1189.3" y2="1045.11" gradientUnits="userSpaceOnUse">
+<stop stop-color="#26BCFF"/>
+<stop offset="1" stop-color="#167BA8"/>
+</linearGradient>
+<linearGradient id="paint1_linear_2018_103" x1="754.147" y1="718.876" x2="1189.3" y2="1045.11" gradientUnits="userSpaceOnUse">
+<stop stop-color="#26BCFF"/>
+<stop offset="0.514423" stop-color="#1FA1DB"/>
+<stop offset="1" stop-color="#167BA8"/>
+</linearGradient>
+<linearGradient id="paint2_linear_2018_103" x1="522.447" y1="1027.94" x2="957.605" y2="1354.17" gradientUnits="userSpaceOnUse">
+<stop stop-color="#26BCFF"/>
+<stop offset="1" stop-color="#167BA8"/>
+</linearGradient>
+<linearGradient id="paint3_linear_2018_103" x1="730.782" y1="726.188" x2="1189.94" y2="1070.41" gradientUnits="userSpaceOnUse">
+<stop stop-color="#26BCFF"/>
+<stop offset="1" stop-color="#167BA8"/>
+</linearGradient>
+<linearGradient id="paint4_linear_2018_103" x1="1025.45" y1="509.921" x2="1067.39" y2="541.365" gradientUnits="userSpaceOnUse">
+<stop stop-color="white"/>
+<stop offset="0.0001" stop-color="white"/>
+</linearGradient>
+</defs>
+</svg>

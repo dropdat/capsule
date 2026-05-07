@@ -37,6 +37,57 @@ export default defineBackground(() => {
           return;
         }
 
+        case "LIST_CAPSULES": {
+          try {
+            const all = await capsuleStore.all();
+            // newest first; trim heavy fields for the picker
+            const items = all
+              .sort((a, b) => (b.updatedAt || "").localeCompare(a.updatedAt || ""))
+              .map((c) => ({
+                id: c.id,
+                title: c.title,
+                summary: c.summary,
+                source: c.source,
+                updatedAt: c.updatedAt,
+                messages: c.messages,
+              }));
+            sendResponse({ ok: true, items });
+          } catch (err) {
+            sendResponse({ ok: false, error: String(err) });
+          }
+          return;
+        }
+
+        case "OPEN_POPUP": {
+          try {
+            // Modern Chrome (≥127) lets background open the action popup directly.
+            const openPopup = (chrome.action as unknown as { openPopup?: () => Promise<void> })
+              .openPopup;
+            if (openPopup) {
+              await openPopup.call(chrome.action);
+              sendResponse({ ok: true, mode: "action" });
+              return;
+            }
+          } catch (err) {
+            console.warn("[dropdat] action.openPopup failed:", err);
+          }
+          // Fallback: open the popup HTML in a small detached window.
+          try {
+            const url = chrome.runtime.getURL("popup.html");
+            await chrome.windows.create({
+              url,
+              type: "popup",
+              width: 380,
+              height: 540,
+              focused: true,
+            });
+            sendResponse({ ok: true, mode: "window" });
+          } catch (err) {
+            sendResponse({ ok: false, error: String(err) });
+          }
+          return;
+        }
+
         case "REQUEST_SYNC": {
           const token = await getClerkToken();
           const result = await syncOnce(async () => token);

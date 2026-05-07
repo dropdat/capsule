@@ -143,7 +143,7 @@ export function AsciiBand() {
         <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
           <div className="flex flex-col items-center gap-3 text-center">
             <img
-              src="/brand/logo-light.svg"
+              src="/brand/logo.svg"
               alt=""
               className="w-20 h-20 drop-shadow-[0_4px_16px_rgba(0,0,0,0.4)]"
             />

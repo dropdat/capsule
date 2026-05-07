@@ -1,4 +1,11 @@
-export type CapsuleSource = "chatgpt" | "claude" | "gemini";
+export type CapsuleSource =
+  | "chatgpt"
+  | "claude"
+  | "gemini"
+  | "grok"
+  | "copilot"
+  | "perplexity"
+  | "other";
 
 export type Role = "user" | "assistant" | "system";
 

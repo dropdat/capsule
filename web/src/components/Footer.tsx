@@ -13,17 +13,15 @@ const cols = [
   {
     title: "Company",
     links: [
-      { label: "About", href: "#" },
-      { label: "Blog", href: "#" },
-      { label: "Contact", href: "#" },
+      { label: "Support", href: "/support" },
+      { label: "Contact", href: "mailto:support@dropdat.app" },
     ],
   },
   {
     title: "Legal",
     links: [
-      { label: "Privacy", href: "#" },
-      { label: "Terms", href: "#" },
-      { label: "Security", href: "#" },
+      { label: "Privacy", href: "/privacy" },
+      { label: "Terms", href: "/terms" },
     ],
   },
 ];
@@ -34,7 +32,7 @@ export function Footer() {
       <div className="w-full max-w-[1200px] mx-auto px-6 py-14 grid lg:grid-cols-[1.2fr_2fr] gap-10">
         <div className="flex flex-col gap-3">
           <div className="flex items-center gap-2 font-heading font-medium text-[20px]">
-            <img src="/brand/logo-dark.svg" alt="" className="w-7 h-7" />
+            <img src="/brand/logo.svg" alt="" className="w-7 h-7" />
             <span>dropdat</span>
           </div>
           <p className="text-[14px] text-muted-foreground max-w-[320px]">

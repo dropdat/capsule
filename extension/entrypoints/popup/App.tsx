@@ -8,6 +8,10 @@ const sourceLabel: Record<Capsule["source"], string> = {
   chatgpt: "ChatGPT",
   claude: "Claude",
   gemini: "Gemini",
+  grok: "Grok",
+  copilot: "Copilot",
+  perplexity: "Perplexity",
+  other: "Other",
 };
 
 const HAS_CLERK = !!(import.meta.env.VITE_CLERK_PUBLISHABLE_KEY as string | undefined);
@@ -47,6 +51,30 @@ export function App() {
     e.dataTransfer.effectAllowed = "copy";
   };
 
+  const dropToActiveTab = async (c: Capsule) => {
+    try {
+      const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+      if (!tab?.id) {
+        setStatus("No active tab to drop into.");
+        return;
+      }
+      await chrome.tabs.sendMessage(tab.id, {
+        type: "DROP_CAPSULE",
+        capsule: {
+          id: c.id,
+          title: c.title,
+          summary: c.summary,
+          source: c.source,
+          updatedAt: c.updatedAt,
+          messages: c.messages,
+        },
+      });
+      window.close();
+    } catch (err) {
+      setStatus(`Drop failed: ${String(err)}`);
+    }
+  };
+
   const pendingCount = capsules.filter((c) => c.pendingSync).length;
 
   return (
@@ -80,7 +108,9 @@ export function App() {
             className={`capsule ${c.pendingSync ? "pending" : ""}`}
             draggable
             onDragStart={(e) => onDragStart(e, c)}
-            title="Drag onto a chat composer to inject"
+            onClick={() => dropToActiveTab(c)}
+            title="Click to drop into the active chat — or drag onto the composer"
+            style={{ cursor: "pointer" }}
           >
             <div className="meta">
               <span>{sourceLabel[c.source]}</span>
