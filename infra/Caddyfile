@@ -1,0 +1,24 @@
+{
+  email {$ACME_EMAIL:admin@dropdat.app}
+}
+
+{$DOMAIN:dropdat.app}, www.{$DOMAIN:dropdat.app} {
+  encode gzip zstd
+
+  # Go API
+  handle /api/* {
+    reverse_proxy api:8080
+  }
+
+  # Static marketing + dashboard (Next.js export)
+  handle {
+    root * /var/www/dropdat
+    try_files {path} {path}/index.html
+    file_server
+  }
+
+  log {
+    output stdout
+    format console
+  }
+}

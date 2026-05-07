@@ -1,0 +1,5 @@
+bin/
+.env
+*.test
+coverage.out
+internal/db/dbgen/

@@ -1,0 +1,12 @@
+**/node_modules
+**/.next
+**/.output
+**/.wxt
+**/dist
+**/bin
+**/coverage
+**/.env
+**/.env.local
+**/.env.*.local
+.git
+.github

@@ -1,0 +1,88 @@
+name: Deploy to Production
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'api/**'
+      - 'web/**'
+      - 'infra/**'
+      - '.github/workflows/deploy.yml'
+  workflow_dispatch: {}
+
+jobs:
+  build-web:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: web
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: 'npm'
+          cache-dependency-path: web/package-lock.json
+
+      - run: npm ci
+
+      - name: Build static export
+        env:
+          NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: ${{ secrets.CLERK_PUBLISHABLE_KEY }}
+          NEXT_PUBLIC_API_URL: https://dropdat.app
+          NEXT_PUBLIC_CLERK_SIGN_IN_URL: /sign-in
+          NEXT_PUBLIC_CLERK_SIGN_UP_URL: /sign-up
+          NEXT_PUBLIC_CLERK_SIGN_IN_FALLBACK_REDIRECT_URL: /app
+          NEXT_PUBLIC_CLERK_SIGN_UP_FALLBACK_REDIRECT_URL: /app
+        run: npm run build
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: web-out
+          path: web/out
+          retention-days: 1
+
+  deploy:
+    needs: build-web
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: web-out
+          path: web/out
+
+      - name: Add SSH key
+        env:
+          SSH_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
+          HOST: ${{ secrets.DEPLOY_HOST }}
+        run: |
+          mkdir -p ~/.ssh
+          echo "$SSH_KEY" > ~/.ssh/id_ed25519
+          chmod 600 ~/.ssh/id_ed25519
+          ssh-keyscan -H "$HOST" >> ~/.ssh/known_hosts
+
+      - name: Rsync to server
+        env:
+          USER: ${{ secrets.DEPLOY_USER }}
+          HOST: ${{ secrets.DEPLOY_HOST }}
+        run: |
+          rsync -az --delete \
+            --exclude '.git' \
+            --exclude 'node_modules' \
+            --exclude '.next' \
+            --exclude 'api/bin' \
+            --exclude 'infra/data' \
+            --exclude '*.env' \
+            ./ "$USER@$HOST:/opt/dropdat/"
+
+      - name: Compose up + prune
+        env:
+          USER: ${{ secrets.DEPLOY_USER }}
+          HOST: ${{ secrets.DEPLOY_HOST }}
+        run: |
+          ssh "$USER@$HOST" 'cd /opt/dropdat/infra && docker compose up -d --build'
+          ssh "$USER@$HOST" 'docker image prune -f'
+          ssh "$USER@$HOST" 'cd /opt/dropdat/infra && docker compose ps'

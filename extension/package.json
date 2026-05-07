@@ -1,0 +1,31 @@
+{
+  "name": "dropdat-extension",
+  "version": "0.1.0",
+  "private": true,
+  "description": "dropdat — capture AI chats as portable capsules",
+  "type": "module",
+  "scripts": {
+    "dev": "wxt",
+    "dev:firefox": "wxt -b firefox",
+    "build": "wxt build",
+    "build:firefox": "wxt build -b firefox",
+    "zip": "wxt zip",
+    "zip:firefox": "wxt zip -b firefox",
+    "compile": "tsc --noEmit",
+    "prepare:wxt": "wxt prepare"
+  },
+  "dependencies": {
+    "@clerk/chrome-extension": "^3.1.22",
+    "react": "^19.2.5",
+    "react-dom": "^19.2.5",
+    "uuid": "^11.1.0"
+  },
+  "devDependencies": {
+    "@types/chrome": "^0.1.40",
+    "@types/react": "^19.2.3",
+    "@types/react-dom": "^19.2.3",
+    "@wxt-dev/module-react": "^1.2.2",
+    "typescript": "^6.0.3",
+    "wxt": "^0.20.25"
+  }
+}
