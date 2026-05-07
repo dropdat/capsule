@@ -20,7 +20,7 @@ const steps = [
 
 export function HowItWorks() {
   return (
-    <section id="how-it-works" className="w-full max-w-[1200px] px-6 py-24">
+    <section id="how-it-works" className="w-full max-w-[1200px] px-5 sm:px-6 py-16 sm:py-24">
       <div className="text-center mb-14">
         <span className="inline-flex items-center gap-2 text-primary text-[13px] font-medium uppercase tracking-[0.18em]">
           <BoltIcon className="w-3.5 h-3.5" />

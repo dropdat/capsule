@@ -15,7 +15,7 @@ export function LegalLayout({
     <>
       <Nav />
       <main className="relative z-[2] w-full flex justify-center">
-        <article className="w-full max-w-[760px] px-6 py-16">
+        <article className="w-full max-w-[760px] px-6 pt-32 pb-20">
           <h1 className="font-heading text-[40px] sm:text-[48px] leading-[1.05] font-medium text-foreground">
             {title}
           </h1>

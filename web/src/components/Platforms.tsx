@@ -5,8 +5,6 @@ import {
   PerplexityMark,
   CopilotMark,
   GrokMark,
-  MistralMark,
-  DeepSeekMark,
 } from "./brands";
 
 const platforms = [
@@ -16,13 +14,11 @@ const platforms = [
   { name: "Perplexity", Icon: PerplexityMark, tint: "#20808d" },
   { name: "Copilot", Icon: CopilotMark, tint: "#0078d4" },
   { name: "Grok", Icon: GrokMark, tint: "#0b1015" },
-  { name: "Mistral", Icon: MistralMark, tint: "#fa520f" },
-  { name: "DeepSeek", Icon: DeepSeekMark, tint: "#4d6bfe" },
 ];
 
 export function Platforms() {
   return (
-    <section id="platforms" className="w-full max-w-[1200px] px-6 py-24">
+    <section id="platforms" className="w-full max-w-[1200px] px-5 sm:px-6 py-16 sm:py-24">
       <div className="text-center mb-12">
         <span className="text-primary text-[13px] font-medium uppercase tracking-[0.18em]">
           Supported AIs
@@ -32,7 +28,7 @@ export function Platforms() {
         </h2>
       </div>
 
-      <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-px bg-border border border-border">
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-px bg-border border border-border">
         {platforms.map(({ name, Icon, tint }) => (
           <div
             key={name}

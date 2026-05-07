@@ -20,9 +20,10 @@ export function AsciiBand() {
     let running = true;
     const dpr = Math.min(window.devicePixelRatio || 1, 2);
 
-    const cellW = 9;
-    const cellH = 14;
-    const fontPx = 12;
+    const isMobile = window.matchMedia("(max-width: 640px)").matches;
+    const cellW = isMobile ? 14 : 12;
+    const cellH = isMobile ? 20 : 18;
+    const fontPx = isMobile ? 11 : 12;
 
     const fit = () => {
       const rect = canvas.getBoundingClientRect();
@@ -102,15 +103,20 @@ export function AsciiBand() {
             0.5 +
             0.5 * Math.sin(c * 0.18 + tt * 6 + Math.sin(r * 0.15 + tt * 4) * 1.4);
           const vfall = 1 - Math.abs(y / h - 0.5) * 0.6;
-          const bgIntensity = Math.max(0, Math.min(1, wave * vfall));
+          // Radial fade so the centre stays uncluttered around the logo.
+          const ndx = (px - cx) / (w * 0.5);
+          const ndy = (py - cy) / (h * 0.5);
+          const radial = Math.min(1, Math.sqrt(ndx * ndx + ndy * ndy));
+          const centreClear = Math.max(0, Math.min(1, (radial - 0.18) / 0.32));
+          const bgIntensity = Math.max(0, Math.min(1, wave * vfall * centreClear));
 
           let alpha: number;
           if (rimAlpha > 0) {
-            alpha = 0.35 + rimAlpha * 0.65; // bright on the rims
+            alpha = 0.32 + rimAlpha * 0.55;
           } else if (insideInner) {
-            alpha = 0.04 + bgIntensity * 0.05; // very faint interior
+            alpha = 0.02 + bgIntensity * 0.04;
           } else {
-            alpha = 0.05 + bgIntensity * 0.7;
+            alpha = 0.04 + bgIntensity * 0.42;
           }
 
           // Stable per-cell digit, slow time evolution
@@ -134,23 +140,20 @@ export function AsciiBand() {
   }, []);
 
   return (
-    <section
-      className="w-full bg-primary-deep relative overflow-hidden flex items-center justify-center"
-      style={{ height: 360 }}
-    >
+    <section className="w-full bg-primary-deep relative overflow-hidden flex items-center justify-center h-[260px] sm:h-[320px] md:h-[360px]">
       <div className="w-full relative h-full">
         <canvas ref={canvasRef} className="absolute inset-0 w-full h-full" />
-        <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-          <div className="flex flex-col items-center gap-3 text-center">
+        <div className="absolute inset-0 flex items-center justify-center pointer-events-none px-6">
+          <div className="flex flex-col items-center gap-2 sm:gap-3 text-center">
             <img
               src="/brand/logo.svg"
               alt=""
-              className="w-20 h-20 drop-shadow-[0_4px_16px_rgba(0,0,0,0.4)]"
+              className="w-16 h-16 sm:w-20 sm:h-20 drop-shadow-[0_4px_16px_rgba(0,0,0,0.4)]"
             />
-            <span className="font-heading text-white text-[20px] font-medium tracking-tight drop-shadow-[0_2px_8px_rgba(0,0,0,0.35)]">
+            <span className="font-heading text-white text-[18px] sm:text-[20px] font-medium tracking-tight drop-shadow-[0_2px_8px_rgba(0,0,0,0.35)]">
               dropdat
             </span>
-            <span className="font-mono text-white/85 text-[11px] uppercase tracking-[0.25em] drop-shadow-[0_1px_4px_rgba(0,0,0,0.3)]">
+            <span className="font-mono text-white/85 text-[10px] sm:text-[11px] uppercase tracking-[0.2em] sm:tracking-[0.25em] drop-shadow-[0_1px_4px_rgba(0,0,0,0.3)]">
               one click · any AI · same memory
             </span>
           </div>

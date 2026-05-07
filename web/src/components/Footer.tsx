@@ -29,7 +29,7 @@ const cols = [
 export function Footer() {
   return (
     <footer className="w-full border-t border-border bg-background relative z-10">
-      <div className="w-full max-w-[1200px] mx-auto px-6 py-14 grid lg:grid-cols-[1.2fr_2fr] gap-10">
+      <div className="w-full max-w-[1200px] mx-auto px-6 py-12 sm:py-14 grid lg:grid-cols-[1.2fr_2fr] gap-8 sm:gap-10">
         <div className="flex flex-col gap-3">
           <div className="flex items-center gap-2 font-heading font-medium text-[20px]">
             <img src="/brand/logo.svg" alt="" className="w-7 h-7" />
@@ -47,7 +47,7 @@ export function Footer() {
             </a>
           </div>
         </div>
-        <div className="grid grid-cols-3 gap-6">
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-6">
           {cols.map((c) => (
             <div key={c.title}>
               <h4 className="font-heading text-[14px] font-medium text-foreground/90 mb-4 uppercase tracking-[0.12em]">

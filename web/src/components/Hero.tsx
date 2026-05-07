@@ -3,8 +3,8 @@ import { HeroVisual } from "./HeroVisual";
 
 export function Hero() {
   return (
-    <section className="w-full max-w-[1200px] px-6 pt-36 pb-16 relative">
-      <div className="grid lg:grid-cols-[1.2fr_1fr] gap-10 items-center">
+    <section className="w-full max-w-[1200px] px-5 sm:px-6 pt-28 sm:pt-36 pb-12 sm:pb-16 relative">
+      <div className="grid lg:grid-cols-[1.2fr_1fr] gap-8 sm:gap-10 items-center">
         <div className="flex flex-col items-start gap-6">
           <a
             href="#how-it-works"
