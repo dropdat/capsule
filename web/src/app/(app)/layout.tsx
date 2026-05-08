@@ -50,10 +50,10 @@ function MobileTopBar({ onOpen }: { onOpen: () => void }) {
           <line x1="2" y1="12" x2="14" y2="12" />
         </svg>
       </button>
-      <div className="flex items-center gap-2">
+      <a href="https://dropdat.app" className="flex items-center gap-2 transition-opacity hover:opacity-80">
         <img src="/brand/logo.svg" alt="" className="h-5 w-5" />
         <span className="font-heading text-[15px] font-medium tracking-tight">dropdat</span>
-      </div>
+      </a>
       <div className="w-9" />
     </div>
   );

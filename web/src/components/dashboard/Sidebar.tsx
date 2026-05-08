@@ -44,10 +44,13 @@ export function Sidebar({
           className="flex items-center justify-between gap-2 px-5 py-4 border-b"
           style={{ borderColor: "var(--sidebar-border)" }}
         >
-          <div className="flex items-center gap-2">
+          <a
+            href="https://dropdat.app"
+            className="flex items-center gap-2 transition-opacity hover:opacity-80"
+          >
             <img src="/brand/logo.svg" alt="" className="h-6 w-6" />
             <span className="font-heading text-[16px] font-medium tracking-tight">dropdat</span>
-          </div>
+          </a>
           <button
             onClick={onClose}
             aria-label="Close menu"
