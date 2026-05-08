@@ -31,7 +31,7 @@ export default function APIKeysPage() {
       const headers = new Headers(init?.headers);
       if (token) headers.set("Authorization", `Bearer ${token}`);
       headers.set("Content-Type", "application/json");
-      return fetch(`${API_BASE}${path}`, { ...init, headers, credentials: "include" });
+      return fetch(`${API_BASE}${path}`, { ...init, headers });
     },
     [getToken]
   );
