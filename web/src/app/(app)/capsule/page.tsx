@@ -24,6 +24,7 @@ function CapsuleDetail() {
   const [title, setTitle] = useState("");
   const [summary, setSummary] = useState("");
   const [tagsInput, setTagsInput] = useState("");
+  const [copied, setCopied] = useState(false);
 
   if (!id) return <p className="text-[14px] text-muted-foreground">Missing capsule id.</p>;
   if (error) return <p className="text-[14px] text-destructive">Failed to load: {String(error)}</p>;
@@ -50,6 +51,23 @@ function CapsuleDetail() {
     if (!confirm("Delete this capsule?")) return;
     await api(`/api/v1/capsules/${capsule.id}`, { method: "DELETE" });
     router.push("/library");
+  };
+
+  const copyText = async () => {
+    const header = `# ${capsule.title}`;
+    const meta = `source: ${capsule.source} · v${capsule.version}`;
+    const sum = capsule.summary ? `\n\n${capsule.summary}` : "";
+    const body = capsule.messages
+      .map((m) => `\n\n## ${m.role}\n${m.content}`)
+      .join("");
+    const text = `${header}\n${meta}${sum}${body}`;
+    try {
+      await navigator.clipboard.writeText(text);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      /* clipboard blocked */
+    }
   };
 
   return (
@@ -88,10 +106,16 @@ function CapsuleDetail() {
             </>
           ) : (
             <>
-              <button onClick={startEdit} className="bg-secondary border border-border px-4 py-2 text-[13px] font-medium hover:bg-card">
+              <button
+                onClick={copyText}
+                className="rounded-md bg-primary text-primary-foreground px-4 py-2 text-[13px] font-medium transition-opacity hover:opacity-90"
+              >
+                {copied ? "Copied ✓" : "Copy capsule"}
+              </button>
+              <button onClick={startEdit} className="rounded-md bg-secondary border border-border px-4 py-2 text-[13px] font-medium hover:bg-card">
                 Edit
               </button>
-              <button onClick={remove} className="bg-card border border-border px-4 py-2 text-[13px] font-medium text-destructive hover:bg-accent-soft/40">
+              <button onClick={remove} className="rounded-md bg-card border border-border px-4 py-2 text-[13px] font-medium text-destructive hover:bg-accent-soft/40">
                 Delete
               </button>
             </>
