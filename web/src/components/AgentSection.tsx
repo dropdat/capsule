@@ -12,7 +12,7 @@ const glyphs = [
 
 export function AgentSection() {
   return (
-    <section className="w-full max-w-[1200px] relative flex items-center justify-center px-6" style={{ minHeight: 480 }}>
+    <section className="w-full max-w-[1200px] relative flex items-center justify-center px-5 sm:px-6 overflow-hidden" style={{ minHeight: 480 }}>
       {glyphs.map((g, i) => (
         <div
           key={i}

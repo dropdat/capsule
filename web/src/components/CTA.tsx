@@ -2,7 +2,7 @@ import { ChromeIcon, ArrowRightIcon } from "./icons";
 
 export function CTA() {
   return (
-    <section id="download" className="w-full max-w-[1200px] px-6 pb-24">
+    <section id="download" className="w-full max-w-[1200px] px-5 sm:px-6 pb-20 sm:pb-24">
       <div className="bg-primary-deep relative overflow-hidden border border-border p-12 md:p-16 text-center">
         <div
           className="absolute inset-0 opacity-25 pointer-events-none"
