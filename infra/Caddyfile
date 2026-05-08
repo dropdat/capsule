@@ -33,10 +33,16 @@ capsule.{$DOMAIN:dropdat.app} {
   }
 
   # Mount the exported /dashboard tree at the subdomain root.
+  # Static assets (/_next/*, fonts, brand) resolve directly; bare routes
+  # fall back to the /dashboard/* tree.
   handle {
     root * /var/www/dropdat
-    rewrite * /dashboard{uri}
-    try_files {path} {path}/index.html
+
+    # Bare "/" should land on the dashboard index, not the marketing index.
+    @root path /
+    rewrite @root /dashboard/
+
+    try_files {path} {path}index.html /dashboard{path} /dashboard{path}index.html
     file_server
   }
 
