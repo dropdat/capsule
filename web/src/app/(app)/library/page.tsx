@@ -76,7 +76,7 @@ function EmptyState() {
         Install the dropdat extension and click the capsule icon inside any supported AI chat.
       </p>
       <Link
-        href="/dashboard/settings"
+        href="/settings"
         className="mt-5 inline-flex items-center gap-2 bg-primary text-primary-foreground border border-border px-5 py-2 text-[14px] font-medium hover:opacity-95 transition-opacity"
       >
         Install extension

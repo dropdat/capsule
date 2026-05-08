@@ -6,13 +6,13 @@ import { UserButton } from "@clerk/react";
 import { useTheme } from "./ThemeProvider";
 
 const NAV = [
-  { href: "/dashboard", label: "Library", icon: LibraryIcon },
-  { href: "/dashboard/api-keys", label: "API Keys", icon: KeyIcon },
-  { href: "/dashboard/settings", label: "Settings", icon: SettingsIcon },
+  { href: "/library", label: "Library", icon: LibraryIcon },
+  { href: "/api-keys", label: "API Keys", icon: KeyIcon },
+  { href: "/settings", label: "Settings", icon: SettingsIcon },
 ];
 
 export function Sidebar() {
-  const pathname = usePathname() || "/dashboard";
+  const pathname = usePathname() || "/library";
 
   return (
     <aside
@@ -36,7 +36,7 @@ export function Sidebar() {
       <nav className="flex-1 px-2 py-4 flex flex-col gap-0.5">
         {NAV.map(({ href, label, icon: Icon }) => {
           const active =
-            href === "/dashboard" ? pathname === "/dashboard" : pathname.startsWith(href);
+            href === "/library" ? pathname === "/library" || pathname === "/" : pathname.startsWith(href);
           return (
             <Link
               key={href}

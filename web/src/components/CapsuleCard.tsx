@@ -17,7 +17,7 @@ export function CapsuleCard({ capsule }: { capsule: Capsule }) {
 
   return (
     <Link
-      href={`/dashboard/capsule?id=${capsule.id}`}
+      href={`/capsule?id=${capsule.id}`}
       className="group flex flex-col gap-3 border border-border bg-card p-5 hover:bg-accent-soft/40 transition-colors"
     >
       <div className="flex items-center justify-between text-[11px] font-mono uppercase tracking-[0.18em] text-muted-foreground">

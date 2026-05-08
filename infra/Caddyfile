@@ -32,17 +32,15 @@ capsule.{$DOMAIN:dropdat.app} {
     reverse_proxy api:8080
   }
 
-  # Mount the exported /dashboard tree at the subdomain root.
-  # Static assets (/_next/*, fonts, brand) resolve directly; bare routes
-  # fall back to the /dashboard/* tree.
+  # Dashboard pages live at /library, /api-keys, /settings, /capsule
+  # in the static export. Bare "/" lands on the library.
   handle {
     root * /var/www/dropdat
 
-    # Bare "/" should land on the dashboard index, not the marketing index.
     @root path /
-    rewrite @root /dashboard/
+    rewrite @root /library/
 
-    try_files {path} {path}index.html /dashboard{path} /dashboard{path}index.html
+    try_files {path} {path}index.html
     file_server
   }
 

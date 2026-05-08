@@ -9,7 +9,7 @@ services:
     environment:
       - ADDR=:8080
       - DATABASE_URL=postgres://${POSTGRES_USER:-dropdat}:${POSTGRES_PASSWORD}@${POSTGRES_HOST:-postgres}:${POSTGRES_PORT:-5432}/${POSTGRES_DB:-dropdat}?sslmode=${POSTGRES_SSLMODE:-disable}
-      - CORS_ORIGINS=${CORS_ORIGINS:-https://dropdat.app}
+      - CORS_ORIGINS=${CORS_ORIGINS:-https://dropdat.app,https://www.dropdat.app,https://capsule.dropdat.app}
       - CLERK_JWKS_URL=${CLERK_JWKS_URL}
       - CLERK_ISSUER=${CLERK_ISSUER}
       - DEV_AUTH_BYPASS=${DEV_AUTH_BYPASS:-}
