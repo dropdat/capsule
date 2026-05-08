@@ -41,11 +41,8 @@ export function Sidebar() {
             <Link
               key={href}
               href={href}
-              className="flex items-center gap-3 px-3 py-2 text-[13px] transition-colors"
-              style={{
-                background: active ? "var(--sidebar-active)" : "transparent",
-                color: active ? "var(--sidebar-foreground)" : "var(--sidebar-muted)",
-              }}
+              data-active={active || undefined}
+              className="sidebar-link flex items-center gap-3 rounded-md px-3 py-[7px] text-[13px] transition-colors"
             >
               <Icon className="h-[15px] w-[15px]" />
               <span>{label}</span>

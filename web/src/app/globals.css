@@ -173,6 +173,29 @@
 .box-corners > .corner-bl { bottom: -4px; left: -4px; }
 .box-corners > .corner-br { bottom: -4px; right: -4px; }
 
+/* Dashboard-scoped radius + sidebar link styles */
+[data-dashboard] {
+  --radius: 6px;
+}
+[data-dashboard] .sidebar-link {
+  color: var(--sidebar-muted);
+}
+[data-dashboard] .sidebar-link:hover {
+  background: var(--sidebar-active);
+  color: var(--sidebar-foreground);
+}
+[data-dashboard] .sidebar-link[data-active] {
+  background: var(--sidebar-active);
+  color: var(--sidebar-foreground);
+  box-shadow: inset 2px 0 0 var(--primary);
+}
+
+/* Hide marketing background effects when dashboard shell is mounted */
+body:has([data-dashboard]) #flowing-lines,
+body:has([data-dashboard]) .ambient-wash {
+  display: none;
+}
+
 /* Long-form legal/marketing prose */
 .legal-prose h2 {
   font-family: var(--font-heading);

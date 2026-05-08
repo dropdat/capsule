@@ -91,96 +91,122 @@ export default function APIKeysPage() {
   const live = keys.filter((k) => !k.revoked_at);
 
   return (
-    <div className="flex flex-col gap-8">
-      <header>
-        <h1 className="font-heading text-[28px] font-medium tracking-tight">API Keys</h1>
-        <p className="mt-1 text-[14px] text-muted-foreground">
-          Generate a key to sign into the dropdat browser extension. Keys are tied to your account.
+    <div className="flex flex-col gap-10">
+      <header className="flex flex-col gap-2">
+        <h1 className="font-heading text-[26px] font-medium tracking-tight">API Keys</h1>
+        <p className="text-[13.5px] text-muted-foreground max-w-[640px] leading-relaxed">
+          Generate a personal key to sign the dropdat browser extension into your account.
+          Keys are shown once at creation — store them somewhere safe.
         </p>
       </header>
 
-      <section className="border border-border bg-card p-5">
-        <h2 className="font-heading text-[16px] font-medium mb-3">Create new key</h2>
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+      <section className="rounded-lg border border-border bg-card overflow-hidden">
+        <div className="flex items-center justify-between border-b border-border px-5 py-3">
+          <h2 className="font-heading text-[14px] font-medium">Create new key</h2>
+          <span className="text-[11px] uppercase tracking-wider text-muted-foreground">
+            dk_live_…
+          </span>
+        </div>
+        <div className="flex flex-col gap-3 px-5 py-5 sm:flex-row sm:items-center">
           <input
             type="text"
             placeholder="Name (e.g. My laptop)"
             value={name}
             onChange={(e) => setName(e.target.value)}
-            className="flex-1 border border-input bg-background px-3 py-2 text-[14px] outline-none focus:border-primary"
+            className="flex-1 rounded-md border border-input bg-background px-3 py-2 text-[13.5px] outline-none transition-colors focus:border-primary"
           />
           <button
             onClick={create}
             disabled={creating}
-            className="border border-primary bg-primary px-4 py-2 text-[14px] font-medium text-primary-foreground hover:opacity-95 disabled:opacity-50"
+            className="rounded-md bg-primary px-4 py-2 text-[13.5px] font-medium text-primary-foreground transition-opacity hover:opacity-90 disabled:opacity-50"
           >
             {creating ? "Creating…" : "Generate key"}
           </button>
         </div>
 
         {justCreated && (
-          <div className="mt-4 border border-primary/30 bg-accent-soft p-4">
+          <div className="mx-5 mb-5 rounded-md border border-primary/30 bg-accent-soft p-4">
             <p className="text-[13px] font-medium">
               Copy this key now — you won&rsquo;t be able to see it again.
             </p>
-            <div className="mt-2 flex items-center gap-2">
-              <code className="flex-1 break-all border border-input bg-background px-3 py-2 font-mono text-[12px]">
+            <div className="mt-3 flex items-center gap-2">
+              <code className="flex-1 break-all rounded-md border border-input bg-background px-3 py-2 font-mono text-[12px]">
                 {justCreated.token}
               </code>
               <button
                 onClick={() => copy(justCreated.token)}
-                className="border border-border bg-background px-3 py-2 text-[12px] font-medium hover:bg-accent-soft"
+                className="rounded-md border border-border bg-background px-3 py-2 text-[12px] font-medium transition-colors hover:bg-muted"
               >
                 Copy
               </button>
             </div>
             <button
               onClick={() => setJustCreated(null)}
-              className="mt-2 text-[12px] text-muted-foreground hover:text-foreground"
+              className="mt-3 text-[12px] text-muted-foreground transition-colors hover:text-foreground"
             >
               I&rsquo;ve saved it, dismiss →
             </button>
           </div>
         )}
 
-        {error && <p className="mt-3 text-[13px] text-destructive">{error}</p>}
+        {error && (
+          <p className="mx-5 mb-4 rounded-md border border-destructive/30 bg-destructive/10 px-3 py-2 text-[12.5px] text-destructive">
+            {error}
+          </p>
+        )}
       </section>
 
-      <section>
-        <h2 className="font-heading text-[16px] font-medium mb-3">
-          Your keys {!loading && `(${live.length})`}
-        </h2>
+      <section className="flex flex-col gap-3">
+        <div className="flex items-baseline justify-between">
+          <h2 className="font-heading text-[14px] font-medium">Your keys</h2>
+          <span className="text-[12px] text-muted-foreground">
+            {loading ? "…" : `${live.length} active`}
+          </span>
+        </div>
+
         {loading ? (
-          <p className="text-[13px] text-muted-foreground">Loading…</p>
+          <div className="rounded-lg border border-border bg-card px-5 py-8 text-[13px] text-muted-foreground">
+            Loading…
+          </div>
         ) : live.length === 0 ? (
-          <p className="text-[13px] text-muted-foreground">No keys yet.</p>
+          <div className="rounded-lg border border-dashed border-border bg-card/50 px-5 py-10 text-center">
+            <p className="text-[13.5px] text-muted-foreground">No keys yet.</p>
+            <p className="mt-1 text-[12px] text-muted-foreground/70">
+              Generate one above to sign into the extension.
+            </p>
+          </div>
         ) : (
-          <div className="overflow-hidden border border-border">
+          <div className="overflow-hidden rounded-lg border border-border bg-card">
             <table className="w-full text-[13px]">
-              <thead className="bg-muted text-left">
-                <tr>
-                  <th className="px-4 py-2 font-medium">Name</th>
-                  <th className="px-4 py-2 font-medium">Prefix</th>
-                  <th className="px-4 py-2 font-medium">Created</th>
-                  <th className="px-4 py-2 font-medium">Last used</th>
-                  <th className="px-4 py-2"></th>
+              <thead className="text-left text-[11.5px] uppercase tracking-wider text-muted-foreground">
+                <tr className="border-b border-border">
+                  <th className="px-5 py-3 font-medium">Name</th>
+                  <th className="px-5 py-3 font-medium">Prefix</th>
+                  <th className="px-5 py-3 font-medium">Created</th>
+                  <th className="px-5 py-3 font-medium">Last used</th>
+                  <th className="px-5 py-3"></th>
                 </tr>
               </thead>
               <tbody>
-                {live.map((k) => (
-                  <tr key={k.id} className="border-t border-border">
-                    <td className="px-4 py-2">{k.name}</td>
-                    <td className="px-4 py-2 font-mono text-[12px]">{k.prefix}…</td>
-                    <td className="px-4 py-2 text-muted-foreground">
+                {live.map((k, i) => (
+                  <tr
+                    key={k.id}
+                    className={i > 0 ? "border-t border-border/60" : undefined}
+                  >
+                    <td className="px-5 py-3 font-medium">{k.name}</td>
+                    <td className="px-5 py-3 font-mono text-[12px] text-muted-foreground">
+                      {k.prefix}…
+                    </td>
+                    <td className="px-5 py-3 text-muted-foreground">
                       {new Date(k.created_at).toLocaleDateString()}
                     </td>
-                    <td className="px-4 py-2 text-muted-foreground">
+                    <td className="px-5 py-3 text-muted-foreground">
                       {k.last_used_at ? new Date(k.last_used_at).toLocaleDateString() : "—"}
                     </td>
-                    <td className="px-4 py-2 text-right">
+                    <td className="px-5 py-3 text-right">
                       <button
                         onClick={() => revoke(k.id)}
-                        className="text-[12px] text-destructive hover:underline"
+                        className="text-[12px] text-destructive transition-opacity hover:opacity-80"
                       >
                         Revoke
                       </button>

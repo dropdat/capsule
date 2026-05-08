@@ -16,11 +16,11 @@ export default function LibraryPage() {
   const { data, error, isLoading, mutate } = useSWR<Capsule[]>(path, api);
 
   return (
-    <section className="flex flex-col gap-6">
+    <section className="flex flex-col gap-8">
       <div className="flex flex-wrap items-end justify-between gap-4">
-        <div>
-          <h1 className="font-heading text-[28px] font-medium tracking-[-0.02em]">Your capsules</h1>
-          <p className="text-[14px] text-muted-foreground mt-1">
+        <div className="flex flex-col gap-2">
+          <h1 className="font-heading text-[26px] font-medium tracking-tight">Library</h1>
+          <p className="text-[13.5px] text-muted-foreground max-w-[520px] leading-relaxed">
             Captured AI conversations, ready to drop anywhere.
           </p>
         </div>
@@ -29,12 +29,12 @@ export default function LibraryPage() {
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           placeholder="Search title or summary…"
-          className="w-72 max-w-full bg-card border border-border px-3 py-2 text-[14px] focus:outline-none focus:border-primary"
+          className="w-72 max-w-full rounded-md bg-card border border-border px-3 py-2 text-[13.5px] outline-none transition-colors focus:border-primary"
         />
       </div>
 
       {error && (
-        <div className="border border-border bg-card p-5 text-[13px] text-destructive">
+        <div className="rounded-lg border border-destructive/30 bg-destructive/5 p-4 text-[13px] text-destructive">
           Failed to load capsules: {String(error)}
           <button
             onClick={() => mutate()}
@@ -48,14 +48,12 @@ export default function LibraryPage() {
       {isLoading && !data && (
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {Array.from({ length: 6 }).map((_, i) => (
-            <div key={i} className="h-44 border border-border bg-card animate-pulse" />
+            <div key={i} className="h-44 rounded-lg border border-border bg-card animate-pulse" />
           ))}
         </div>
       )}
 
-      {data && data.length === 0 && (
-        <EmptyState />
-      )}
+      {data && data.length === 0 && <EmptyState />}
 
       {data && data.length > 0 && (
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -70,16 +68,16 @@ export default function LibraryPage() {
 
 function EmptyState() {
   return (
-    <div className="border border-border bg-card p-12 text-center">
+    <div className="rounded-lg border border-dashed border-border bg-card/50 p-12 text-center">
       <p className="font-heading text-[18px] font-medium">No capsules yet</p>
-      <p className="text-[14px] text-muted-foreground mt-2">
+      <p className="text-[13.5px] text-muted-foreground mt-2 max-w-[420px] mx-auto leading-relaxed">
         Install the dropdat extension and click the capsule icon inside any supported AI chat.
       </p>
       <Link
         href="/settings"
-        className="mt-5 inline-flex items-center gap-2 bg-primary text-primary-foreground border border-border px-5 py-2 text-[14px] font-medium hover:opacity-95 transition-opacity"
+        className="mt-6 inline-flex items-center gap-2 rounded-md bg-primary text-primary-foreground px-5 py-2 text-[13.5px] font-medium transition-opacity hover:opacity-90"
       >
-        Install extension
+        Install extension →
       </Link>
     </div>
   );

@@ -28,8 +28,15 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
   return (
     <ThemeCtx.Provider value={{ theme, toggle }}>
       <div
+        data-dashboard
         className={theme === "dark" ? "dark" : ""}
-        style={{ minHeight: "100vh", background: "var(--background)", color: "var(--foreground)" }}
+        style={{
+          position: "relative",
+          zIndex: 10,
+          minHeight: "100vh",
+          background: "var(--background)",
+          color: "var(--foreground)",
+        }}
       >
         {children}
       </div>
