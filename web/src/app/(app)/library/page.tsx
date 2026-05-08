@@ -19,7 +19,7 @@ export default function LibraryPage() {
     <section className="flex flex-col gap-8">
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div className="flex flex-col gap-2">
-          <h1 className="font-heading text-[26px] font-medium tracking-tight">Library</h1>
+          <h1 className="font-heading text-[22px] sm:text-[26px] font-medium tracking-tight">Library</h1>
           <p className="text-[13.5px] text-muted-foreground max-w-[520px] leading-relaxed">
             Captured AI conversations, ready to drop anywhere.
           </p>

@@ -3,8 +3,8 @@ import { GithubIcon, XIcon } from "./icons";
 
 export function Nav() {
   return (
-    <nav className="fixed top-0 left-0 right-0 z-50 flex justify-center w-full">
-      <div className="mt-3 mx-3 sm:mt-4 sm:mx-4 w-full max-w-[1200px] flex items-center justify-between gap-3 px-3 sm:px-4 py-2 sm:py-2.5 bg-white/80 backdrop-blur-md border border-border">
+    <nav className="fixed top-0 left-0 right-0 z-50 px-3 sm:px-4 pt-3 sm:pt-4">
+      <div className="mx-auto w-full max-w-[1200px] flex items-center justify-between gap-3 px-3 sm:px-4 py-2 sm:py-2.5 bg-white/80 backdrop-blur-md border border-border">
         <Link href="/" className="flex items-center gap-2 font-heading font-medium text-[16px] sm:text-[18px]">
           <img src="/brand/logo.svg" alt="" className="w-6 h-6 sm:w-7 sm:h-7" />
           <span>dropdat</span>

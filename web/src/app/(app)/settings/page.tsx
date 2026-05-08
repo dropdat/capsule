@@ -7,7 +7,7 @@ export default function SettingsPage() {
   return (
     <section className="flex flex-col gap-8">
       <header className="flex flex-col gap-2">
-        <h1 className="font-heading text-[26px] font-medium tracking-tight">Settings</h1>
+        <h1 className="font-heading text-[22px] sm:text-[26px] font-medium tracking-tight">Settings</h1>
         <p className="text-[13.5px] text-muted-foreground">Account and extension management.</p>
       </header>
 
@@ -15,7 +15,7 @@ export default function SettingsPage() {
         <div className="border-b border-border px-5 py-3">
           <h2 className="font-heading text-[14px] font-medium">Account</h2>
         </div>
-        <dl className="px-5 py-5 text-[13.5px] grid grid-cols-[120px_1fr] gap-y-3">
+        <dl className="px-5 py-5 text-[13.5px] grid grid-cols-1 sm:grid-cols-[120px_1fr] gap-y-3 break-words">
           <dt className="text-muted-foreground">Email</dt>
           <dd>{user?.primaryEmailAddress?.emailAddress ?? "—"}</dd>
           <dt className="text-muted-foreground">User ID</dt>

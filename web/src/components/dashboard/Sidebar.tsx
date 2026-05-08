@@ -11,54 +11,84 @@ const NAV = [
   { href: "/settings", label: "Settings", icon: SettingsIcon },
 ];
 
-export function Sidebar() {
+export function Sidebar({
+  open = false,
+  onClose,
+}: {
+  open?: boolean;
+  onClose?: () => void;
+}) {
   const pathname = usePathname() || "/library";
 
   return (
-    <aside
-      className="flex h-screen w-[240px] flex-col border-r"
-      style={{
-        background: "var(--sidebar)",
-        color: "var(--sidebar-foreground)",
-        borderColor: "var(--sidebar-border)",
-        position: "sticky",
-        top: 0,
-      }}
-    >
+    <>
+      {/* mobile backdrop */}
       <div
-        className="flex items-center gap-2 px-5 py-4 border-b"
-        style={{ borderColor: "var(--sidebar-border)" }}
+        className={`md:hidden fixed inset-0 z-40 bg-black/50 transition-opacity ${
+          open ? "opacity-100" : "pointer-events-none opacity-0"
+        }`}
+        onClick={onClose}
+        aria-hidden
+      />
+      <aside
+        className={`fixed md:sticky top-0 z-50 flex h-screen w-[240px] shrink-0 flex-col border-r transition-transform md:translate-x-0 ${
+          open ? "translate-x-0" : "-translate-x-full md:translate-x-0"
+        }`}
+        style={{
+          background: "var(--sidebar)",
+          color: "var(--sidebar-foreground)",
+          borderColor: "var(--sidebar-border)",
+        }}
       >
-        <img src="/brand/logo.svg" alt="" className="h-6 w-6" />
-        <span className="font-heading text-[16px] font-medium tracking-tight">dropdat</span>
-      </div>
+        <div
+          className="flex items-center justify-between gap-2 px-5 py-4 border-b"
+          style={{ borderColor: "var(--sidebar-border)" }}
+        >
+          <div className="flex items-center gap-2">
+            <img src="/brand/logo.svg" alt="" className="h-6 w-6" />
+            <span className="font-heading text-[16px] font-medium tracking-tight">dropdat</span>
+          </div>
+          <button
+            onClick={onClose}
+            aria-label="Close menu"
+            className="md:hidden flex h-8 w-8 items-center justify-center rounded-md"
+            style={{ color: "var(--sidebar-muted)" }}
+          >
+            <svg viewBox="0 0 16 16" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="1.6">
+              <line x1="3.5" y1="3.5" x2="12.5" y2="12.5" />
+              <line x1="12.5" y1="3.5" x2="3.5" y2="12.5" />
+            </svg>
+          </button>
+        </div>
 
-      <nav className="flex-1 px-2 py-4 flex flex-col gap-0.5">
-        {NAV.map(({ href, label, icon: Icon }) => {
-          const active =
-            href === "/library" ? pathname === "/library" || pathname === "/" : pathname.startsWith(href);
-          return (
-            <Link
-              key={href}
-              href={href}
-              data-active={active || undefined}
-              className="sidebar-link flex items-center gap-3 rounded-md px-3 py-[7px] text-[13px] transition-colors"
-            >
-              <Icon className="h-[15px] w-[15px]" />
-              <span>{label}</span>
-            </Link>
-          );
-        })}
-      </nav>
+        <nav className="flex-1 px-2 py-4 flex flex-col gap-0.5">
+          {NAV.map(({ href, label, icon: Icon }) => {
+            const active =
+              href === "/library" ? pathname === "/library" || pathname === "/" : pathname.startsWith(href);
+            return (
+              <Link
+                key={href}
+                href={href}
+                data-active={active || undefined}
+                onClick={onClose}
+                className="sidebar-link flex items-center gap-3 rounded-md px-3 py-[7px] text-[13px] transition-colors"
+              >
+                <Icon className="h-[15px] w-[15px]" />
+                <span>{label}</span>
+              </Link>
+            );
+          })}
+        </nav>
 
-      <div
-        className="border-t px-3 py-3 flex items-center justify-between"
-        style={{ borderColor: "var(--sidebar-border)" }}
-      >
-        <UserButton />
-        <ThemeToggle />
-      </div>
-    </aside>
+        <div
+          className="border-t px-3 py-3 flex items-center justify-between"
+          style={{ borderColor: "var(--sidebar-border)" }}
+        >
+          <UserButton />
+          <ThemeToggle />
+        </div>
+      </aside>
+    </>
   );
 }
 

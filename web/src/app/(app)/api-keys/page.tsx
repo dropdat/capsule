@@ -93,7 +93,7 @@ export default function APIKeysPage() {
   return (
     <div className="flex flex-col gap-10">
       <header className="flex flex-col gap-2">
-        <h1 className="font-heading text-[26px] font-medium tracking-tight">API Keys</h1>
+        <h1 className="font-heading text-[22px] sm:text-[26px] font-medium tracking-tight">API Keys</h1>
         <p className="text-[13.5px] text-muted-foreground max-w-[640px] leading-relaxed">
           Generate a personal key to sign the dropdat browser extension into your account.
           Keys are shown once at creation — store them somewhere safe.
@@ -176,8 +176,8 @@ export default function APIKeysPage() {
             </p>
           </div>
         ) : (
-          <div className="overflow-hidden rounded-lg border border-border bg-card">
-            <table className="w-full text-[13px]">
+          <div className="overflow-x-auto rounded-lg border border-border bg-card">
+            <table className="w-full min-w-[520px] text-[13px]">
               <thead className="text-left text-[11.5px] uppercase tracking-wider text-muted-foreground">
                 <tr className="border-b border-border">
                   <th className="px-5 py-3 font-medium">Name</th>
