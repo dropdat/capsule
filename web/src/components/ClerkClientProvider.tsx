@@ -10,8 +10,8 @@ export function ClerkClientProvider({ children }: { children: React.ReactNode })
       publishableKey={PUBLISHABLE_KEY}
       signInUrl="/sign-in"
       signUpUrl="/sign-up"
-      signInFallbackRedirectUrl="/app"
-      signUpFallbackRedirectUrl="/app"
+      signInFallbackRedirectUrl="/dashboard"
+      signUpFallbackRedirectUrl="/dashboard"
       appearance={{
         variables: {
           colorPrimary: "#0562ef",

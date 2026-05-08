@@ -1,6 +1,7 @@
 import { defineBackground } from "wxt/utils/define-background";
 import { capsuleStore } from "../lib/storage";
 import { syncOnce } from "../lib/sync";
+import { getApiKey as readApiKey } from "../lib/auth";
 import type { Capsule } from "../lib/types";
 
 export default defineBackground(() => {
@@ -24,7 +25,7 @@ export default defineBackground(() => {
             await capsuleStore.put(capsule);
             console.log("[dropdat] bg saved capsule", capsule.id);
             // Trigger sync immediately, but report save success regardless
-            const token = await getClerkToken();
+            const token = await getApiKey();
             const sync = await syncOnce(async () => token).catch((e) => {
               console.warn("[dropdat] sync after save failed:", e);
               return { ok: 0, failed: 1 };
@@ -89,7 +90,7 @@ export default defineBackground(() => {
         }
 
         case "REQUEST_SYNC": {
-          const token = await getClerkToken();
+          const token = await getApiKey();
           const result = await syncOnce(async () => token);
           sendResponse({ ok: true, ...result });
           return;
@@ -106,20 +107,11 @@ export default defineBackground(() => {
   chrome.alarms?.create?.("dropdat-sync", { periodInMinutes: 1 });
   chrome.alarms?.onAlarm?.addListener(async (alarm) => {
     if (alarm.name !== "dropdat-sync") return;
-    const token = await getClerkToken();
+    const token = await getApiKey();
     await syncOnce(async () => token).catch(() => undefined);
   });
 });
 
-/**
- * Stub — wired to Clerk in step 8. For now reads from chrome.storage.session
- * if popup put a token there; otherwise null (server in dev mode accepts).
- */
-async function getClerkToken(): Promise<string | null> {
-  try {
-    const got = await chrome.storage.session.get("clerk_jwt");
-    return (got.clerk_jwt as string | undefined) ?? null;
-  } catch {
-    return null;
-  }
+async function getApiKey(): Promise<string | null> {
+  return readApiKey();
 }

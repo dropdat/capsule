@@ -13,13 +13,14 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
           <header className="sticky top-0 z-40 w-full border-b border-border bg-background/80 backdrop-blur">
             <div className="mx-auto flex w-full max-w-[1200px] items-center justify-between gap-4 px-6 py-3">
               <div className="flex items-center gap-6">
-                <Link href="/app" className="flex items-center gap-2 font-heading text-[16px] font-medium">
+                <Link href="/dashboard" className="flex items-center gap-2 font-heading text-[16px] font-medium">
                   <img src="/brand/logo.svg" alt="" className="h-6 w-6" />
                   dropdat
                 </Link>
                 <nav className="flex items-center gap-5 text-[13px] text-foreground/80">
-                  <Link href="/app" className="hover:text-foreground transition-colors">Library</Link>
-                  <Link href="/app/settings" className="hover:text-foreground transition-colors">Settings</Link>
+                  <Link href="/dashboard" className="hover:text-foreground transition-colors">Library</Link>
+                  <Link href="/dashboard/api-keys" className="hover:text-foreground transition-colors">API Keys</Link>
+                  <Link href="/dashboard/settings" className="hover:text-foreground transition-colors">Settings</Link>
                 </nav>
               </div>
               <UserButton />

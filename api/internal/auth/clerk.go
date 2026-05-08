@@ -27,13 +27,24 @@ func UserID(ctx context.Context) string {
 	return v
 }
 
+// APIKeyVerifier checks an extension API key (dk_live_…) and returns the
+// owning user id. Wired up by main.go to apikey.Service.Verify.
+type APIKeyVerifier interface {
+	Verify(ctx context.Context, token string) (string, error)
+}
+
 // Verifier holds a cached JWKS keyfunc for one Clerk instance.
 type Verifier struct {
 	jwks       keyfunc.Keyfunc
 	issuer     string
 	devBypass  bool
 	devUserID  string
+	apiKeys    APIKeyVerifier
 }
+
+// SetAPIKeyVerifier wires in extension API key verification. If unset, only
+// Clerk JWTs are accepted.
+func (v *Verifier) SetAPIKeyVerifier(a APIKeyVerifier) { v.apiKeys = a }
 
 // NewVerifier constructs a verifier from env:
 //   - CLERK_JWKS_URL   (e.g. https://your-app.clerk.accounts.dev/.well-known/jwks.json)
@@ -80,6 +91,18 @@ func (v *Verifier) Middleware(next http.Handler) http.Handler {
 		token := strings.TrimPrefix(auth, "Bearer ")
 		if token == "" || token == auth {
 			httpx.Error(w, http.StatusUnauthorized, "missing bearer token")
+			return
+		}
+
+		// Extension API key path.
+		if v.apiKeys != nil && strings.HasPrefix(token, "dk_") {
+			uid, err := v.apiKeys.Verify(r.Context(), token)
+			if err != nil {
+				httpx.Error(w, http.StatusUnauthorized, "invalid api key")
+				return
+			}
+			ctx := context.WithValue(r.Context(), userIDKey, uid)
+			next.ServeHTTP(w, r.WithContext(ctx))
 			return
 		}
 

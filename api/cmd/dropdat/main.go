@@ -16,6 +16,7 @@ import (
 	"github.com/go-chi/cors"
 	"github.com/jackc/pgx/v5/pgxpool"
 
+	"github.com/yusii/dropdat/api/internal/apikey"
 	"github.com/yusii/dropdat/api/internal/auth"
 	"github.com/yusii/dropdat/api/internal/capsule"
 	"github.com/yusii/dropdat/api/internal/db/dbgen"
@@ -87,6 +88,9 @@ func main() {
 	queries := dbgen.New(pool)
 	capsuleSvc := capsule.NewService(queries)
 	capsuleHandler := capsule.NewHandler(capsuleSvc)
+	apiKeySvc := apikey.NewService(queries)
+	apiKeyHandler := apikey.NewHandler(apiKeySvc)
+	verifier.SetAPIKeyVerifier(apiKeySvc)
 
 	r.Route("/api/v1", func(r chi.Router) {
 		r.Use(verifier.Middleware)
@@ -96,6 +100,7 @@ func main() {
 		})
 
 		capsuleHandler.Mount(r)
+		apiKeyHandler.Mount(r)
 	})
 
 	srv := &http.Server{

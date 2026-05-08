@@ -49,14 +49,14 @@ function CapsuleDetail() {
   const remove = async () => {
     if (!confirm("Delete this capsule?")) return;
     await api(`/api/v1/capsules/${capsule.id}`, { method: "DELETE" });
-    router.push("/app");
+    router.push("/dashboard");
   };
 
   return (
     <article className="flex flex-col gap-8">
       <header className="flex items-start justify-between gap-4">
         <div className="flex flex-col gap-2">
-          <Link href="/app" className="text-[12px] text-muted-foreground hover:text-foreground transition-colors">
+          <Link href="/dashboard" className="text-[12px] text-muted-foreground hover:text-foreground transition-colors">
             ← Library
           </Link>
           {editing ? (
@@ -162,7 +162,7 @@ function CapsuleDetail() {
               {(lineage ?? [capsule]).map((v) => (
                 <li key={v.id}>
                   <Link
-                    href={`/app/capsule?id=${v.id}`}
+                    href={`/dashboard/capsule?id=${v.id}`}
                     className={`flex items-center justify-between gap-2 px-2 py-1.5 text-[13px] border ${
                       v.id === capsule.id ? "border-primary bg-accent-soft" : "border-transparent hover:border-border hover:bg-accent-soft/40"
                     }`}

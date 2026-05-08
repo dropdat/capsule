@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
-import { Show, SignInButton, UserButton } from "@clerk/chrome-extension";
 import { capsuleStore } from "../../lib/storage";
 import { formatForInjection } from "../../lib/inject";
+import { clearApiKey, getApiKey, setApiKey, verifyApiKey } from "../../lib/auth";
 import type { Capsule } from "../../lib/types";
 
 const sourceLabel: Record<Capsule["source"], string> = {
@@ -14,9 +14,12 @@ const sourceLabel: Record<Capsule["source"], string> = {
   other: "Other",
 };
 
-const HAS_CLERK = !!(import.meta.env.VITE_CLERK_PUBLISHABLE_KEY as string | undefined);
+const DASHBOARD_URL =
+  (import.meta.env.VITE_DASHBOARD_URL as string | undefined) ?? "https://dropdat.app";
 
 export function App() {
+  const [authChecked, setAuthChecked] = useState(false);
+  const [signedIn, setSignedIn] = useState(false);
   const [capsules, setCapsules] = useState<Capsule[]>([]);
   const [syncing, setSyncing] = useState(false);
   const [status, setStatus] = useState<string>("");
@@ -28,7 +31,12 @@ export function App() {
   };
 
   useEffect(() => {
-    refresh();
+    (async () => {
+      const key = await getApiKey();
+      setSignedIn(!!key);
+      setAuthChecked(true);
+      await refresh();
+    })();
   }, []);
 
   const triggerSync = async () => {
@@ -75,7 +83,24 @@ export function App() {
     }
   };
 
+  const signOut = async () => {
+    await clearApiKey();
+    setSignedIn(false);
+  };
+
   const pendingCount = capsules.filter((c) => c.pendingSync).length;
+
+  if (!authChecked) {
+    return (
+      <div className="app">
+        <div className="empty">Loading…</div>
+      </div>
+    );
+  }
+
+  if (!signedIn) {
+    return <SignInScreen onSignedIn={() => setSignedIn(true)} />;
+  }
 
   return (
     <div className="app">
@@ -85,9 +110,11 @@ export function App() {
           dropdat
         </div>
         <div style={{ display: "flex", gap: 6 }}>
-          {HAS_CLERK && <AuthArea />}
           <button className="btn secondary" onClick={triggerSync} disabled={syncing}>
             {syncing ? "Syncing…" : "Sync"}
+          </button>
+          <button className="btn secondary" onClick={signOut} title="Remove API key">
+            Sign out
           </button>
         </div>
       </header>
@@ -114,7 +141,10 @@ export function App() {
           >
             <div className="meta">
               <span>{sourceLabel[c.source]}</span>
-              <span>v{c.version}{c.pendingSync ? " · pending" : ""}</span>
+              <span>
+                v{c.version}
+                {c.pendingSync ? " · pending" : ""}
+              </span>
             </div>
             <div className="title">{c.title}</div>
           </div>
@@ -124,7 +154,7 @@ export function App() {
       <footer className="footer">
         <span>{pendingCount > 0 ? `${pendingCount} pending` : `${capsules.length} capsules`}</span>
         <a
-          href={`${(import.meta.env.VITE_DASHBOARD_URL as string | undefined) ?? "http://localhost:3000"}/app`}
+          href={`${DASHBOARD_URL}/dashboard`}
           target="_blank"
           rel="noreferrer"
           style={{ color: "var(--primary)", textDecoration: "none" }}
@@ -133,7 +163,16 @@ export function App() {
         </a>
       </footer>
       {status && (
-        <div style={{ position: "absolute", bottom: 48, left: 16, right: 16, fontSize: 12, color: "var(--muted)" }}>
+        <div
+          style={{
+            position: "absolute",
+            bottom: 48,
+            left: 16,
+            right: 16,
+            fontSize: 12,
+            color: "var(--muted)",
+          }}
+        >
           {status}
         </div>
       )}
@@ -141,18 +180,82 @@ export function App() {
   );
 }
 
-/** Sign-in / user button area — only mounted when Clerk is configured. */
-function AuthArea() {
+function SignInScreen({ onSignedIn }: { onSignedIn: () => void }) {
+  const [key, setKey] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const submit = async () => {
+    const trimmed = key.trim();
+    if (!trimmed) {
+      setError("Paste an API key to continue.");
+      return;
+    }
+    setBusy(true);
+    setError(null);
+    try {
+      await verifyApiKey(trimmed);
+      await setApiKey(trimmed);
+      onSignedIn();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Invalid API key");
+    } finally {
+      setBusy(false);
+    }
+  };
+
   return (
-    <>
-      <Show when="signed-out">
-        <SignInButton mode="modal">
-          <button className="btn">Sign in</button>
-        </SignInButton>
-      </Show>
-      <Show when="signed-in">
-        <UserButton />
-      </Show>
-    </>
+    <div className="app" style={{ padding: 16 }}>
+      <header className="header" style={{ borderBottom: "none", marginBottom: 8 }}>
+        <div className="brand">
+          <img src="/icon/32.png" alt="" width={20} height={20} />
+          dropdat
+        </div>
+      </header>
+
+      <div style={{ padding: "12px 4px", display: "flex", flexDirection: "column", gap: 12 }}>
+        <p style={{ fontSize: 13, color: "var(--muted)", margin: 0, lineHeight: 1.5 }}>
+          Sign in by pasting an API key from your dropdat dashboard. The key is stored locally in
+          this browser only.
+        </p>
+
+        <input
+          type="password"
+          autoFocus
+          placeholder="dk_live_…"
+          value={key}
+          onChange={(e) => setKey(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") submit();
+          }}
+          style={{
+            padding: "10px 12px",
+            border: "1px solid var(--border, #c5dbf2)",
+            background: "#fff",
+            color: "#0b1015",
+            fontSize: 13,
+            fontFamily: "inherit",
+            outline: "none",
+          }}
+        />
+
+        <button className="btn" onClick={submit} disabled={busy}>
+          {busy ? "Verifying…" : "Sign in"}
+        </button>
+
+        {error && (
+          <div style={{ fontSize: 12, color: "#c0392b", padding: "4px 0" }}>{error}</div>
+        )}
+
+        <a
+          href={`${DASHBOARD_URL}/dashboard/api-keys`}
+          target="_blank"
+          rel="noreferrer"
+          style={{ fontSize: 12, color: "var(--primary)", textDecoration: "none" }}
+        >
+          Generate an API key →
+        </a>
+      </div>
+    </div>
   );
 }
