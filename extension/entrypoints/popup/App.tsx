@@ -154,7 +154,7 @@ export function App() {
       <footer className="footer">
         <span>{pendingCount > 0 ? `${pendingCount} pending` : `${capsules.length} capsules`}</span>
         <a
-          href={`${DASHBOARD_URL}/dashboard`}
+          href={`${DASHBOARD_URL}/`}
           target="_blank"
           rel="noreferrer"
           style={{ color: "var(--primary)", textDecoration: "none" }}
@@ -248,7 +248,7 @@ function SignInScreen({ onSignedIn }: { onSignedIn: () => void }) {
         )}
 
         <a
-          href={`${DASHBOARD_URL}/dashboard/api-keys`}
+          href={`${DASHBOARD_URL}/api-keys`}
           target="_blank"
           rel="noreferrer"
           style={{ fontSize: 12, color: "var(--primary)", textDecoration: "none" }}

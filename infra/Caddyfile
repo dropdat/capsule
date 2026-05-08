@@ -10,9 +10,32 @@
     reverse_proxy api:8080
   }
 
-  # Static marketing + dashboard (Next.js export)
+  # Static marketing site (Next.js export). The /dashboard route still lives
+  # in the build, but production traffic to it is served via capsule.dropdat.app.
   handle {
     root * /var/www/dropdat
+    try_files {path} {path}/index.html
+    file_server
+  }
+
+  log {
+    output stdout
+    format console
+  }
+}
+
+capsule.{$DOMAIN:dropdat.app} {
+  encode gzip zstd
+
+  # Go API also reachable from the dashboard subdomain
+  handle /api/* {
+    reverse_proxy api:8080
+  }
+
+  # Mount the exported /dashboard tree at the subdomain root.
+  handle {
+    root * /var/www/dropdat
+    rewrite * /dashboard{uri}
     try_files {path} {path}/index.html
     file_server
   }
