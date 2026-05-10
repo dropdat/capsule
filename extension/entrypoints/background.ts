@@ -5,37 +5,56 @@ import { getApiKey as readApiKey } from "../lib/auth";
 import { folderApi, getPreferredFolderId, linkApi } from "../lib/folders";
 import type { Capsule } from "../lib/types";
 
-const MENU_PARENT = "dropdat-root";
-const MENU_SAVE_PAGE = "dropdat-save-page";
-const MENU_SAVE_LINK = "dropdat-save-link";
-const MENU_SAVE_SELECTION = "dropdat-save-selection";
+const MENU_ROOT_FLAT = "dropdat-save";
+const MENU_ROOT_PARENT = "dropdat-root";
+const MENU_FOLDER_PREFIX = "dropdat-folder:";
+
+const CONTEXTS: chrome.contextMenus.ContextType[] = ["page", "link", "selection"];
 
 async function registerContextMenus() {
   if (!chrome.contextMenus?.create) return;
   await new Promise<void>((resolve) => chrome.contextMenus.removeAll(() => resolve()));
+
+  // Try to enumerate folders. If we can — show a submenu of folder names.
+  // Otherwise (signed out or API error) — show a single flat item that
+  // saves to the default folder (the API auto-creates "links" if missing).
+  const apiKey = await readApiKey();
+  let folders: Awaited<ReturnType<typeof folderApi.list>> = [];
+  if (apiKey) {
+    try {
+      folders = await folderApi.list();
+    } catch (err) {
+      console.warn("[dropdat] context-menu folder list failed:", err);
+    }
+  }
+
+  if (folders.length <= 1) {
+    chrome.contextMenus.create({
+      id: MENU_ROOT_FLAT,
+      title: "dropdat",
+      contexts: CONTEXTS,
+    });
+    return;
+  }
+
   chrome.contextMenus.create({
-    id: MENU_PARENT,
+    id: MENU_ROOT_PARENT,
     title: "dropdat",
-    contexts: ["page", "link", "selection"],
+    contexts: CONTEXTS,
   });
-  chrome.contextMenus.create({
-    id: MENU_SAVE_PAGE,
-    parentId: MENU_PARENT,
-    title: "Save this page to dropdat",
-    contexts: ["page"],
+  // Sort: default first, then alphabetical.
+  const sorted = [...folders].sort((a, b) => {
+    if (a.isDefault !== b.isDefault) return a.isDefault ? -1 : 1;
+    return a.name.localeCompare(b.name);
   });
-  chrome.contextMenus.create({
-    id: MENU_SAVE_LINK,
-    parentId: MENU_PARENT,
-    title: "Save link to dropdat",
-    contexts: ["link"],
-  });
-  chrome.contextMenus.create({
-    id: MENU_SAVE_SELECTION,
-    parentId: MENU_PARENT,
-    title: "Save selected URL to dropdat",
-    contexts: ["selection"],
-  });
+  for (const f of sorted) {
+    chrome.contextMenus.create({
+      id: `${MENU_FOLDER_PREFIX}${f.id}`,
+      parentId: MENU_ROOT_PARENT,
+      title: f.isDefault ? `${f.name}  ★` : f.name,
+      contexts: CONTEXTS,
+    });
+  }
 }
 
 async function notify(title: string, message: string) {
@@ -52,7 +71,11 @@ async function notify(title: string, message: string) {
   }
 }
 
-async function saveLinkFromContext(info: chrome.contextMenus.OnClickData, tab?: chrome.tabs.Tab) {
+async function saveLinkFromContext(
+  info: chrome.contextMenus.OnClickData,
+  tab: chrome.tabs.Tab | undefined,
+  folderId: string | undefined
+) {
   const apiKey = await readApiKey();
   if (!apiKey) {
     await notify("dropdat", "Sign in via the extension popup first.");
@@ -60,18 +83,19 @@ async function saveLinkFromContext(info: chrome.contextMenus.OnClickData, tab?: 
   }
   let url = "";
   let title = "";
-  if (info.menuItemId === MENU_SAVE_LINK && info.linkUrl) {
+  if (info.linkUrl) {
     url = info.linkUrl;
     title = info.selectionText || tab?.title || info.linkUrl;
-  } else if (info.menuItemId === MENU_SAVE_SELECTION) {
-    const sel = (info.selectionText || "").trim();
+  } else if (info.selectionText) {
+    const sel = info.selectionText.trim();
     const match = sel.match(/https?:\/\/\S+/);
-    if (!match) {
-      await notify("dropdat", "No URL in selection.");
-      return;
+    if (match) {
+      url = match[0];
+      title = sel;
+    } else {
+      url = info.pageUrl || tab?.url || "";
+      title = tab?.title || url;
     }
-    url = match[0];
-    title = sel;
   } else {
     url = info.pageUrl || tab?.url || "";
     title = tab?.title || url;
@@ -81,8 +105,13 @@ async function saveLinkFromContext(info: chrome.contextMenus.OnClickData, tab?: 
     return;
   }
   try {
-    const folderId = (await getPreferredFolderId()) || undefined;
-    const link = await linkApi.create({ url, title, folderId, faviconUrl: tab?.favIconUrl || "" });
+    const resolvedFolderId = folderId || (await getPreferredFolderId()) || undefined;
+    const link = await linkApi.create({
+      url,
+      title,
+      folderId: resolvedFolderId,
+      faviconUrl: tab?.favIconUrl || "",
+    });
     await notify("Saved to dropdat", link.title || link.url);
   } catch (err) {
     console.error("[dropdat] save link failed", err);
@@ -100,14 +129,20 @@ export default defineBackground(() => {
   chrome.runtime.onStartup?.addListener(() => {
     void registerContextMenus();
   });
+  chrome.storage?.onChanged?.addListener((changes, area) => {
+    if (area !== "local") return;
+    if (changes.dropdat_api_key) void registerContextMenus();
+  });
 
   chrome.contextMenus?.onClicked?.addListener((info, tab) => {
-    if (
-      info.menuItemId === MENU_SAVE_PAGE ||
-      info.menuItemId === MENU_SAVE_LINK ||
-      info.menuItemId === MENU_SAVE_SELECTION
-    ) {
-      void saveLinkFromContext(info, tab);
+    const id = String(info.menuItemId);
+    if (id === MENU_ROOT_FLAT) {
+      void saveLinkFromContext(info, tab, undefined);
+      return;
+    }
+    if (id.startsWith(MENU_FOLDER_PREFIX)) {
+      const folderId = id.slice(MENU_FOLDER_PREFIX.length);
+      void saveLinkFromContext(info, tab, folderId);
     }
   });
 
@@ -232,10 +267,17 @@ export default defineBackground(() => {
         case "CREATE_FOLDER": {
           try {
             const folder = await folderApi.create(msg.name, !!msg.isDefault);
+            void registerContextMenus();
             sendResponse({ ok: true, folder });
           } catch (err) {
             sendResponse({ ok: false, error: String(err) });
           }
+          return;
+        }
+
+        case "REFRESH_CONTEXT_MENUS": {
+          await registerContextMenus();
+          sendResponse({ ok: true });
           return;
         }
 
