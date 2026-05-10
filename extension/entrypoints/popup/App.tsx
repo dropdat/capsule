@@ -2,6 +2,12 @@ import { useEffect, useState } from "react";
 import { capsuleStore } from "../../lib/storage";
 import { formatForInjection } from "../../lib/inject";
 import { clearApiKey, getApiKey, setApiKey, verifyApiKey } from "../../lib/auth";
+import {
+  type Folder,
+  type Link,
+  getPreferredFolderId,
+  setPreferredFolderId,
+} from "../../lib/folders";
 import type { Capsule } from "../../lib/types";
 
 const sourceLabel: Record<Capsule["source"], string> = {
@@ -17,9 +23,12 @@ const sourceLabel: Record<Capsule["source"], string> = {
 const DASHBOARD_URL =
   (import.meta.env.VITE_DASHBOARD_URL as string | undefined) ?? "https://dropdat.app";
 
+type Tab = "capsules" | "links";
+
 export function App() {
   const [authChecked, setAuthChecked] = useState(false);
   const [signedIn, setSignedIn] = useState(false);
+  const [tab, setTab] = useState<Tab>("capsules");
   const [capsules, setCapsules] = useState<Capsule[]>([]);
   const [syncing, setSyncing] = useState(false);
   const [status, setStatus] = useState<string>("");
@@ -119,40 +128,65 @@ export function App() {
         </div>
       </header>
 
-      <div className="list">
-        {capsules.length === 0 && (
-          <div className="empty">
-            No capsules yet.
-            <br />
-            Open ChatGPT, Claude or Gemini and click the
-            <br />
-            <strong>● capsule</strong> button to capture a chat.
-          </div>
-        )}
-        {capsules.map((c) => (
-          <div
-            key={c.id}
-            className={`capsule ${c.pendingSync ? "pending" : ""}`}
-            draggable
-            onDragStart={(e) => onDragStart(e, c)}
-            onClick={() => dropToActiveTab(c)}
-            title="Click to drop into the active chat — or drag onto the composer"
-            style={{ cursor: "pointer" }}
-          >
-            <div className="meta">
-              <span>{sourceLabel[c.source]}</span>
-              <span>
-                v{c.version}
-                {c.pendingSync ? " · pending" : ""}
-              </span>
-            </div>
-            <div className="title">{c.title}</div>
-          </div>
-        ))}
+      <div className="tabs">
+        <button
+          className={`tab ${tab === "capsules" ? "active" : ""}`}
+          onClick={() => setTab("capsules")}
+        >
+          Capsules
+        </button>
+        <button
+          className={`tab ${tab === "links" ? "active" : ""}`}
+          onClick={() => setTab("links")}
+        >
+          Links
+        </button>
       </div>
 
+      {tab === "capsules" ? (
+        <div className="list">
+          {capsules.length === 0 && (
+            <div className="empty">
+              No capsules yet.
+              <br />
+              Open ChatGPT, Claude or Gemini and click the
+              <br />
+              <strong>● capsule</strong> button to capture a chat.
+            </div>
+          )}
+          {capsules.map((c) => (
+            <div
+              key={c.id}
+              className={`capsule ${c.pendingSync ? "pending" : ""}`}
+              draggable
+              onDragStart={(e) => onDragStart(e, c)}
+              onClick={() => dropToActiveTab(c)}
+              title="Click to drop into the active chat — or drag onto the composer"
+              style={{ cursor: "pointer" }}
+            >
+              <div className="meta">
+                <span>{sourceLabel[c.source]}</span>
+                <span>
+                  v{c.version}
+                  {c.pendingSync ? " · pending" : ""}
+                </span>
+              </div>
+              <div className="title">{c.title}</div>
+            </div>
+          ))}
+        </div>
+      ) : (
+        <LinksPane onStatus={setStatus} />
+      )}
+
       <footer className="footer">
-        <span>{pendingCount > 0 ? `${pendingCount} pending` : `${capsules.length} capsules`}</span>
+        <span>
+          {tab === "capsules"
+            ? pendingCount > 0
+              ? `${pendingCount} pending`
+              : `${capsules.length} capsules`
+            : "saved links"}
+        </span>
         <a
           href={`${DASHBOARD_URL}/`}
           target="_blank"
@@ -177,6 +211,143 @@ export function App() {
         </div>
       )}
     </div>
+  );
+}
+
+function LinksPane({ onStatus }: { onStatus: (s: string) => void }) {
+  const [folders, setFolders] = useState<Folder[]>([]);
+  const [activeFolderId, setActiveFolderId] = useState<string>("");
+  const [links, setLinks] = useState<Link[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [busy, setBusy] = useState(false);
+
+  const loadFolders = async () => {
+    const res = await chrome.runtime.sendMessage({ type: "LIST_FOLDERS" });
+    if (!res?.ok) {
+      onStatus(`Folders error: ${res?.error || "unknown"}`);
+      return [] as Folder[];
+    }
+    return res.items as Folder[];
+  };
+
+  const loadLinks = async (folderId?: string) => {
+    const res = await chrome.runtime.sendMessage({ type: "LIST_LINKS", folderId });
+    if (!res?.ok) {
+      onStatus(`Links error: ${res?.error || "unknown"}`);
+      return [] as Link[];
+    }
+    return res.items as Link[];
+  };
+
+  useEffect(() => {
+    (async () => {
+      setLoading(true);
+      const fs = await loadFolders();
+      setFolders(fs);
+      const pref = (await getPreferredFolderId()) || fs.find((f) => f.isDefault)?.id || "";
+      setActiveFolderId(pref);
+      const ls = await loadLinks(pref || undefined);
+      setLinks(ls);
+      setLoading(false);
+    })();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const onPickFolder = async (id: string) => {
+    setActiveFolderId(id);
+    await setPreferredFolderId(id || null);
+    setLoading(true);
+    setLinks(await loadLinks(id || undefined));
+    setLoading(false);
+  };
+
+  const onCreate = async () => {
+    const name = window.prompt("New folder name?");
+    if (!name) return;
+    setBusy(true);
+    const res = await chrome.runtime.sendMessage({ type: "CREATE_FOLDER", name });
+    setBusy(false);
+    if (!res?.ok) {
+      onStatus(`Create failed: ${res?.error || "unknown"}`);
+      return;
+    }
+    const fs = await loadFolders();
+    setFolders(fs);
+    onPickFolder((res.folder as Folder).id);
+  };
+
+  const onSaveCurrentTab = async () => {
+    const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+    if (!tab?.url) {
+      onStatus("No active tab.");
+      return;
+    }
+    setBusy(true);
+    const res = await chrome.runtime.sendMessage({
+      type: "SAVE_LINK",
+      url: tab.url,
+      title: tab.title || tab.url,
+      faviconUrl: tab.favIconUrl || "",
+      folderId: activeFolderId || undefined,
+    });
+    setBusy(false);
+    if (!res?.ok) {
+      onStatus(`Save failed: ${res?.error || "unknown"}`);
+      return;
+    }
+    setLinks(await loadLinks(activeFolderId || undefined));
+  };
+
+  return (
+    <>
+      <div className="folder-bar">
+        <span style={{ color: "var(--muted)" }}>Folder</span>
+        <select value={activeFolderId} onChange={(e) => onPickFolder(e.target.value)}>
+          <option value="">All</option>
+          {folders.map((f) => (
+            <option key={f.id} value={f.id}>
+              {f.name}
+              {f.isDefault ? " (default)" : ""}
+            </option>
+          ))}
+        </select>
+        <button className="btn secondary" onClick={onCreate} disabled={busy}>
+          +
+        </button>
+        <button className="btn" onClick={onSaveCurrentTab} disabled={busy}>
+          Save tab
+        </button>
+      </div>
+
+      <div className="list">
+        {loading && <div className="empty">Loading…</div>}
+        {!loading && links.length === 0 && (
+          <div className="empty">
+            No saved links yet.
+            <br />
+            Right-click any page or link → <strong>dropdat</strong> → Save.
+          </div>
+        )}
+        {!loading &&
+          links.map((l) => {
+            const folder = folders.find((f) => f.id === l.folderId);
+            return (
+              <a
+                key={l.id}
+                className="link-row"
+                href={l.url}
+                target="_blank"
+                rel="noreferrer"
+                style={{ textDecoration: "none", color: "inherit" }}
+              >
+                <span className="folder">{folder?.name || "—"}</span>
+                <span className="title">{l.title || l.url}</span>
+                <span className="url">{l.url}</span>
+              </a>
+            );
+          })}
+      </div>
+    </>
   );
 }
 

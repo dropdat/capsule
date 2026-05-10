@@ -7,6 +7,7 @@ import { useTheme } from "./ThemeProvider";
 
 const NAV = [
   { href: "/library", label: "Library", icon: LibraryIcon },
+  { href: "/links", label: "Links", icon: LinkIcon },
   { href: "/api-keys", label: "API Keys", icon: KeyIcon },
   { href: "/settings", label: "Settings", icon: SettingsIcon },
 ];
@@ -118,6 +119,15 @@ function LibraryIcon({ className }: IconProps) {
       <rect x="2" y="2.5" width="12" height="11" />
       <line x1="2" y1="6" x2="14" y2="6" />
       <line x1="6" y1="2.5" x2="6" y2="13.5" />
+    </svg>
+  );
+}
+
+function LinkIcon({ className }: IconProps) {
+  return (
+    <svg className={className} viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.4">
+      <path d="M7 9.5a3 3 0 0 0 4.2 0l2-2a3 3 0 0 0-4.2-4.2l-1 1" />
+      <path d="M9 6.5a3 3 0 0 0-4.2 0l-2 2a3 3 0 0 0 4.2 4.2l1-1" />
     </svg>
   );
 }

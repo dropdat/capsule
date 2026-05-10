@@ -20,7 +20,9 @@ import (
 	"github.com/yusii/dropdat/api/internal/auth"
 	"github.com/yusii/dropdat/api/internal/capsule"
 	"github.com/yusii/dropdat/api/internal/db/dbgen"
+	"github.com/yusii/dropdat/api/internal/folder"
 	"github.com/yusii/dropdat/api/internal/httpx"
+	"github.com/yusii/dropdat/api/internal/link"
 )
 
 func main() {
@@ -90,6 +92,10 @@ func main() {
 	capsuleHandler := capsule.NewHandler(capsuleSvc)
 	apiKeySvc := apikey.NewService(queries)
 	apiKeyHandler := apikey.NewHandler(apiKeySvc)
+	folderSvc := folder.NewService(queries)
+	folderHandler := folder.NewHandler(folderSvc)
+	linkSvc := link.NewService(queries, folderSvc)
+	linkHandler := link.NewHandler(linkSvc)
 	verifier.SetAPIKeyVerifier(apiKeySvc)
 
 	r.Route("/api/v1", func(r chi.Router) {
@@ -101,6 +107,8 @@ func main() {
 
 		capsuleHandler.Mount(r)
 		apiKeyHandler.Mount(r)
+		folderHandler.Mount(r)
+		linkHandler.Mount(r)
 	})
 
 	srv := &http.Server{

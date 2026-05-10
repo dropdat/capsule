@@ -7,7 +7,7 @@ export default defineConfig({
     description: "Capture any AI chat as a portable capsule. Drop it anywhere.",
     version: "0.1.1",
     ...(process.env.EXT_KEY ? { key: process.env.EXT_KEY } : {}),
-    permissions: ["storage", "activeTab", "cookies"],
+    permissions: ["storage", "activeTab", "cookies", "contextMenus", "notifications"],
     host_permissions: [
       "https://chatgpt.com/*",
       "https://chat.openai.com/*",

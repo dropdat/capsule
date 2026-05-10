@@ -36,6 +36,27 @@ export function useApi() {
   };
 }
 
+export type Folder = {
+  id: string;
+  userId: string;
+  name: string;
+  isDefault: boolean;
+  createdAt: string;
+  updatedAt: string;
+};
+
+export type SavedLink = {
+  id: string;
+  userId: string;
+  folderId: string;
+  url: string;
+  title: string;
+  note: string;
+  faviconUrl: string;
+  createdAt: string;
+  updatedAt: string;
+};
+
 export type CapsuleSource = "chatgpt" | "claude" | "gemini";
 
 export type Capsule = {

@@ -109,3 +109,71 @@ html, body {
 }
 .btn.secondary { background: #fafafa; color: var(--fg); }
 .btn:hover { opacity: 0.95; }
+
+.tabs {
+  display: flex;
+  border-bottom: 1px solid var(--border);
+  background: rgba(255,255,255,0.7);
+}
+.tab {
+  flex: 1;
+  padding: 8px 12px;
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  color: var(--muted);
+  border-bottom: 2px solid transparent;
+  font-family: inherit;
+}
+.tab.active {
+  color: var(--primary);
+  border-bottom-color: var(--primary);
+  font-weight: 500;
+}
+
+.link-row {
+  border: 1px solid var(--border);
+  background: var(--card);
+  padding: 10px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.link-row .url {
+  font-size: 11px;
+  color: var(--muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.link-row .title {
+  font-size: 13px;
+  font-weight: 500;
+}
+.link-row .folder {
+  font-family: "DM Mono", ui-monospace, monospace;
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.18em;
+  color: var(--muted);
+}
+
+.folder-bar {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  padding: 8px 16px;
+  border-bottom: 1px solid var(--border);
+  font-size: 12px;
+}
+.folder-bar select {
+  flex: 1;
+  padding: 4px 6px;
+  border: 1px solid var(--border);
+  background: #fff;
+  font-family: inherit;
+  font-size: 12px;
+}
