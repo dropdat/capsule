@@ -14,6 +14,8 @@ services:
       - CLERK_ISSUER=${CLERK_ISSUER}
       - DEV_AUTH_BYPASS=${DEV_AUTH_BYPASS:-}
       - DEV_USER_ID=${DEV_USER_ID:-}
+      - OPENAI_API_KEY=${OPENAI_API_KEY:-}
+      - OPENAI_EMBED_MODEL=${OPENAI_EMBED_MODEL:-}
     expose:
       - "8080"
     depends_on:
@@ -22,7 +24,7 @@ services:
     restart: unless-stopped
 
   postgres:
-    image: postgres:16-alpine
+    image: pgvector/pgvector:pg16
     container_name: dropdat-postgres
     env_file:
       - .env

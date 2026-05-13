@@ -26,6 +26,22 @@ func (h *Handler) Mount(r chi.Router) {
 	r.Delete("/capsules/{id}", h.Delete)
 	r.Post("/capsules/{id}/versions", h.CreateVersion)
 	r.Get("/capsules/{id}/lineage", h.Lineage)
+	r.Post("/capsules/search", h.Search)
+}
+
+func (h *Handler) Search(w http.ResponseWriter, r *http.Request) {
+	uid := auth.UserID(r.Context())
+	var body SearchRequest
+	if err := httpx.DecodeJSON(r, &body); err != nil {
+		httpx.Error(w, http.StatusBadRequest, err.Error())
+		return
+	}
+	hits, err := h.svc.Search(r.Context(), uid, body)
+	if err != nil {
+		httpx.Error(w, http.StatusBadRequest, err.Error())
+		return
+	}
+	httpx.JSON(w, http.StatusOK, hits)
 }
 
 func (h *Handler) Create(w http.ResponseWriter, r *http.Request) {

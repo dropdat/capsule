@@ -4,13 +4,16 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"log/slog"
 	"time"
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgtype"
+	"github.com/jackc/pgx/v5/pgxpool"
 
 	"github.com/yusii/dropdat/api/internal/db/dbgen"
+	"github.com/yusii/dropdat/api/internal/embed"
 )
 
 var (
@@ -21,10 +24,38 @@ var (
 )
 
 type Service struct {
-	q *dbgen.Queries
+	q        *dbgen.Queries
+	pool     *pgxpool.Pool
+	embedder embed.Embedder
 }
 
-func NewService(q *dbgen.Queries) *Service { return &Service{q: q} }
+func NewService(q *dbgen.Queries, pool *pgxpool.Pool, embedder embed.Embedder) *Service {
+	if embedder == nil {
+		embedder = embed.Noop{}
+	}
+	return &Service{q: q, pool: pool, embedder: embedder}
+}
+
+// embedAsync kicks off a background embed+store. Uses context.Background so
+// it survives the originating request finishing. Errors are logged, not
+// surfaced — embedding is best-effort.
+func (s *Service) embedAsync(userID string, id uuid.UUID, text string) {
+	if !s.embedder.Enabled() {
+		return
+	}
+	go func() {
+		ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+		defer cancel()
+		vec, err := s.embedder.Embed(ctx, text)
+		if err != nil {
+			slog.Warn("capsule embed failed", "capsuleId", id, "err", err)
+			return
+		}
+		if err := s.storeEmbedding(ctx, userID, id, vec); err != nil {
+			slog.Warn("capsule embed store failed", "capsuleId", id, "err", err)
+		}
+	}()
+}
 
 func (s *Service) Create(ctx context.Context, userID string, in CreateRequest) (Capsule, error) {
 	if !in.Source.Valid() {
@@ -62,6 +93,7 @@ func (s *Service) Create(ctx context.Context, userID string, in CreateRequest) (
 	if err != nil {
 		return Capsule{}, fmt.Errorf("create capsule: %w", err)
 	}
+	s.embedAsync(userID, in.ID, embedText(in))
 	return toCapsule(row)
 }
 
@@ -143,7 +175,14 @@ func (s *Service) Patch(ctx context.Context, userID string, id uuid.UUID, p Patc
 		}
 		return Capsule{}, err
 	}
-	return toCapsule(row)
+	updated, _ := toCapsule(row)
+	s.embedAsync(userID, id, embedText(CreateRequest{
+		Title:    updated.Title,
+		Summary:  updated.Summary,
+		Tags:     updated.Tags,
+		Messages: updated.Messages,
+	}))
+	return updated, nil
 }
 
 func (s *Service) Delete(ctx context.Context, userID string, id uuid.UUID) error {
@@ -196,6 +235,7 @@ func (s *Service) CreateVersion(ctx context.Context, userID string, parentID uui
 	if err != nil {
 		return Capsule{}, err
 	}
+	s.embedAsync(userID, in.ID, embedTextFromVersion(in))
 	return toCapsule(row)
 }
 

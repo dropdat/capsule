@@ -20,6 +20,7 @@ import (
 	"github.com/yusii/dropdat/api/internal/auth"
 	"github.com/yusii/dropdat/api/internal/capsule"
 	"github.com/yusii/dropdat/api/internal/db/dbgen"
+	"github.com/yusii/dropdat/api/internal/embed"
 	"github.com/yusii/dropdat/api/internal/folder"
 	"github.com/yusii/dropdat/api/internal/httpx"
 	"github.com/yusii/dropdat/api/internal/link"
@@ -88,7 +89,8 @@ func main() {
 	}
 
 	queries := dbgen.New(pool)
-	capsuleSvc := capsule.NewService(queries)
+	embedder := embed.NewFromEnv()
+	capsuleSvc := capsule.NewService(queries, pool, embedder)
 	capsuleHandler := capsule.NewHandler(capsuleSvc)
 	apiKeySvc := apikey.NewService(queries)
 	apiKeyHandler := apikey.NewHandler(apiKeySvc)

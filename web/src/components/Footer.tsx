@@ -6,6 +6,7 @@ const cols = [
     links: [
       { label: "How it works", href: "#how-it-works" },
       { label: "Features", href: "#features" },
+      { label: "MCP server", href: "/mcp" },
       { label: "Supported AIs", href: "#platforms" },
       { label: "Download", href: "#download" },
     ],

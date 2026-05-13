@@ -12,6 +12,7 @@ export function Nav() {
         <ul className="hidden md:flex items-center gap-7 text-[14px] text-foreground/80">
           <li><a href="#how-it-works" className="hover:text-foreground transition-colors">How it works</a></li>
           <li><a href="#features" className="hover:text-foreground transition-colors">Features</a></li>
+          <li><Link href="/mcp" className="hover:text-foreground transition-colors">MCP</Link></li>
           <li><a href="#platforms" className="hover:text-foreground transition-colors">Supported AIs</a></li>
         </ul>
         <div className="flex items-center gap-2">

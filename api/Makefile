@@ -1,4 +1,4 @@
-.PHONY: help run build test sqlc migrate-up migrate-down migrate-status fmt lint tidy
+.PHONY: help run build test sqlc migrate-up migrate-down migrate-status fmt lint tidy embed-backfill
 
 DB ?= postgres://dropdat:dropdat@localhost:5432/dropdat?sslmode=disable
 MIGRATIONS := internal/db/migrations
@@ -41,3 +41,7 @@ fmt:
 
 tidy:
 	go mod tidy
+
+embed-backfill:
+	@set -a; [ -f .env ] && . ./.env; set +a; \
+	  DATABASE_URL=$(DB) go run ./cmd/embed-backfill
