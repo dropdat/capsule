@@ -90,6 +90,14 @@ jobs:
             --exclude '*.env' \
             ./ "$USER@$HOST:/opt/dropdat/"
 
+      - name: Run DB migrations
+        env:
+          USER: ${{ secrets.DEPLOY_USER }}
+          HOST: ${{ secrets.DEPLOY_HOST }}
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+        run: |
+          ssh "$USER@$HOST" "cd /opt/dropdat/api && goose -dir internal/db/migrations postgres '$DATABASE_URL' up"
+
       - name: Compose up + prune
         env:
           USER: ${{ secrets.DEPLOY_USER }}
