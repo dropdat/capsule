@@ -232,7 +232,32 @@ npm install -g @dropdat/mcp`}
               n={3}
               title="Wire it into your client"
               body={
-                <pre className="font-mono text-[13px] leading-[1.6] bg-background border border-border p-4 overflow-x-auto">
+                <div className="flex flex-col gap-4">
+                  <div className="flex flex-col gap-2">
+                    <span className="text-[13px] uppercase tracking-[0.14em] text-muted-foreground">
+                      Claude Code (one-liner)
+                    </span>
+                    <pre className="font-mono text-[13px] leading-[1.6] bg-background border border-border p-4 overflow-x-auto">
+{`claude mcp add dropdat \\
+  --env DROPDAT_API_KEY=dk_live_xxx \\
+  --env DROPDAT_API_BASE=https://api.dropdat.app \\
+  -- npx -y @dropdat/mcp`}
+                    </pre>
+                    <span className="text-[13px] text-muted-foreground">
+                      Then{" "}
+                      <code className="font-mono text-foreground">
+                        /mcp
+                      </code>{" "}
+                      inside Claude Code lists the new server and its five
+                      tools.
+                    </span>
+                  </div>
+
+                  <div className="flex flex-col gap-2">
+                    <span className="text-[13px] uppercase tracking-[0.14em] text-muted-foreground">
+                      Cursor, Cline, Claude Desktop, Continue
+                    </span>
+                    <pre className="font-mono text-[13px] leading-[1.6] bg-background border border-border p-4 overflow-x-auto">
 {`{
   "mcpServers": {
     "dropdat": {
@@ -245,7 +270,20 @@ npm install -g @dropdat/mcp`}
     }
   }
 }`}
-                </pre>
+                    </pre>
+                    <span className="text-[13px] text-muted-foreground">
+                      Drop into the client&rsquo;s MCP config file (e.g.{" "}
+                      <code className="font-mono text-foreground">
+                        ~/.cursor/mcp.json
+                      </code>{" "}
+                      or{" "}
+                      <code className="font-mono text-foreground">
+                        claude_desktop_config.json
+                      </code>
+                      ) and restart the client.
+                    </span>
+                  </div>
+                </div>
               }
             />
             <Step
