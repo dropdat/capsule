@@ -134,23 +134,25 @@ func main() {
 
 	// Unauthenticated webhook receiver — dodo signs the body, no JWT.
 	billingHandler.MountWebhook(r)
-	// Public share-link reads (no auth).
-	r.Route("/api/v1", func(pr chi.Router) {
-		capsuleHandler.MountPublic(pr)
-	})
 
 	r.Route("/api/v1", func(r chi.Router) {
-		r.Use(verifier.Middleware)
+		// Public share-link reads — mounted before the auth middleware so
+		// they bypass JWT verification.
+		capsuleHandler.MountPublic(r)
 
-		r.Get("/me", func(w http.ResponseWriter, r *http.Request) {
-			httpx.JSON(w, http.StatusOK, map[string]string{"userId": auth.UserID(r.Context())})
+		r.Group(func(r chi.Router) {
+			r.Use(verifier.Middleware)
+
+			r.Get("/me", func(w http.ResponseWriter, r *http.Request) {
+				httpx.JSON(w, http.StatusOK, map[string]string{"userId": auth.UserID(r.Context())})
+			})
+
+			capsuleHandler.Mount(r)
+			apiKeyHandler.Mount(r)
+			folderHandler.Mount(r)
+			linkHandler.Mount(r)
+			billingHandler.Mount(r)
 		})
-
-		capsuleHandler.Mount(r)
-		apiKeyHandler.Mount(r)
-		folderHandler.Mount(r)
-		linkHandler.Mount(r)
-		billingHandler.Mount(r)
 	})
 
 	srv := &http.Server{
