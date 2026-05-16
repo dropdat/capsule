@@ -224,9 +224,29 @@ function TeamDetail() {
               key={m.user_id}
               className="border-t border-border first:border-t-0 px-5 py-3 flex items-center justify-between gap-3"
             >
-              <div className="flex flex-col min-w-0">
-                <span className="text-[13.5px] font-mono truncate">{m.user_id}</span>
-                <span className="text-[12px] text-muted-foreground capitalize">{m.role}</span>
+              <div className="flex items-center gap-3 min-w-0">
+                {m.image_url ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={m.image_url} alt="" className="h-8 w-8 rounded-full object-cover shrink-0" />
+                ) : (
+                  <div className="h-8 w-8 rounded-full bg-primary text-primary-foreground text-[11px] font-medium flex items-center justify-center shrink-0">
+                    {(m.name?.[0] ?? m.email?.[0] ?? m.user_id[0] ?? "?").toUpperCase()}
+                  </div>
+                )}
+                <div className="flex flex-col min-w-0">
+                  <span className="text-[13.5px] font-medium truncate">
+                    {m.name ?? m.email ?? m.user_id}
+                  </span>
+                  <span className="text-[12px] text-muted-foreground capitalize">
+                    {m.role}
+                    {m.email && m.name && (
+                      <>
+                        {" · "}
+                        <span className="lowercase">{m.email}</span>
+                      </>
+                    )}
+                  </span>
+                </div>
               </div>
               <div className="flex items-center gap-2">
                 {isManager && m.role !== "owner" && m.user_id !== user?.id && (

@@ -20,6 +20,7 @@ import (
 	"github.com/yusii/dropdat/api/internal/auth"
 	"github.com/yusii/dropdat/api/internal/billing"
 	"github.com/yusii/dropdat/api/internal/capsule"
+	"github.com/yusii/dropdat/api/internal/clerk"
 	"github.com/yusii/dropdat/api/internal/db/dbgen"
 	"github.com/yusii/dropdat/api/internal/embed"
 	"github.com/yusii/dropdat/api/internal/folder"
@@ -132,10 +133,11 @@ func main() {
 	linkHandler := link.NewHandler(linkSvc)
 	billingHandler := billing.NewHandler(queries, billing.NewDodoClient())
 	teamSvc := team.NewService(queries)
+	clerkClient := clerk.New() // nil if CLERK_SECRET_KEY unset; team roster falls back to raw ids
 	teamHandler := team.NewHandler(teamSvc, func(ctx context.Context, userID string) bool {
 		// Joining/creating a team needs a paid plan (any non-basic tier).
 		return tierFor(ctx, userID) != billing.TierBasic
-	})
+	}, clerkClient)
 	verifier.SetAPIKeyVerifier(apiKeySvc)
 
 	// Unauthenticated webhook receiver — dodo signs the body, no JWT.

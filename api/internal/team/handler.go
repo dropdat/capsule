@@ -10,6 +10,7 @@ import (
 	"github.com/google/uuid"
 
 	"github.com/yusii/dropdat/api/internal/auth"
+	"github.com/yusii/dropdat/api/internal/clerk"
 	"github.com/yusii/dropdat/api/internal/db/dbgen"
 	"github.com/yusii/dropdat/api/internal/httpx"
 )
@@ -21,13 +22,14 @@ type CanJoin func(ctx context.Context, userID string) bool
 type Handler struct {
 	svc     *Service
 	canJoin CanJoin
+	clerk   *clerk.Client // nil = no name resolution, return raw ids
 }
 
-func NewHandler(svc *Service, canJoin CanJoin) *Handler {
+func NewHandler(svc *Service, canJoin CanJoin, clk *clerk.Client) *Handler {
 	if canJoin == nil {
 		canJoin = func(context.Context, string) bool { return true }
 	}
-	return &Handler{svc: svc, canJoin: canJoin}
+	return &Handler{svc: svc, canJoin: canJoin, clerk: clk}
 }
 
 func (h *Handler) Mount(r chi.Router) {
@@ -271,9 +273,12 @@ func (h *Handler) Join(w http.ResponseWriter, r *http.Request) {
 }
 
 type memberDTO struct {
-	UserID   string `json:"user_id"`
-	Role     string `json:"role"`
-	JoinedAt string `json:"joined_at"`
+	UserID    string `json:"user_id"`
+	Role      string `json:"role"`
+	Name      string `json:"name,omitempty"`
+	Email     string `json:"email,omitempty"`
+	ImageURL  string `json:"image_url,omitempty"`
+	JoinedAt  string `json:"joined_at"`
 }
 
 func (h *Handler) Members(w http.ResponseWriter, r *http.Request) {
@@ -292,13 +297,28 @@ func (h *Handler) Members(w http.ResponseWriter, r *http.Request) {
 		httpx.Error(w, http.StatusInternalServerError, err.Error())
 		return
 	}
+
+	// Bulk-resolve Clerk display info. If CLERK_SECRET_KEY isn't set the
+	// map is empty and we fall through to raw user ids.
+	ids := make([]string, 0, len(rows))
+	for _, m := range rows {
+		ids = append(ids, m.UserID)
+	}
+	people := h.clerk.GetUsers(r.Context(), ids)
+
 	out := make([]memberDTO, 0, len(rows))
 	for _, m := range rows {
-		out = append(out, memberDTO{
+		dto := memberDTO{
 			UserID:   m.UserID,
 			Role:     m.Role,
 			JoinedAt: m.JoinedAt.Time.Format(time.RFC3339),
-		})
+		}
+		if u, ok := people[m.UserID]; ok {
+			dto.Name = u.Display()
+			dto.Email = u.PrimaryEmail
+			dto.ImageURL = u.ImageURL
+		}
+		out = append(out, dto)
 	}
 	httpx.JSON(w, http.StatusOK, out)
 }

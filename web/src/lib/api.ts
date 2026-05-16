@@ -106,6 +106,9 @@ export type Team = {
 export type TeamMember = {
   user_id: string;
   role: "owner" | "admin" | "member";
+  name?: string;
+  email?: string;
+  image_url?: string;
   joined_at: string;
 };
 
