@@ -52,16 +52,31 @@ func main() {
 			batch = n
 		}
 	}
+	// EMBED_FORCE=1 re-embeds every live capsule, ignoring whether one is
+	// already set. Useful after changing model or swapping providers.
+	force := os.Getenv("EMBED_FORCE") == "1"
+	whereClause := "embedding IS NULL AND deleted_at IS NULL"
+	if force {
+		whereClause = "deleted_at IS NULL"
+		fmt.Println("EMBED_FORCE=1 — re-embedding every live capsule")
+	}
 
 	total := 0
 	for {
-		rows, err := pool.Query(ctx, `
+		query := fmt.Sprintf(`
 			SELECT id, user_id, title, summary, tags, messages
 			FROM capsules
-			WHERE embedding IS NULL AND deleted_at IS NULL
+			WHERE %s
 			ORDER BY created_at ASC
-			LIMIT $1
-		`, batch)
+			LIMIT $1 OFFSET $2
+		`, whereClause)
+		// When force-rebuilding we need OFFSET to walk the whole table —
+		// the WHERE clause no longer shrinks each batch.
+		offset := 0
+		if force {
+			offset = total
+		}
+		rows, err := pool.Query(ctx, query, batch, offset)
 		if err != nil {
 			slog.Error("query", "err", err)
 			os.Exit(1)
