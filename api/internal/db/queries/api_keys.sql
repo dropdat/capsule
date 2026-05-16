@@ -1,10 +1,10 @@
 -- name: CreateAPIKey :one
-INSERT INTO api_keys (id, user_id, name, token_hash, prefix)
-VALUES ($1, $2, $3, $4, $5)
+INSERT INTO api_keys (id, user_id, name, token_hash, prefix, scopes)
+VALUES ($1, $2, $3, $4, $5, $6)
 RETURNING *;
 
 -- name: ListAPIKeysByUser :many
-SELECT id, user_id, name, prefix, last_used_at, created_at, revoked_at
+SELECT id, user_id, name, prefix, scopes, last_used_at, created_at, revoked_at
 FROM api_keys
 WHERE user_id = $1
 ORDER BY created_at DESC;

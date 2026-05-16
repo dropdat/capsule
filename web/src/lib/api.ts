@@ -74,3 +74,20 @@ export type Capsule = {
   created_at: string;
   updated_at: string;
 };
+
+export type Tier = "basic" | "pro" | "premium" | "ultimate" | "enterprise";
+
+export type Subscription = {
+  tier: Tier;
+  status: string;
+  product_id?: string;
+  current_period_end?: string;
+  capsule_limit: number; // -1 == unlimited
+  capsules_used: number;
+  scopes: string[];
+  has_customer: boolean;
+};
+
+export type CheckoutResponse = { link: string };
+export type PortalResponse = { link: string };
+

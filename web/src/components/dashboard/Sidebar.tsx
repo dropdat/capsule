@@ -9,6 +9,7 @@ const NAV = [
   { href: "/library", label: "Library", icon: LibraryIcon },
   { href: "/links", label: "Links", icon: LinkIcon },
   { href: "/api-keys", label: "API Keys", icon: KeyIcon },
+  { href: "/billing", label: "Billing", icon: BillingIcon },
   { href: "/settings", label: "Settings", icon: SettingsIcon },
 ];
 
@@ -138,6 +139,16 @@ function KeyIcon({ className }: IconProps) {
       <circle cx="5" cy="11" r="2.5" />
       <line x1="6.7" y1="9.3" x2="14" y2="2" />
       <line x1="11" y1="5" x2="13" y2="7" />
+    </svg>
+  );
+}
+
+function BillingIcon({ className }: IconProps) {
+  return (
+    <svg className={className} viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.4">
+      <rect x="1.5" y="3.5" width="13" height="9" rx="1.5" />
+      <line x1="1.5" y1="6.5" x2="14.5" y2="6.5" />
+      <line x1="4" y1="10" x2="7" y2="10" />
     </svg>
   );
 }

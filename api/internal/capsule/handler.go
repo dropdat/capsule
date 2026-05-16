@@ -169,6 +169,8 @@ func writeServiceErr(w http.ResponseWriter, err error) {
 		httpx.Error(w, http.StatusNotFound, err.Error())
 	case errors.Is(err, ErrInvalidSource), errors.Is(err, ErrEmptyTitle), errors.Is(err, ErrInvalidID):
 		httpx.Error(w, http.StatusBadRequest, err.Error())
+	case errors.Is(err, ErrCapsuleLimit):
+		httpx.Error(w, http.StatusPaymentRequired, err.Error())
 	default:
 		httpx.Error(w, http.StatusInternalServerError, "internal error")
 	}

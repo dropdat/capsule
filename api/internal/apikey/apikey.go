@@ -37,6 +37,7 @@ func NewService(q *dbgen.Queries) *Service { return &Service{q: q} }
 type CreateInput struct {
 	UserID string
 	Name   string
+	Scopes []string
 }
 
 // Created bundles the persisted record with the one-time-shown raw token.
@@ -62,12 +63,17 @@ func (s *Service) Create(ctx context.Context, in CreateInput) (*Created, error) 
 	}
 	token := tokenPrefix + base64.RawURLEncoding.EncodeToString(raw)
 
+	scopes := in.Scopes
+	if scopes == nil {
+		scopes = []string{}
+	}
 	row, err := s.q.CreateAPIKey(ctx, dbgen.CreateAPIKeyParams{
 		ID:        uuid.New(),
 		UserID:    in.UserID,
 		Name:      name,
 		TokenHash: hashToken(token),
 		Prefix:    safePreview(token),
+		Scopes:    scopes,
 	})
 	if err != nil {
 		return nil, err
@@ -91,24 +97,24 @@ func (s *Service) Revoke(ctx context.Context, userID string, id uuid.UUID) error
 	return s.q.RevokeAPIKey(ctx, dbgen.RevokeAPIKeyParams{ID: id, UserID: userID})
 }
 
-// Verify resolves a raw token to its owning user_id, or returns an error.
+// Verify resolves a raw token to its owning user_id and scopes, or returns an error.
 // Side effect: updates last_used_at on success.
-func (s *Service) Verify(ctx context.Context, token string) (string, error) {
+func (s *Service) Verify(ctx context.Context, token string) (string, []string, error) {
 	if !strings.HasPrefix(token, tokenPrefix) {
-		return "", errors.New("invalid token format")
+		return "", nil, errors.New("invalid token format")
 	}
 	row, err := s.q.GetAPIKeyByHash(ctx, hashToken(token))
 	if err != nil {
-		return "", errors.New("invalid api key")
+		return "", nil, errors.New("invalid api key")
 	}
 	if row.RevokedAt.Valid {
-		return "", errors.New("revoked api key")
+		return "", nil, errors.New("revoked api key")
 	}
 	// Best-effort touch; ignore errors so verification never fails on a
 	// transient write hiccup.
 	_ = s.q.TouchAPIKey(ctx, row.ID)
 	_ = time.Now() // keep import even if Postgres handles touch
-	return row.UserID, nil
+	return row.UserID, row.Scopes, nil
 }
 
 func hashToken(token string) string {

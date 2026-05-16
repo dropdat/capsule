@@ -18,6 +18,7 @@ import (
 
 	"github.com/yusii/dropdat/api/internal/apikey"
 	"github.com/yusii/dropdat/api/internal/auth"
+	"github.com/yusii/dropdat/api/internal/billing"
 	"github.com/yusii/dropdat/api/internal/capsule"
 	"github.com/yusii/dropdat/api/internal/db/dbgen"
 	"github.com/yusii/dropdat/api/internal/embed"
@@ -91,14 +92,41 @@ func main() {
 	queries := dbgen.New(pool)
 	embedder := embed.NewFromEnv()
 	capsuleSvc := capsule.NewService(queries, pool, embedder)
+
+	// Tier resolution: look up subscription, fall back to basic.
+	tierFor := func(ctx context.Context, userID string) string {
+		sub, err := queries.GetSubscription(ctx, userID)
+		if err != nil {
+			return billing.TierBasic
+		}
+		return sub.Tier
+	}
+	capsuleSvc.SetLimitChecker(func(ctx context.Context, userID string) (bool, error) {
+		lim := billing.TierLimits(tierFor(ctx, userID))
+		if lim.CapsuleLimit < 0 {
+			return true, nil
+		}
+		used, err := queries.CountUserCapsulesActive(ctx, userID)
+		if err != nil {
+			return false, err
+		}
+		return used < lim.CapsuleLimit, nil
+	})
+
 	capsuleHandler := capsule.NewHandler(capsuleSvc)
 	apiKeySvc := apikey.NewService(queries)
-	apiKeyHandler := apikey.NewHandler(apiKeySvc)
+	apiKeyHandler := apikey.NewHandler(apiKeySvc, func(ctx context.Context, userID string) []string {
+		return billing.TierLimits(tierFor(ctx, userID)).Scopes
+	})
 	folderSvc := folder.NewService(queries)
 	folderHandler := folder.NewHandler(folderSvc)
 	linkSvc := link.NewService(queries, folderSvc)
 	linkHandler := link.NewHandler(linkSvc)
+	billingHandler := billing.NewHandler(queries, billing.NewDodoClient())
 	verifier.SetAPIKeyVerifier(apiKeySvc)
+
+	// Unauthenticated webhook receiver — dodo signs the body, no JWT.
+	billingHandler.MountWebhook(r)
 
 	r.Route("/api/v1", func(r chi.Router) {
 		r.Use(verifier.Middleware)
@@ -111,6 +139,7 @@ func main() {
 		apiKeyHandler.Mount(r)
 		folderHandler.Mount(r)
 		linkHandler.Mount(r)
+		billingHandler.Mount(r)
 	})
 
 	srv := &http.Server{

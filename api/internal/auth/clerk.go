@@ -18,7 +18,19 @@ import (
 
 type ctxKey int
 
-const userIDKey ctxKey = iota
+const (
+	userIDKey ctxKey = iota
+	scopesKey
+	authKindKey
+)
+
+// AuthKind labels how the request was authenticated.
+type AuthKind string
+
+const (
+	AuthKindJWT    AuthKind = "jwt"
+	AuthKindAPIKey AuthKind = "api_key"
+)
 
 // UserID extracts the authenticated Clerk user id (sub claim) from context.
 // Returns empty string if no auth context (caller treats as unauthenticated).
@@ -27,19 +39,32 @@ func UserID(ctx context.Context) string {
 	return v
 }
 
+// Scopes returns the scopes attached to this request. Empty for JWT auth
+// (callers fall back to the user's tier scopes); populated for API key auth.
+func Scopes(ctx context.Context) []string {
+	v, _ := ctx.Value(scopesKey).([]string)
+	return v
+}
+
+// Kind returns how the request was authenticated.
+func Kind(ctx context.Context) AuthKind {
+	v, _ := ctx.Value(authKindKey).(AuthKind)
+	return v
+}
+
 // APIKeyVerifier checks an extension API key (dk_live_…) and returns the
-// owning user id. Wired up by main.go to apikey.Service.Verify.
+// owning user id plus the scopes granted to that key.
 type APIKeyVerifier interface {
-	Verify(ctx context.Context, token string) (string, error)
+	Verify(ctx context.Context, token string) (string, []string, error)
 }
 
 // Verifier holds a cached JWKS keyfunc for one Clerk instance.
 type Verifier struct {
-	jwks       keyfunc.Keyfunc
-	issuer     string
-	devBypass  bool
-	devUserID  string
-	apiKeys    APIKeyVerifier
+	jwks      keyfunc.Keyfunc
+	issuer    string
+	devBypass bool
+	devUserID string
+	apiKeys   APIKeyVerifier
 }
 
 // SetAPIKeyVerifier wires in extension API key verification. If unset, only
@@ -83,6 +108,7 @@ func (v *Verifier) Middleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if v.devBypass {
 			ctx := context.WithValue(r.Context(), userIDKey, v.devUserID)
+			ctx = context.WithValue(ctx, authKindKey, AuthKindJWT)
 			next.ServeHTTP(w, r.WithContext(ctx))
 			return
 		}
@@ -96,12 +122,14 @@ func (v *Verifier) Middleware(next http.Handler) http.Handler {
 
 		// Extension API key path.
 		if v.apiKeys != nil && strings.HasPrefix(token, "dk_") {
-			uid, err := v.apiKeys.Verify(r.Context(), token)
+			uid, scopes, err := v.apiKeys.Verify(r.Context(), token)
 			if err != nil {
 				httpx.Error(w, http.StatusUnauthorized, "invalid api key")
 				return
 			}
 			ctx := context.WithValue(r.Context(), userIDKey, uid)
+			ctx = context.WithValue(ctx, scopesKey, scopes)
+			ctx = context.WithValue(ctx, authKindKey, AuthKindAPIKey)
 			next.ServeHTTP(w, r.WithContext(ctx))
 			return
 		}
@@ -118,13 +146,11 @@ func (v *Verifier) Middleware(next http.Handler) http.Handler {
 			return
 		}
 
-		// Verify exp explicitly (jwt.Parse already does this, but cheap belt-and-braces)
 		if exp, err := claims.GetExpirationTime(); err != nil || exp == nil || exp.Before(time.Now()) {
 			httpx.Error(w, http.StatusUnauthorized, "token expired")
 			return
 		}
 
-		// Verify issuer if configured
 		if v.issuer != "" {
 			if iss, err := claims.GetIssuer(); err != nil || iss != v.issuer {
 				httpx.Error(w, http.StatusUnauthorized, "issuer mismatch")
@@ -139,6 +165,7 @@ func (v *Verifier) Middleware(next http.Handler) http.Handler {
 		}
 
 		ctx := context.WithValue(r.Context(), userIDKey, sub)
+		ctx = context.WithValue(ctx, authKindKey, AuthKindJWT)
 		next.ServeHTTP(w, r.WithContext(ctx))
 	})
 }

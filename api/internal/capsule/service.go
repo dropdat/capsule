@@ -21,13 +21,22 @@ var (
 	ErrInvalidSource  = errors.New("invalid source")
 	ErrEmptyTitle     = errors.New("title required")
 	ErrInvalidID      = errors.New("invalid uuid")
+	ErrCapsuleLimit   = errors.New("capsule limit reached for current plan")
 )
+
+// LimitChecker reports whether the user is allowed to create another capsule.
+// Returning false halts the create with ErrCapsuleLimit. nil = unlimited.
+type LimitChecker func(ctx context.Context, userID string) (allowed bool, err error)
 
 type Service struct {
 	q        *dbgen.Queries
 	pool     *pgxpool.Pool
 	embedder embed.Embedder
+	canCreate LimitChecker
 }
+
+// SetLimitChecker wires in tier-based capsule limit enforcement.
+func (s *Service) SetLimitChecker(c LimitChecker) { s.canCreate = c }
 
 func NewService(q *dbgen.Queries, pool *pgxpool.Pool, embedder embed.Embedder) *Service {
 	if embedder == nil {
@@ -66,6 +75,15 @@ func (s *Service) Create(ctx context.Context, userID string, in CreateRequest) (
 	}
 	if in.ID == uuid.Nil {
 		return Capsule{}, ErrInvalidID
+	}
+	if s.canCreate != nil {
+		ok, err := s.canCreate(ctx, userID)
+		if err != nil {
+			return Capsule{}, err
+		}
+		if !ok {
+			return Capsule{}, ErrCapsuleLimit
+		}
 	}
 
 	msgBytes, err := marshalMessages(in.Messages)

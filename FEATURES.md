@@ -13,7 +13,8 @@ Living index of shipped features. Updated each session when new features land.
   - **Library** — browse saved capsules
   - **Capsule** — view / edit a single capsule
   - **Links** — saved link manager
-  - **API Keys** — issue & revoke personal API keys
+  - **API Keys** — issue & revoke personal API keys (scopes derived from current plan)
+  - **Billing** — plan picker (Basic / Pro / Premium / Ultimate + Enterprise contact), monthly/annual toggle, current-plan + usage card, Manage-billing portal link
   - **Settings** — account settings
 - Folder organization for capsules
 - Mobile-safe layout (no horizontal overflow)
@@ -29,7 +30,13 @@ Living index of shipped features. Updated each session when new features land.
 - Backfill command (`make embed-backfill`) for existing capsules
 - Folder CRUD (group capsules)
 - Link CRUD (saved AI-chat links)
-- API key issuance & verification
+- API key issuance & verification (scoped: `capsules:*`, `mcp`, `attachments`, `dynamic_context`, `versioning`, `teams`)
+- Subscription tiers (basic / pro / premium / ultimate / enterprise) backed by dodopayments
+  - `GET /billing/subscription` — current tier, status, capsule usage, scopes
+  - `POST /billing/checkout` — hosted dodopayments checkout session for a plan
+  - `GET /billing/portal` — dodopayments customer portal link
+  - `POST /webhooks/dodopayments` — HMAC-verified webhook upserting subscription state from `subscription.active|renewed|cancelled|expired|failed|paused`
+- Per-tier capsule limits enforced on create (`402 Payment Required` when exceeded)
 - Clerk JWT auth (JWKS verified server-side)
 - DEV_AUTH_BYPASS for local development
 - Client-supplied UUIDv7 ids for offline-first sync
@@ -74,4 +81,4 @@ Living index of shipped features. Updated each session when new features land.
 
 - Clerk authentication across web + extension
 - Server-side JWKS verification on API
-- Per-user API keys for programmatic access
+- Per-user API keys for programmatic access (scopes clamped to subscription tier)
