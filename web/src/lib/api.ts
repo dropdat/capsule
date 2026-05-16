@@ -103,6 +103,30 @@ export type Team = {
   updated_at: string;
 };
 
+export type ContextPack = {
+  id: string;
+  name: string;
+  goal: string;
+  created_at: string;
+  updated_at: string;
+};
+
+export type PackItem = {
+  capsule_id: string;
+  title: string;
+  summary: string;
+  source: string;
+  position: number;
+};
+
+export type RelatedCapsule = {
+  id: string;
+  title: string;
+  summary: string;
+  source: string;
+  similarity: number;
+};
+
 export type TeamMember = {
   user_id: string;
   role: "owner" | "admin" | "member";
