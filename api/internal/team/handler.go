@@ -63,6 +63,9 @@ func (h *Handler) TeamCapsules(w http.ResponseWriter, r *http.Request) {
 		httpx.Error(w, http.StatusInternalServerError, err.Error())
 		return
 	}
+	if rows == nil {
+		rows = []dbgen.Capsule{}
+	}
 	httpx.JSON(w, http.StatusOK, rows)
 }
 
@@ -81,6 +84,9 @@ func (h *Handler) TeamFolders(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		httpx.Error(w, http.StatusInternalServerError, err.Error())
 		return
+	}
+	if rows == nil {
+		rows = []dbgen.Folder{}
 	}
 	httpx.JSON(w, http.StatusOK, rows)
 }

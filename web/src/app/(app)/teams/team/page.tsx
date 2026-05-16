@@ -55,8 +55,8 @@ function TeamDetail() {
       ]);
       if (!tRes.ok) throw new Error(tRes.status === 403 ? "You are not a member of this team." : `Load failed (${tRes.status})`);
       setTeam(await tRes.json());
-      if (mRes.ok) setMembers(await mRes.json());
-      if (cRes.ok) setCapsules(await cRes.json());
+      if (mRes.ok) setMembers((await mRes.json()) ?? []);
+      if (cRes.ok) setCapsules((await cRes.json()) ?? []);
     } catch (e) {
       setError(e instanceof Error ? e.message : "Failed to load");
     }

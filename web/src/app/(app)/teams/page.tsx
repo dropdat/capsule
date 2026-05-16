@@ -32,7 +32,7 @@ export default function TeamsPage() {
     try {
       const res = await authedFetch("/api/v1/teams");
       if (!res.ok) throw new Error(`Load failed (${res.status})`);
-      setTeams(await res.json());
+      setTeams((await res.json()) ?? []);
     } catch (e) {
       setError(e instanceof Error ? e.message : "Failed to load");
       setTeams([]);
