@@ -32,10 +32,8 @@ Living index of shipped features. Updated each session when new features land.
 - Capsule CRUD with versioning
 - Hybrid semantic + keyword search (`POST /capsules/search`) — pgvector
   HNSW cosine + Postgres `tsvector` ranking, fused via RRF
-- Auto-embedding of new capsules (and version edits) via Voyage AI
-  `voyage-3.5` (1024-dim padded to 1536, free 50M tokens/month) with
-  OpenAI `text-embedding-3-small` as per-request fallback; graceful
-  BM25 fallback when both providers are absent
+- Auto-embedding of new capsules (and version edits) via OpenAI
+  `text-embedding-3-small`; graceful BM25 fallback when key absent
 - Backfill command (`make embed-backfill`) for existing capsules
 - Folder CRUD (group capsules)
 - Link CRUD (saved AI-chat links)
