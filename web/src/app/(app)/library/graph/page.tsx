@@ -48,6 +48,20 @@ export default function GraphPage() {
   const [selected, setSelected] = useState<GraphNode | null>(null);
   const [sourceFilter, setSourceFilter] = useState<string | "all">("all");
   const [search, setSearch] = useState("");
+  // Read the theme's foreground color so canvas labels track dark mode.
+  const [theme, setTheme] = useState({ fg: "#0b1015", fgMuted: "rgba(140,140,140,0.6)" });
+  useEffect(() => {
+    const update = () => {
+      if (typeof window === "undefined") return;
+      const cs = getComputedStyle(document.documentElement);
+      const fg = cs.getPropertyValue("--foreground").trim() || "#0b1015";
+      setTheme({ fg, fgMuted: fg + "66" });
+    };
+    update();
+    const obs = new MutationObserver(update);
+    obs.observe(document.documentElement, { attributes: true, attributeFilter: ["class"] });
+    return () => obs.disconnect();
+  }, []);
 
   const load = useCallback(async () => {
     setError(null);
@@ -127,6 +141,22 @@ export default function GraphPage() {
     const fg = fgRef.current as { pauseAnimation?: () => void } | null;
     fg?.pauseAnimation?.();
   }, [data.nodes]);
+
+  // After the ref is set, tune the d3 simulation forces to spread the graph
+  // out — defaults are way too tight for our node counts and produce a
+  // congested ball that keeps wobbling.
+  useEffect(() => {
+    const fg = fgRef.current as
+      | {
+          d3Force: (name: string) => { distance?: (n: number) => unknown; strength?: (n: number) => unknown } | null;
+        }
+      | null;
+    if (!fg) return;
+    const link = fg.d3Force("link");
+    if (link?.distance) link.distance(70);
+    const charge = fg.d3Force("charge");
+    if (charge?.strength) charge.strength(-220);
+  }, [data]);
 
   return (
     <section className="flex flex-col gap-6">
@@ -227,15 +257,16 @@ export default function GraphPage() {
                   ctx.font = `${fontSize}px ui-sans-serif, system-ui, sans-serif`;
                   ctx.textAlign = "center";
                   ctx.textBaseline = "top";
-                  ctx.fillStyle = faded ? "rgba(140,140,140,0.5)" : "currentColor";
+                  ctx.fillStyle = faded ? theme.fgMuted : theme.fg;
                   ctx.fillText(label, n.x!, n.y! + r + 2);
                 }
               }}
-              warmupTicks={80}
-              cooldownTicks={60}
-              cooldownTime={2500}
-              d3AlphaDecay={0.05}
-              d3VelocityDecay={0.6}
+              warmupTicks={100}
+              cooldownTicks={40}
+              cooldownTime={2000}
+              d3AlphaMin={0.05}
+              d3AlphaDecay={0.08}
+              d3VelocityDecay={0.7}
               enableNodeDrag={true}
               onEngineStop={stop}
               onNodeDragEnd={(n) => {
