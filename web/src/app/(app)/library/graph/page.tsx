@@ -14,7 +14,15 @@ const ForceGraph2D = dynamic(
   { ssr: false }
 );
 
-type GraphNode = { id: string; title: string; source: string };
+type GraphNode = {
+  id: string;
+  title: string;
+  source: string;
+  fx?: number;
+  fy?: number;
+  x?: number;
+  y?: number;
+};
 type GraphLink = { source: string; target: string; value: number };
 
 const SOURCE_COLOR: Record<string, string> = {
@@ -119,7 +127,26 @@ export default function GraphPage() {
             linkColor={() => "rgba(120,120,120,0.35)"}
             nodeColor={(n: GraphNode) => SOURCE_COLOR[n.source] ?? "#6c7080"}
             nodeLabel={(n: GraphNode) => n.title}
-            cooldownTicks={120}
+            // Settle quickly and stay still.
+            warmupTicks={60}
+            cooldownTicks={50}
+            cooldownTime={2000}
+            d3AlphaDecay={0.05}
+            d3VelocityDecay={0.6}
+            enableNodeDrag={true}
+            onEngineStop={() => {
+              // Freeze every node where the simulation parked it so the
+              // graph stops re-jittering after layout settles.
+              for (const n of data.nodes as GraphNode[]) {
+                if (n.x != null) n.fx = n.x;
+                if (n.y != null) n.fy = n.y;
+              }
+            }}
+            onNodeDragEnd={(n: GraphNode) => {
+              // Pin a dragged node where the user dropped it.
+              n.fx = n.x;
+              n.fy = n.y;
+            }}
             onNodeClick={(n: GraphNode) => router.push(`/capsule?id=${n.id}`)}
           />
         )}
