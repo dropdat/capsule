@@ -30,7 +30,7 @@ type Handler struct {
 func NewHandler(q *dbgen.Queries, dodo *DodoClient) *Handler {
 	app := os.Getenv("APP_URL")
 	if app == "" {
-		app = "https://app.dropdat.app"
+		app = "https://capsule.dropdat.app"
 	}
 	return &Handler{q: q, dodo: dodo, appURL: app}
 }
@@ -133,7 +133,7 @@ func (h *Handler) CreateCheckout(w http.ResponseWriter, r *http.Request) {
 
 	req := CheckoutRequest{
 		ProductCart: []CheckoutLineItem{{ProductID: productID, Quantity: 1}},
-		ReturnURL:   h.appURL + "/settings?billing=completed",
+		ReturnURL:   h.appURL + "/billing?status=completed",
 		AllowedPaymentMethodType: []string{
 			"credit", "debit", "apple_pay", "google_pay",
 		},
