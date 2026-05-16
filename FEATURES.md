@@ -15,7 +15,8 @@ Living index of shipped features. Updated each session when new features land.
   - **Capsule** — view / edit a single capsule
   - **Links** — saved link manager
   - **API Keys** — issue & revoke personal API keys (scopes derived from current plan)
-  - **Billing** — plan picker (Basic / Pro / Premium / Ultimate + Enterprise contact) with per-feature check/cross matrix, monthly/annual toggle, current-plan + usage card, Manage-billing portal link
+  - **Billing** — plan picker (Basic / Pro / Premium / Ultimate + Enterprise contact) with per-feature check/cross matrix, monthly/annual toggle, current-plan + usage card, Cancel-plan + Refresh-from-payment-processor
+  - **Teams** — create teams, public join-link with rotate, member roster with owner/admin/member roles, team capsule library, delete team
   - **Settings** — account settings
 - Profile menu (sidebar) — shows current plan, status, capsule usage, manage-billing portal link, and "invoices emailed automatically" hint
 - Capsule public sharing — Ultimate-tier toggle on any capsule generates a read-only `dropdat.app/s/<token>` URL; lower tiers get an in-app upgrade dialog
@@ -42,6 +43,7 @@ Living index of shipped features. Updated each session when new features land.
   - `POST /webhooks/dodopayments` — HMAC-verified webhook upserting subscription state from `subscription.active|renewed|cancelled|expired|failed|paused`
 - Per-tier capsule limits enforced on create (`402 Payment Required` when exceeded): Basic 5, Pro 15, Premium 50, Ultimate unlimited
 - Capsule sharing — `POST /capsules/{id}/share` (Ultimate-gated, `402` otherwise), `DELETE /capsules/{id}/share`, public unauthenticated `GET /public/capsules/share/{token}`
+- Teams (paid-plan only, `402` for Basic) — `POST /teams`, `POST /teams/join {token}`, `GET /teams`, `GET /teams/{id}`, `PATCH /teams/{id}`, `DELETE /teams/{id}`, `POST /teams/{id}/rotate-link`, roster `GET/PATCH/DELETE /teams/{id}/members[/{user_id}]`, team library `GET /teams/{id}/capsules` and `/folders`, share capsules/folders via `POST /capsules/{id}/team` and `/folders/{id}/team`
 - Clerk JWT auth (JWKS verified server-side)
 - DEV_AUTH_BYPASS for local development
 - Client-supplied UUIDv7 ids for offline-first sync

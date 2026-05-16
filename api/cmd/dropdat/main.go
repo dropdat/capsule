@@ -25,6 +25,7 @@ import (
 	"github.com/yusii/dropdat/api/internal/folder"
 	"github.com/yusii/dropdat/api/internal/httpx"
 	"github.com/yusii/dropdat/api/internal/link"
+	"github.com/yusii/dropdat/api/internal/team"
 )
 
 func main() {
@@ -130,6 +131,11 @@ func main() {
 	linkSvc := link.NewService(queries, folderSvc)
 	linkHandler := link.NewHandler(linkSvc)
 	billingHandler := billing.NewHandler(queries, billing.NewDodoClient())
+	teamSvc := team.NewService(queries)
+	teamHandler := team.NewHandler(teamSvc, func(ctx context.Context, userID string) bool {
+		// Joining/creating a team needs a paid plan (any non-basic tier).
+		return tierFor(ctx, userID) != billing.TierBasic
+	})
 	verifier.SetAPIKeyVerifier(apiKeySvc)
 
 	// Unauthenticated webhook receiver — dodo signs the body, no JWT.
@@ -152,6 +158,7 @@ func main() {
 			folderHandler.Mount(r)
 			linkHandler.Mount(r)
 			billingHandler.Mount(r)
+			teamHandler.Mount(r)
 		})
 	})
 

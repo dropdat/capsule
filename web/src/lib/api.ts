@@ -92,3 +92,21 @@ export type Subscription = {
 export type CheckoutResponse = { link: string };
 export type PortalResponse = { link: string };
 
+export type Team = {
+  id: string;
+  name: string;
+  owner_user_id: string;
+  join_token?: string;
+  join_enabled: boolean;
+  my_role?: "owner" | "admin" | "member";
+  created_at: string;
+  updated_at: string;
+};
+
+export type TeamMember = {
+  user_id: string;
+  role: "owner" | "admin" | "member";
+  joined_at: string;
+};
+
+

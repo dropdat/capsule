@@ -9,6 +9,7 @@ const NAV = [
   { href: "/library", label: "Library", icon: LibraryIcon },
   { href: "/links", label: "Links", icon: LinkIcon },
   { href: "/api-keys", label: "API Keys", icon: KeyIcon },
+  { href: "/teams", label: "Teams", icon: TeamsIcon },
   { href: "/billing", label: "Billing", icon: BillingIcon },
   { href: "/settings", label: "Settings", icon: SettingsIcon },
 ];
@@ -139,6 +140,17 @@ function KeyIcon({ className }: IconProps) {
       <circle cx="5" cy="11" r="2.5" />
       <line x1="6.7" y1="9.3" x2="14" y2="2" />
       <line x1="11" y1="5" x2="13" y2="7" />
+    </svg>
+  );
+}
+
+function TeamsIcon({ className }: IconProps) {
+  return (
+    <svg className={className} viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.4">
+      <circle cx="5.5" cy="6.5" r="2" />
+      <circle cx="11" cy="6.5" r="2" />
+      <path d="M2 13c.5-2 2-3 3.5-3s3 1 3.5 3" />
+      <path d="M8.5 13c.5-2 1.8-3 3-3s2.5 1 3 3" />
     </svg>
   );
 }

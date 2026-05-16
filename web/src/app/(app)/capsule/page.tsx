@@ -5,6 +5,7 @@ import useSWR from "swr";
 import { useApi, type Capsule } from "@/lib/api";
 import Link from "next/link";
 import { ShareControl } from "@/components/capsule/ShareControl";
+import { ShareToTeam } from "@/components/capsule/ShareToTeam";
 
 function CapsuleDetail() {
   const params = useSearchParams();
@@ -117,6 +118,7 @@ function CapsuleDetail() {
                 Edit
               </button>
               <ShareControl capsuleId={capsule.id} initialToken={capsule.shareToken} />
+              <ShareToTeam capsuleId={capsule.id} />
               <button onClick={remove} className="rounded-md bg-card border border-border px-4 py-2 text-[13px] font-medium text-destructive hover:bg-accent-soft/40">
                 Delete
               </button>
