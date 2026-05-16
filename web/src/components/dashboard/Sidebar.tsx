@@ -7,10 +7,11 @@ import { ProfileMenu } from "./ProfileMenu";
 
 const NAV = [
   { href: "/library", label: "Library", icon: LibraryIcon },
+  { href: "/library/graph", label: "Graph", icon: GraphIcon },
   { href: "/links", label: "Links", icon: LinkIcon },
-  { href: "/api-keys", label: "API Keys", icon: KeyIcon },
   { href: "/packs", label: "Packs", icon: PacksIcon },
   { href: "/teams", label: "Teams", icon: TeamsIcon },
+  { href: "/api-keys", label: "API Keys", icon: KeyIcon },
   { href: "/billing", label: "Billing", icon: BillingIcon },
   { href: "/settings", label: "Settings", icon: SettingsIcon },
 ];
@@ -141,6 +142,21 @@ function KeyIcon({ className }: IconProps) {
       <circle cx="5" cy="11" r="2.5" />
       <line x1="6.7" y1="9.3" x2="14" y2="2" />
       <line x1="11" y1="5" x2="13" y2="7" />
+    </svg>
+  );
+}
+
+function GraphIcon({ className }: IconProps) {
+  return (
+    <svg className={className} viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.4">
+      <circle cx="4" cy="4" r="1.6" />
+      <circle cx="12" cy="5" r="1.6" />
+      <circle cx="5" cy="12" r="1.6" />
+      <circle cx="11" cy="11.5" r="1.6" />
+      <line x1="5" y1="5" x2="11" y2="5" />
+      <line x1="4.5" y1="5.5" x2="5" y2="11" />
+      <line x1="6" y1="11.5" x2="11" y2="11.5" />
+      <line x1="11.5" y1="6" x2="11" y2="11" />
     </svg>
   );
 }

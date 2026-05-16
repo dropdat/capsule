@@ -74,7 +74,7 @@ feature that turns the corpus from *archived* into *useful*.
 **Gate:** vector search = Pro. Free tier = keyword only.
 
 ### C. Capsule graph & second-brain links — **L2**
-
+ wh
 The "connect capsules" idea, with a chosen model rather than free-form.
 
 **Model:** auto-extracted entity + topic edges, manual override.

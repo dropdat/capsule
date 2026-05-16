@@ -91,24 +91,34 @@ function PackDetail() {
     }
   };
 
-  const autofill = async () => {
+  const autofill = async (seedID?: string) => {
     if (items.length === 0) {
       setError("Add at least one capsule first — autofill needs a seed.");
       return;
     }
+    const seed = seedID ?? items[0].capsule_id;
     setBusy("autofill");
     setError(null);
     try {
       const { added } = await api<{ added: number }>(`/api/v1/packs/${id}/autofill`, {
         method: "POST",
-        body: JSON.stringify({ seed_capsule_id: items[0].capsule_id, limit: 8 }),
+        body: JSON.stringify({ seed_capsule_id: seed, limit: 8 }),
       });
       await load();
       if (added === 0) {
         setError("No new related capsules found — try a different seed or capture more chats.");
       }
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Autofill failed");
+      const msg = e instanceof Error ? e.message : "";
+      if (msg.includes("embedding")) {
+        setError(
+          "That capsule has no embedding yet, so we can't find similar ones. " +
+            "Embeddings need OPENAI_API_KEY on the API — check with the admin, " +
+            "or try a different seed capsule from the dropdown."
+        );
+      } else {
+        setError(msg || "Autofill failed");
+      }
     } finally {
       setBusy(null);
     }
@@ -173,14 +183,35 @@ function PackDetail() {
               </>
             ) : (
               <>
-                <button
-                  onClick={autofill}
-                  disabled={busy === "autofill" || items.length === 0}
-                  title={items.length === 0 ? "Add a seed capsule first" : "Add capsules similar to the first item"}
-                  className="rounded-md bg-secondary border border-border px-4 py-2 text-[13px] font-medium hover:bg-card disabled:opacity-50"
-                >
-                  {busy === "autofill" ? "Filling…" : "Autofill related"}
-                </button>
+                {items.length > 1 ? (
+                  <select
+                    disabled={busy === "autofill"}
+                    onChange={(e) => {
+                      if (e.target.value) autofill(e.target.value);
+                      e.currentTarget.selectedIndex = 0;
+                    }}
+                    className="rounded-md bg-secondary border border-border px-3 py-2 text-[13px] font-medium hover:bg-card disabled:opacity-50"
+                    title="Pick a seed capsule to autofill from"
+                  >
+                    <option value="">
+                      {busy === "autofill" ? "Filling…" : "Autofill from…"}
+                    </option>
+                    {items.map((it) => (
+                      <option key={it.capsule_id} value={it.capsule_id}>
+                        {it.title.slice(0, 40)}
+                      </option>
+                    ))}
+                  </select>
+                ) : (
+                  <button
+                    onClick={() => autofill()}
+                    disabled={busy === "autofill" || items.length === 0}
+                    title={items.length === 0 ? "Add a seed capsule first" : "Add capsules similar to the first item"}
+                    className="rounded-md bg-secondary border border-border px-4 py-2 text-[13px] font-medium hover:bg-card disabled:opacity-50"
+                  >
+                    {busy === "autofill" ? "Filling…" : "Autofill related"}
+                  </button>
+                )}
                 <button onClick={copyRendered} disabled={busy === "render"} className="rounded-md bg-primary text-primary-foreground px-4 py-2 text-[13px] font-medium hover:opacity-90 disabled:opacity-50">
                   {renderedCopied ? "Copied ✓" : busy === "render" ? "Rendering…" : "Copy as context"}
                 </button>
