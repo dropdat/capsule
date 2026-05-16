@@ -263,12 +263,23 @@ export default function BillingPage() {
     setBusy("resync");
     setError(null);
     try {
+      const email = user?.primaryEmailAddress?.emailAddress ?? "";
       const res = await authedFetch("/api/v1/billing/sync", {
         method: "POST",
-        body: JSON.stringify({}),
+        body: JSON.stringify({ email }),
       });
-      if (res.ok) setSub(await res.json());
-      else await refresh();
+      if (res.ok) {
+        setSub(await res.json());
+      } else if (res.status === 404) {
+        await refresh();
+        setStatusModal({
+          kind: "error",
+          message:
+            "No subscription was found for your email at the payment processor. If you just paid, give it a minute and try again.",
+        });
+      } else {
+        await refresh();
+      }
     } catch {
       await refresh();
     } finally {

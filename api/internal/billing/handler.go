@@ -162,6 +162,7 @@ func (h *Handler) CreateCheckout(w http.ResponseWriter, r *http.Request) {
 
 type syncRequest struct {
 	SubscriptionID string `json:"subscription_id"`
+	Email          string `json:"email"`
 }
 
 // Sync pulls subscription state directly from dodopayments and applies it
@@ -188,15 +189,33 @@ func (h *Handler) Sync(w http.ResponseWriter, r *http.Request) {
 			subID = *sub.DodopaymentsSubscriptionID
 		}
 	}
-	if subID == "" {
-		httpx.Error(w, http.StatusBadRequest, "subscription_id required")
-		return
-	}
 
-	ds, err := h.dodo.GetSubscription(r.Context(), subID)
-	if err != nil {
-		slog.Error("dodo subscription fetch failed", "err", err, "sub", subID)
-		httpx.Error(w, http.StatusBadGateway, "lookup failed")
+	var ds *Subscription
+	if subID != "" {
+		var err error
+		ds, err = h.dodo.GetSubscription(r.Context(), subID)
+		if err != nil {
+			slog.Error("dodo subscription fetch failed", "err", err, "sub", subID)
+			httpx.Error(w, http.StatusBadGateway, "lookup failed")
+			return
+		}
+	} else if email := strings.TrimSpace(body.Email); email != "" {
+		// No subscription id known locally — list dodo subscriptions for
+		// this customer email and pick the most recent matching one whose
+		// metadata.user_id matches.
+		list, err := h.dodo.ListSubscriptions(r.Context(), email)
+		if err != nil {
+			slog.Error("dodo list subs failed", "err", err, "email", email)
+			httpx.Error(w, http.StatusBadGateway, "lookup failed")
+			return
+		}
+		ds = pickSubForUser(list, uid)
+		if ds == nil {
+			httpx.Error(w, http.StatusNotFound, "no subscription found for this account")
+			return
+		}
+	} else {
+		httpx.Error(w, http.StatusBadRequest, "subscription_id or email required")
 		return
 	}
 
@@ -249,6 +268,44 @@ func (h *Handler) Cancel(w http.ResponseWriter, r *http.Request) {
 		CurrentPeriodEnd:           sub.CurrentPeriodEnd,
 	})
 	h.GetSubscription(w, r)
+}
+
+// pickSubForUser scans a list of dodopayments subscriptions and returns the
+// most useful one for the given Clerk user id. Preference order:
+//  1. Active subscription whose metadata.user_id matches.
+//  2. Any subscription whose metadata.user_id matches.
+//  3. Any active subscription on the customer email (best-effort when
+//     metadata is missing — older checkouts may not have set it).
+//  4. The first subscription returned.
+func pickSubForUser(list []Subscription, uid string) *Subscription {
+	var matchedActive, matchedAny, anyActive *Subscription
+	for i := range list {
+		s := &list[i]
+		metaUser, _ := s.Metadata["user_id"].(string)
+		isActive := strings.ToLower(s.Status) == "active"
+		if metaUser == uid {
+			if isActive && matchedActive == nil {
+				matchedActive = s
+			}
+			if matchedAny == nil {
+				matchedAny = s
+			}
+		}
+		if isActive && anyActive == nil {
+			anyActive = s
+		}
+	}
+	switch {
+	case matchedActive != nil:
+		return matchedActive
+	case matchedAny != nil:
+		return matchedAny
+	case anyActive != nil:
+		return anyActive
+	case len(list) > 0:
+		return &list[0]
+	}
+	return nil
 }
 
 // applySubscription writes a dodopayments Subscription into the local DB.

@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"net/url"
 	"os"
 	"time"
 )
@@ -99,6 +100,28 @@ func (c *DodoClient) GetSubscription(ctx context.Context, id string) (*Subscript
 		return nil, err
 	}
 	return &out, nil
+}
+
+// ListSubscriptions returns dodopayments subscriptions matching a filter.
+// We expose a single "email" filter — enough to reconcile a user whose
+// webhook never delivered.
+func (c *DodoClient) ListSubscriptions(ctx context.Context, email string) ([]Subscription, error) {
+	path := "/subscriptions"
+	if email != "" {
+		path += "?email=" + url.QueryEscape(email)
+	}
+	// dodopayments paginates with items+pagination; accept either shape.
+	var raw struct {
+		Items []Subscription `json:"items"`
+		Data  []Subscription `json:"data"`
+	}
+	if err := c.do(ctx, http.MethodGet, path, nil, &raw); err != nil {
+		return nil, err
+	}
+	if len(raw.Items) > 0 {
+		return raw.Items, nil
+	}
+	return raw.Data, nil
 }
 
 // CancelSubscription marks the subscription cancelled (recurring stops).
