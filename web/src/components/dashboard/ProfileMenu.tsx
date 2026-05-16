@@ -21,7 +21,6 @@ export function ProfileMenu() {
   const { getToken } = useAuth();
   const [open, setOpen] = useState(false);
   const [sub, setSub] = useState<Subscription | null>(null);
-  const [portalBusy, setPortalBusy] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
 
   const load = useCallback(async () => {
@@ -55,24 +54,6 @@ export function ProfileMenu() {
       document.removeEventListener("keydown", onKey);
     };
   }, [open]);
-
-  const openPortal = async () => {
-    setPortalBusy(true);
-    try {
-      const token = await getToken();
-      const res = await fetch(`${API_BASE}/api/v1/billing/portal`, {
-        headers: token ? { Authorization: `Bearer ${token}` } : undefined,
-      });
-      if (!res.ok) throw new Error(await res.text());
-      const data: { link: string } = await res.json();
-      window.open(data.link, "_blank", "noopener,noreferrer");
-    } catch {
-      // fallback: send them to the in-app billing page
-      window.location.href = "/billing";
-    } finally {
-      setPortalBusy(false);
-    }
-  };
 
   const email = user?.primaryEmailAddress?.emailAddress;
   const initials =
@@ -141,15 +122,14 @@ export function ProfileMenu() {
             >
               Plans & billing
             </Link>
-            {sub?.has_customer && (
-              <button
-                type="button"
-                onClick={openPortal}
-                disabled={portalBusy}
-                className="block w-full text-left px-4 py-2 text-[13px] hover:bg-muted disabled:opacity-50"
+            {sub?.has_customer && sub.tier !== "basic" && sub.status !== "cancelled" && (
+              <Link
+                href="/billing"
+                onClick={() => setOpen(false)}
+                className="block px-4 py-2 text-[13px] hover:bg-muted text-destructive"
               >
-                {portalBusy ? "Opening portal…" : "Manage billing portal"}
-              </button>
+                Cancel plan
+              </Link>
             )}
             <Link
               href="/settings"

@@ -218,24 +218,6 @@ export default function BillingPage() {
     }
   };
 
-  const openPortal = async () => {
-    setBusy("portal");
-    setError(null);
-    try {
-      const res = await authedFetch("/api/v1/billing/portal");
-      if (!res.ok) {
-        const body = await res.text();
-        throw new Error(body || `Portal failed (${res.status})`);
-      }
-      const data: { link: string } = await res.json();
-      window.open(data.link, "_blank", "noopener,noreferrer");
-    } catch (e) {
-      setError(e instanceof Error ? e.message : "Portal unavailable");
-    } finally {
-      setBusy(null);
-    }
-  };
-
   const cancelSubscription = async () => {
     setBusy("cancel");
     setError(null);
@@ -320,24 +302,14 @@ export default function BillingPage() {
             >
               {busy === "resync" ? "Syncing…" : "Refresh"}
             </button>
-            {sub?.has_customer && (
-              <button
-                type="button"
-                onClick={openPortal}
-                disabled={busy === "portal"}
-                className="text-[12.5px] underline text-muted-foreground hover:text-foreground disabled:opacity-50"
-              >
-                {busy === "portal" ? "Opening…" : "Manage billing"}
-              </button>
-            )}
-            {sub?.has_customer && sub.status === "active" && (
+            {sub?.has_customer && sub.tier !== "basic" && sub.status !== "cancelled" && (
               <button
                 type="button"
                 onClick={() => setConfirmCancel(true)}
                 disabled={busy === "cancel"}
                 className="text-[12.5px] underline text-destructive hover:opacity-80 disabled:opacity-50"
               >
-                Cancel plan
+                {busy === "cancel" ? "Cancelling…" : "Cancel plan"}
               </button>
             )}
           </div>
