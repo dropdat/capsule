@@ -186,6 +186,85 @@ type RelatedCapsule struct {
 	Similarity float64   `json:"similarity"`
 }
 
+// Graph builds a nodes+edges graph of the user's capsule library.
+// Each node is a capsule with an embedding; each edge connects a capsule to
+// its top-K nearest neighbours (cosine similarity above `minSim`).
+func (s *Service) Graph(ctx context.Context, userID string, nodeLimit, perNode int, minSim float64) (*GraphResponse, error) {
+	if nodeLimit <= 0 || nodeLimit > 500 {
+		nodeLimit = 200
+	}
+	if perNode <= 0 || perNode > 10 {
+		perNode = 3
+	}
+	if minSim < 0 {
+		minSim = 0
+	}
+	caps, err := s.q.ListUserCapsulesWithEmbedding(ctx, dbgen.ListUserCapsulesWithEmbeddingParams{
+		UserID: userID,
+		Limit:  int32(nodeLimit),
+	})
+	if err != nil {
+		return nil, err
+	}
+	nodes := make([]GraphNode, 0, len(caps))
+	for _, c := range caps {
+		nodes = append(nodes, GraphNode{ID: c.ID.String(), Title: c.Title, Source: c.Source})
+	}
+
+	// Dedupe edges by ordered pair so two-way nearest-neighbour duplicates
+	// collapse to a single edge.
+	type pair struct{ a, b string }
+	seen := make(map[pair]float64)
+	for _, c := range caps {
+		if c.Embedding == nil {
+			continue
+		}
+		rows, err := s.q.ListRelatedCapsules(ctx, dbgen.ListRelatedCapsulesParams{
+			UserID:  userID,
+			Column2: c.Embedding,
+			ID:      c.ID,
+			Limit:   int32(perNode),
+		})
+		if err != nil {
+			continue
+		}
+		for _, r := range rows {
+			if r.Similarity < minSim {
+				continue
+			}
+			a, b := c.ID.String(), r.ID.String()
+			if a > b {
+				a, b = b, a
+			}
+			if prev, ok := seen[pair{a, b}]; !ok || r.Similarity > prev {
+				seen[pair{a, b}] = r.Similarity
+			}
+		}
+	}
+	edges := make([]GraphEdge, 0, len(seen))
+	for p, w := range seen {
+		edges = append(edges, GraphEdge{From: p.a, To: p.b, Weight: w})
+	}
+	return &GraphResponse{Nodes: nodes, Edges: edges}, nil
+}
+
+type GraphNode struct {
+	ID     string `json:"id"`
+	Title  string `json:"title"`
+	Source string `json:"source"`
+}
+
+type GraphEdge struct {
+	From   string  `json:"from"`
+	To     string  `json:"to"`
+	Weight float64 `json:"weight"`
+}
+
+type GraphResponse struct {
+	Nodes []GraphNode `json:"nodes"`
+	Edges []GraphEdge `json:"edges"`
+}
+
 func (s *Service) Related(ctx context.Context, seedID uuid.UUID, userID string, limit int) ([]RelatedCapsule, error) {
 	if limit <= 0 || limit > 50 {
 		limit = 10

@@ -91,6 +91,29 @@ function PackDetail() {
     }
   };
 
+  const autofill = async () => {
+    if (items.length === 0) {
+      setError("Add at least one capsule first — autofill needs a seed.");
+      return;
+    }
+    setBusy("autofill");
+    setError(null);
+    try {
+      const { added } = await api<{ added: number }>(`/api/v1/packs/${id}/autofill`, {
+        method: "POST",
+        body: JSON.stringify({ seed_capsule_id: items[0].capsule_id, limit: 8 }),
+      });
+      await load();
+      if (added === 0) {
+        setError("No new related capsules found — try a different seed or capture more chats.");
+      }
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Autofill failed");
+    } finally {
+      setBusy(null);
+    }
+  };
+
   const copyRendered = async () => {
     setBusy("render");
     try {
@@ -150,6 +173,14 @@ function PackDetail() {
               </>
             ) : (
               <>
+                <button
+                  onClick={autofill}
+                  disabled={busy === "autofill" || items.length === 0}
+                  title={items.length === 0 ? "Add a seed capsule first" : "Add capsules similar to the first item"}
+                  className="rounded-md bg-secondary border border-border px-4 py-2 text-[13px] font-medium hover:bg-card disabled:opacity-50"
+                >
+                  {busy === "autofill" ? "Filling…" : "Autofill related"}
+                </button>
                 <button onClick={copyRendered} disabled={busy === "render"} className="rounded-md bg-primary text-primary-foreground px-4 py-2 text-[13px] font-medium hover:opacity-90 disabled:opacity-50">
                   {renderedCopied ? "Copied ✓" : busy === "render" ? "Rendering…" : "Copy as context"}
                 </button>

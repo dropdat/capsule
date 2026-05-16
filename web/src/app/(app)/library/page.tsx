@@ -24,13 +24,21 @@ export default function LibraryPage() {
             Captured AI conversations, ready to drop anywhere.
           </p>
         </div>
-        <input
-          type="search"
-          value={query}
-          onChange={(e) => setQuery(e.target.value)}
-          placeholder="Search title or summary…"
-          className="w-72 max-w-full rounded-md bg-card border border-border px-3 py-2 text-[13.5px] outline-none transition-colors focus:border-primary"
-        />
+        <div className="flex items-center gap-2 w-full sm:w-auto">
+          <Link
+            href="/library/graph"
+            className="rounded-md bg-secondary border border-border px-3 py-2 text-[13px] hover:bg-card whitespace-nowrap"
+          >
+            Graph view
+          </Link>
+          <input
+            type="search"
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            placeholder="Search title or summary…"
+            className="w-72 max-w-full rounded-md bg-card border border-border px-3 py-2 text-[13.5px] outline-none transition-colors focus:border-primary"
+          />
+        </div>
       </div>
 
       {error && (

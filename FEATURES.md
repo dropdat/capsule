@@ -17,7 +17,8 @@ Living index of shipped features. Updated each session when new features land.
   - **API Keys** — issue & revoke personal API keys (scopes derived from current plan)
   - **Billing** — plan picker (Basic / Pro / Premium / Ultimate + Enterprise contact) with per-feature check/cross matrix, monthly/annual toggle, current-plan + usage card, Cancel-plan + Refresh-from-payment-processor
   - **Teams** — create teams, public join-link with rotate, member roster with owner/admin/member roles, team capsule library, delete team
-  - **Packs** — context packs: bundle capsules into a single drop-in markdown block (Copy as context), auto-fill from a seed capsule via embedding similarity, per-capsule Related panel
+  - **Packs** — context packs: bundle capsules into a single drop-in markdown block (Copy as context), one-click Autofill related, per-capsule Related panel
+  - **Library graph** — force-directed visual of every embedded capsule, edges are top-K cosine neighbours; click any node to open the capsule
   - **Settings** — account settings
 - Profile menu (sidebar) — shows current plan, status, capsule usage, manage-billing portal link, and "invoices emailed automatically" hint
 - Capsule public sharing — Ultimate-tier toggle on any capsule generates a read-only `dropdat.app/s/<token>` URL; lower tiers get an in-app upgrade dialog
@@ -47,6 +48,7 @@ Living index of shipped features. Updated each session when new features land.
 - Teams (paid-plan only, `402` for Basic) — `POST /teams`, `POST /teams/join {token}`, `GET /teams`, `GET /teams/{id}`, `PATCH /teams/{id}`, `DELETE /teams/{id}`, `POST /teams/{id}/rotate-link`, roster `GET/PATCH/DELETE /teams/{id}/members[/{user_id}]`, team library `GET /teams/{id}/capsules` and `/folders`, share capsules/folders via `POST /capsules/{id}/team` and `/folders/{id}/team`
 - Context packs (paid-plan only) — `GET/POST /packs`, `GET/PATCH/DELETE /packs/{id}`, items `GET/POST/DELETE /packs/{id}/items[/{capsule_id}]`, `POST /packs/{id}/autofill` (top-K embedding neighbours of a seed capsule), `GET /packs/{id}/render` returns a single markdown block ready to paste into any AI
 - Related capsules — `GET /capsules/{id}/related?limit=N` uses pgvector HNSW cosine to surface the user's most-similar capsules; falls back to empty list if the seed has no embedding yet
+- Capsule graph — `GET /capsules/graph?nodes=N&k=K&min_sim=X` returns `{nodes, edges}` for a library-wide visualization; edges deduped across reciprocal neighbours
 - Clerk JWT auth (JWKS verified server-side)
 - DEV_AUTH_BYPASS for local development
 - Client-supplied UUIDv7 ids for offline-first sync

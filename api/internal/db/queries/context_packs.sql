@@ -41,6 +41,15 @@ SELECT COUNT(*) AS c FROM context_pack_items WHERE pack_id = $1;
 SELECT embedding FROM capsules
 WHERE id = $1 AND user_id = $2 AND deleted_at IS NULL AND embedding IS NOT NULL;
 
+-- name: ListUserCapsulesWithEmbedding :many
+SELECT id, title, source, embedding
+FROM capsules
+WHERE user_id = $1
+  AND deleted_at IS NULL
+  AND embedding IS NOT NULL
+ORDER BY updated_at DESC
+LIMIT $2;
+
 -- name: ListRelatedCapsules :many
 SELECT c.*, (1 - (c.embedding <=> $2::vector))::float AS similarity
 FROM capsules c

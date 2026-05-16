@@ -119,6 +119,11 @@ export type PackItem = {
   position: number;
 };
 
+export type CapsuleGraph = {
+  nodes: { id: string; title: string; source: string }[];
+  edges: { from: string; to: string; weight: number }[];
+};
+
 export type RelatedCapsule = {
   id: string;
   title: string;

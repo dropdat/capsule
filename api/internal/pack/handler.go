@@ -42,7 +42,27 @@ func (h *Handler) Mount(r chi.Router) {
 	r.Post("/packs/{id}/autofill", h.AutoFill)
 	r.Get("/packs/{id}/render", h.Render)
 	r.Get("/capsules/{id}/related", h.Related)
+	r.Get("/capsules/graph", h.Graph)
 }
+
+func (h *Handler) Graph(w http.ResponseWriter, r *http.Request) {
+	uid := auth.UserID(r.Context())
+	if uid == "" {
+		httpx.Error(w, http.StatusUnauthorized, "auth required")
+		return
+	}
+	q := r.URL.Query()
+	nodeLimit, _ := strconv.Atoi(q.Get("nodes"))
+	perNode, _ := strconv.Atoi(q.Get("k"))
+	minSim, _ := strconv.ParseFloat(q.Get("min_sim"), 64)
+	g, err := h.svc.Graph(r.Context(), uid, nodeLimit, perNode, minSim)
+	if err != nil {
+		httpx.Error(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+	httpx.JSON(w, http.StatusOK, g)
+}
+
 
 // ----- DTOs -----
 
