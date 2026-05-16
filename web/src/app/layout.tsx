@@ -23,10 +23,57 @@ const dmMono = DM_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "dropdat — Cross-AI memory in one click",
+  metadataBase: new URL("https://dropdat.app"),
+  title: {
+    default: "dropdat — Cross-AI memory in one click",
+    template: "%s — dropdat",
+  },
   description:
-    "Capture any AI chat as a portable capsule. Drop it into ChatGPT, Claude, Gemini and resume the conversation instantly.",
+    "Capture any AI chat as a portable capsule. Drop it into ChatGPT, Claude, Gemini and resume the conversation instantly. Open-source MCP server for Claude Code, Cursor, Cline, Claude Desktop.",
+  keywords: [
+    "AI memory",
+    "cross-AI memory",
+    "MCP server",
+    "Claude Code MCP",
+    "Cursor MCP",
+    "Cline MCP",
+    "Claude Desktop MCP",
+    "ChatGPT memory",
+    "portable AI context",
+    "AI capsule",
+    "semantic recall",
+    "vector search Claude",
+    "share context between ChatGPT and Claude",
+    "long-term memory coding agents",
+  ],
+  applicationName: "dropdat",
+  authors: [{ name: "dropdat" }],
+  creator: "dropdat",
+  publisher: "dropdat",
+  category: "developer tools",
   icons: { icon: "/seo/favicon.svg" },
+  alternates: { canonical: "/" },
+  openGraph: {
+    type: "website",
+    siteName: "dropdat",
+    url: "https://dropdat.app",
+    title: "dropdat — Cross-AI memory in one click",
+    description:
+      "Capture any AI chat as a portable capsule. Drop it into ChatGPT, Claude, Gemini and resume the conversation instantly.",
+    images: [{ url: "/seo/og.png", width: 1200, height: 630, alt: "dropdat — cross-AI memory" }],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "dropdat — Cross-AI memory in one click",
+    description:
+      "Portable AI memory. Capture, capsule, drop. MCP server included.",
+    images: ["/seo/og.png"],
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: { index: true, follow: true, "max-image-preview": "large", "max-snippet": -1 },
+  },
 };
 
 export default function RootLayout({

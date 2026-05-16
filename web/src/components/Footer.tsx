@@ -7,13 +7,25 @@ const cols = [
       { label: "How it works", href: "#how-it-works" },
       { label: "Features", href: "#features" },
       { label: "MCP server", href: "/mcp" },
-      { label: "Supported AIs", href: "#platforms" },
+      { label: "FAQ", href: "/faq" },
       { label: "Download", href: "https://chromewebstore.google.com/detail/pfcnjelpgccnkagaekhdcddpfacighho" },
     ],
   },
   {
-    title: "Company",
+    title: "MCP clients",
     links: [
+      { label: "Claude Code", href: "/mcp/claude-code" },
+      { label: "Cursor", href: "/mcp/cursor" },
+      { label: "Cline", href: "/mcp/cline" },
+      { label: "Claude Desktop", href: "/mcp/claude-desktop" },
+      { label: "GitHub", href: "https://github.com/dropdat/mcp" },
+    ],
+  },
+  {
+    title: "Use cases",
+    links: [
+      { label: "Cross-AI memory", href: "/use-cases/cross-ai-memory" },
+      { label: "Coding agent memory", href: "/use-cases/coding-agent-memory" },
       { label: "Support", href: "/support" },
       { label: "Contact", href: "mailto:support@dropdat.app" },
     ],
@@ -48,7 +60,7 @@ export function Footer() {
             </a>
           </div>
         </div>
-        <div className="grid grid-cols-2 sm:grid-cols-3 gap-6">
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-6">
           {cols.map((c) => (
             <div key={c.title}>
               <h4 className="font-heading text-[14px] font-medium text-foreground/90 mb-4 uppercase tracking-[0.12em]">

@@ -1,3 +1,5 @@
+import type { Metadata } from "next";
+import Link from "next/link";
 import { Nav } from "@/components/Nav";
 import { Footer } from "@/components/Footer";
 import {
@@ -9,11 +11,54 @@ import {
   LibraryIcon,
 } from "@/components/icons";
 
-export const metadata = {
+export const metadata: Metadata = {
   title: "MCP server + semantic recall — dropdat",
   description:
-    "Wire dropdat into Claude Code, Cursor, Cline, and Claude Desktop. Recall past AI sessions semantically, save the current one with a single tool call.",
+    "Wire dropdat into Claude Code, Cursor, Cline, and Claude Desktop. Recall past AI sessions semantically, save the current one with a single tool call. Free, open-source npm package.",
+  alternates: { canonical: "/mcp" },
+  keywords: [
+    "MCP server",
+    "Model Context Protocol server",
+    "Claude Code MCP",
+    "Cursor MCP",
+    "Cline MCP",
+    "Claude Desktop MCP",
+    "semantic recall AI",
+    "long-term memory MCP",
+    "dropdat MCP",
+    "@dropdat/mcp",
+  ],
+  openGraph: {
+    title: "MCP server + semantic recall — dropdat",
+    description:
+      "One npm package gives Claude Code, Cursor, Cline, Claude Desktop long-term cross-session memory.",
+    url: "https://dropdat.app/mcp",
+    type: "article",
+  },
 };
+
+const softwareJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "SoftwareApplication",
+  name: "@dropdat/mcp",
+  operatingSystem: "macOS, Windows, Linux",
+  applicationCategory: "DeveloperApplication",
+  offers: { "@type": "Offer", price: "0", priceCurrency: "USD" },
+  url: "https://dropdat.app/mcp",
+  sameAs: [
+    "https://github.com/dropdat/mcp",
+    "https://www.npmjs.com/package/@dropdat/mcp",
+  ],
+  description:
+    "Open-source MCP server that gives any MCP-capable AI client (Claude Code, Cursor, Cline, Claude Desktop) long-term semantic recall over your dropdat capsule library.",
+};
+
+const clientLinks = [
+  { href: "/mcp/claude-code", label: "Claude Code", blurb: "One-liner install with claude mcp add." },
+  { href: "/mcp/cursor", label: "Cursor", blurb: "Drop config into ~/.cursor/mcp.json." },
+  { href: "/mcp/cline", label: "Cline", blurb: "Persistent memory across autonomous runs." },
+  { href: "/mcp/claude-desktop", label: "Claude Desktop", blurb: "Mac & Windows, one JSON config." },
+];
 
 const tools = [
   {
@@ -82,6 +127,10 @@ const searchBeats = [
 export default function McpPage() {
   return (
     <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(softwareJsonLd) }}
+      />
       <Nav />
       <main className="relative z-[2] flex flex-col items-center w-full">
         {/* Hero */}
@@ -300,25 +349,57 @@ npm install -g @dropdat/mcp`}
           </ol>
         </section>
 
-        {/* Clients */}
+        {/* Per-client install guides */}
         <section className="w-full max-w-[1200px] px-5 sm:px-6 py-12 sm:py-16">
           <div className="mb-10">
             <h2 className="font-heading text-[32px] max-md:text-[24px] font-medium tracking-[-0.03em] leading-[120%]">
-              Works with the agents you already run.
+              Per-client install guides
             </h2>
             <p className="mt-3 text-[15px] text-muted-foreground max-w-[640px]">
+              Pick your AI client for the exact config snippet, file path, and
+              verification step.
+            </p>
+          </div>
+          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-px bg-border border border-border">
+            {clientLinks.map((c) => (
+              <Link
+                key={c.href}
+                href={c.href}
+                className="bg-card p-6 flex items-start gap-3 hover:bg-accent transition-colors"
+              >
+                <CheckIcon className="w-5 h-5 text-primary mt-0.5 shrink-0" />
+                <div>
+                  <h3 className="font-heading text-[16px] font-medium">
+                    {c.label} →
+                  </h3>
+                  <p className="text-[14px] text-muted-foreground mt-1">
+                    {c.blurb}
+                  </p>
+                </div>
+              </Link>
+            ))}
+          </div>
+        </section>
+
+        {/* Other supported clients */}
+        <section className="w-full max-w-[1200px] px-5 sm:px-6 py-8">
+          <div className="mb-6">
+            <h2 className="font-heading text-[24px] font-medium tracking-[-0.03em]">
+              Also works with
+            </h2>
+            <p className="mt-2 text-[14px] text-muted-foreground max-w-[640px]">
               Standard MCP stdio transport. No fork, no proxy, no special build.
             </p>
           </div>
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-px bg-border border border-border">
             {clients.map((c) => (
-              <div key={c.name} className="bg-card p-6 flex items-start gap-3">
+              <div key={c.name} className="bg-card p-5 flex items-start gap-3">
                 <CheckIcon className="w-5 h-5 text-primary mt-0.5 shrink-0" />
                 <div>
-                  <h3 className="font-heading text-[16px] font-medium">
+                  <h3 className="font-heading text-[15px] font-medium">
                     {c.name}
                   </h3>
-                  <p className="text-[14px] text-muted-foreground mt-1">
+                  <p className="text-[13.5px] text-muted-foreground mt-1">
                     {c.note}
                   </p>
                 </div>
