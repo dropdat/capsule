@@ -76,6 +76,37 @@ func (c *DodoClient) CreateCheckoutSession(ctx context.Context, in CheckoutReque
 	return &out, nil
 }
 
+// Subscription is the slice of the dodopayments subscription object we use
+// for reconciliation when the webhook is delayed or misconfigured.
+type Subscription struct {
+	SubscriptionID  string         `json:"subscription_id"`
+	ProductID       string         `json:"product_id"`
+	Status          string         `json:"status"`
+	CreatedAt       string         `json:"created_at"`
+	NextBillingDate string         `json:"next_billing_date"`
+	Customer        struct {
+		CustomerID string `json:"customer_id"`
+		Email      string `json:"email"`
+		Name       string `json:"name"`
+	} `json:"customer"`
+	Metadata map[string]any `json:"metadata,omitempty"`
+}
+
+// GetSubscription retrieves a subscription by id.
+func (c *DodoClient) GetSubscription(ctx context.Context, id string) (*Subscription, error) {
+	var out Subscription
+	if err := c.do(ctx, http.MethodGet, "/subscriptions/"+id, nil, &out); err != nil {
+		return nil, err
+	}
+	return &out, nil
+}
+
+// CancelSubscription marks the subscription cancelled (recurring stops).
+func (c *DodoClient) CancelSubscription(ctx context.Context, id string) error {
+	return c.do(ctx, http.MethodPatch, "/subscriptions/"+id,
+		map[string]string{"status": "cancelled"}, nil)
+}
+
 // CustomerPortalLink returns a portal session url for an existing customer.
 // Dodo exposes this as POST /customers/{id}/customer-portal/session.
 func (c *DodoClient) CustomerPortalLink(ctx context.Context, customerID string) (string, error) {

@@ -41,6 +41,8 @@ func (h *Handler) Mount(r chi.Router) {
 	r.Get("/billing/subscription", h.GetSubscription)
 	r.Post("/billing/checkout", h.CreateCheckout)
 	r.Get("/billing/portal", h.PortalLink)
+	r.Post("/billing/sync", h.Sync)
+	r.Post("/billing/cancel", h.Cancel)
 }
 
 // MountWebhook attaches the unauthenticated dodo webhook receiver.
@@ -156,6 +158,120 @@ func (h *Handler) CreateCheckout(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	httpx.JSON(w, http.StatusOK, checkoutResponseDTO{Link: out.CheckoutURL})
+}
+
+type syncRequest struct {
+	SubscriptionID string `json:"subscription_id"`
+}
+
+// Sync pulls subscription state directly from dodopayments and applies it
+// locally. The frontend calls this after the user returns from the hosted
+// checkout — bypasses any webhook-delivery delay or misconfiguration.
+func (h *Handler) Sync(w http.ResponseWriter, r *http.Request) {
+	uid := auth.UserID(r.Context())
+	if uid == "" {
+		httpx.Error(w, http.StatusUnauthorized, "auth required")
+		return
+	}
+	if h.dodo == nil {
+		httpx.Error(w, http.StatusServiceUnavailable, "billing not configured")
+		return
+	}
+
+	var body syncRequest
+	_ = httpx.DecodeJSON(r, &body)
+	subID := strings.TrimSpace(body.SubscriptionID)
+	if subID == "" {
+		// Fall back to the user's last saved subscription id.
+		if sub, err := h.q.GetSubscription(r.Context(), uid); err == nil &&
+			sub.DodopaymentsSubscriptionID != nil {
+			subID = *sub.DodopaymentsSubscriptionID
+		}
+	}
+	if subID == "" {
+		httpx.Error(w, http.StatusBadRequest, "subscription_id required")
+		return
+	}
+
+	ds, err := h.dodo.GetSubscription(r.Context(), subID)
+	if err != nil {
+		slog.Error("dodo subscription fetch failed", "err", err, "sub", subID)
+		httpx.Error(w, http.StatusBadGateway, "lookup failed")
+		return
+	}
+
+	// Trust the metadata user_id when present (the checkout we created set
+	// it). Refuse to apply a subscription that belongs to someone else.
+	if metaUser, ok := ds.Metadata["user_id"].(string); ok && metaUser != "" && metaUser != uid {
+		httpx.Error(w, http.StatusForbidden, "subscription does not belong to this user")
+		return
+	}
+
+	if err := h.applySubscription(r.Context(), uid, ds); err != nil {
+		slog.Error("apply subscription", "err", err, "user", uid)
+		httpx.Error(w, http.StatusInternalServerError, "apply failed")
+		return
+	}
+	h.GetSubscription(w, r)
+}
+
+// Cancel stops the recurring subscription at dodopayments. Local state
+// flips to cancelled on the next webhook OR the next /billing/sync.
+func (h *Handler) Cancel(w http.ResponseWriter, r *http.Request) {
+	uid := auth.UserID(r.Context())
+	if uid == "" {
+		httpx.Error(w, http.StatusUnauthorized, "auth required")
+		return
+	}
+	if h.dodo == nil {
+		httpx.Error(w, http.StatusServiceUnavailable, "billing not configured")
+		return
+	}
+	sub, err := h.q.GetSubscription(r.Context(), uid)
+	if err != nil || sub.DodopaymentsSubscriptionID == nil || *sub.DodopaymentsSubscriptionID == "" {
+		httpx.Error(w, http.StatusNotFound, "no active subscription")
+		return
+	}
+	if err := h.dodo.CancelSubscription(r.Context(), *sub.DodopaymentsSubscriptionID); err != nil {
+		slog.Error("dodo cancel failed", "err", err, "sub", *sub.DodopaymentsSubscriptionID)
+		httpx.Error(w, http.StatusBadGateway, "cancel failed")
+		return
+	}
+	// Optimistically mark cancelled locally so the UI updates immediately.
+	_, _ = h.q.UpsertSubscription(r.Context(), dbgen.UpsertSubscriptionParams{
+		UserID:                     uid,
+		Tier:                       TierBasic,
+		Status:                     "cancelled",
+		DodopaymentsCustomerID:     sub.DodopaymentsCustomerID,
+		DodopaymentsSubscriptionID: sub.DodopaymentsSubscriptionID,
+		ProductID:                  sub.ProductID,
+		CurrentPeriodStart:         sub.CurrentPeriodStart,
+		CurrentPeriodEnd:           sub.CurrentPeriodEnd,
+	})
+	h.GetSubscription(w, r)
+}
+
+// applySubscription writes a dodopayments Subscription into the local DB.
+// Shared between webhook + manual sync paths.
+func (h *Handler) applySubscription(ctx context.Context, uid string, ds *Subscription) error {
+	tier := TierForProductID(ds.ProductID)
+	status := strings.ToLower(ds.Status)
+	if status == "active" || status == "on_hold" || status == "trialing" {
+		// keep tier
+	} else if status == "cancelled" || status == "expired" || status == "failed" || status == "paused" {
+		tier = TierBasic
+	}
+	_, err := h.q.UpsertSubscription(ctx, dbgen.UpsertSubscriptionParams{
+		UserID:                     uid,
+		Tier:                       tier,
+		Status:                     status,
+		DodopaymentsCustomerID:     strPtr(ds.Customer.CustomerID),
+		DodopaymentsSubscriptionID: strPtr(ds.SubscriptionID),
+		ProductID:                  strPtr(ds.ProductID),
+		CurrentPeriodStart:         parseTS(ds.CreatedAt),
+		CurrentPeriodEnd:           parseTS(ds.NextBillingDate),
+	})
+	return err
 }
 
 func (h *Handler) PortalLink(w http.ResponseWriter, r *http.Request) {

@@ -100,6 +100,13 @@ function CrossIcon({ className }: { className?: string }) {
   );
 }
 
+type StatusModal =
+  | { kind: "success"; tier?: string }
+  | { kind: "pending" }
+  | { kind: "error"; message: string }
+  | { kind: "cancelled" }
+  | null;
+
 export default function BillingPage() {
   const { getToken } = useAuth();
   const { user } = useUser();
@@ -108,6 +115,8 @@ export default function BillingPage() {
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState<string | null>(null);
   const [interval, setInterval] = useState<"monthly" | "annual">("monthly");
+  const [statusModal, setStatusModal] = useState<StatusModal>(null);
+  const [confirmCancel, setConfirmCancel] = useState(false);
 
   const authedFetch = useCallback(
     async (path: string, init?: RequestInit) => {
@@ -139,6 +148,52 @@ export default function BillingPage() {
   useEffect(() => {
     refresh();
   }, [refresh]);
+
+  // Handle redirects back from the dodopayments hosted checkout. The URL
+  // looks like /billing?status=completed&subscription_id=sub_… on success
+  // (we set the return URL) or status=failed on cancel.
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const url = new URL(window.location.href);
+    const status = url.searchParams.get("status");
+    const subscriptionId = url.searchParams.get("subscription_id");
+    if (!status) return;
+
+    // Strip the query params so a refresh doesn't re-trigger this branch.
+    const clean = window.location.pathname;
+    window.history.replaceState({}, "", clean);
+
+    if (status === "completed" && subscriptionId) {
+      setStatusModal({ kind: "pending" });
+      (async () => {
+        try {
+          const res = await authedFetch("/api/v1/billing/sync", {
+            method: "POST",
+            body: JSON.stringify({ subscription_id: subscriptionId }),
+          });
+          if (!res.ok) throw new Error(await res.text());
+          const synced: Subscription = await res.json();
+          setSub(synced);
+          setStatusModal({ kind: "success", tier: synced.tier });
+        } catch (e) {
+          setStatusModal({
+            kind: "error",
+            message:
+              e instanceof Error
+                ? e.message
+                : "We couldn't confirm your subscription. Please refresh in a moment.",
+          });
+        }
+      })();
+    } else if (status === "completed") {
+      setStatusModal({ kind: "pending" });
+    } else {
+      setStatusModal({
+        kind: "error",
+        message: "Payment was not completed. No charge was made.",
+      });
+    }
+  }, [authedFetch]);
 
   const currentTier: Tier = sub?.tier ?? "basic";
 
@@ -181,6 +236,46 @@ export default function BillingPage() {
     }
   };
 
+  const cancelSubscription = async () => {
+    setBusy("cancel");
+    setError(null);
+    setConfirmCancel(false);
+    try {
+      const res = await authedFetch("/api/v1/billing/cancel", { method: "POST" });
+      if (!res.ok) {
+        const body = await res.text();
+        throw new Error(body || `Cancel failed (${res.status})`);
+      }
+      const updated: Subscription = await res.json();
+      setSub(updated);
+      setStatusModal({ kind: "cancelled" });
+    } catch (e) {
+      setStatusModal({
+        kind: "error",
+        message: e instanceof Error ? e.message : "Cancel failed",
+      });
+    } finally {
+      setBusy(null);
+    }
+  };
+
+  const refreshFromDodo = async () => {
+    setBusy("resync");
+    setError(null);
+    try {
+      const res = await authedFetch("/api/v1/billing/sync", {
+        method: "POST",
+        body: JSON.stringify({}),
+      });
+      if (res.ok) setSub(await res.json());
+      else await refresh();
+    } catch {
+      await refresh();
+    } finally {
+      setBusy(null);
+    }
+  };
+
   const usage = useMemo(() => {
     if (!sub) return null;
     if (sub.capsule_limit < 0) return `${sub.capsules_used} capsules used (unlimited)`;
@@ -205,16 +300,36 @@ export default function BillingPage() {
       <div className="rounded-lg border border-border bg-card overflow-hidden">
         <div className="border-b border-border px-5 py-3 flex items-center justify-between">
           <h2 className="font-heading text-[14px] font-medium">Current plan</h2>
-          {sub?.has_customer && (
+          <div className="flex items-center gap-3">
             <button
               type="button"
-              onClick={openPortal}
-              disabled={busy === "portal"}
+              onClick={refreshFromDodo}
+              disabled={busy === "resync"}
               className="text-[12.5px] underline text-muted-foreground hover:text-foreground disabled:opacity-50"
             >
-              {busy === "portal" ? "Opening…" : "Manage billing"}
+              {busy === "resync" ? "Syncing…" : "Refresh"}
             </button>
-          )}
+            {sub?.has_customer && (
+              <button
+                type="button"
+                onClick={openPortal}
+                disabled={busy === "portal"}
+                className="text-[12.5px] underline text-muted-foreground hover:text-foreground disabled:opacity-50"
+              >
+                {busy === "portal" ? "Opening…" : "Manage billing"}
+              </button>
+            )}
+            {sub?.has_customer && sub.status === "active" && (
+              <button
+                type="button"
+                onClick={() => setConfirmCancel(true)}
+                disabled={busy === "cancel"}
+                className="text-[12.5px] underline text-destructive hover:opacity-80 disabled:opacity-50"
+              >
+                Cancel plan
+              </button>
+            )}
+          </div>
         </div>
         <div className="px-5 py-5 grid grid-cols-1 sm:grid-cols-3 gap-y-3 text-[13.5px]">
           <div>
@@ -340,6 +455,127 @@ export default function BillingPage() {
           </div>
         </div>
       </div>
+
+      {statusModal && (
+        <Modal onClose={() => setStatusModal(null)}>
+          {statusModal.kind === "pending" && (
+            <ModalBody
+              title="Confirming your payment…"
+              body="Hang tight — we're syncing with the payment processor. This usually takes a few seconds."
+              actions={[{ label: "OK", onClick: () => setStatusModal(null), primary: true }]}
+            />
+          )}
+          {statusModal.kind === "success" && (
+            <ModalBody
+              title="You're upgraded 🎉"
+              body={`Welcome to ${(statusModal.tier ?? "your new").toString().replace(/^./, (c) => c.toUpperCase())}. Your subscription is active and the new limits apply right away. An invoice has been emailed to you.`}
+              actions={[{ label: "Got it", onClick: () => setStatusModal(null), primary: true }]}
+            />
+          )}
+          {statusModal.kind === "cancelled" && (
+            <ModalBody
+              title="Subscription cancelled"
+              body="Your plan won't renew. You keep access until the end of the current billing period."
+              actions={[{ label: "OK", onClick: () => setStatusModal(null), primary: true }]}
+            />
+          )}
+          {statusModal.kind === "error" && (
+            <ModalBody
+              title="Something went wrong"
+              body={statusModal.message}
+              actions={[
+                { label: "Close", onClick: () => setStatusModal(null) },
+                { label: "Refresh now", onClick: refreshFromDodo, primary: true },
+              ]}
+            />
+          )}
+        </Modal>
+      )}
+
+      {confirmCancel && (
+        <Modal onClose={() => setConfirmCancel(false)}>
+          <ModalBody
+            title="Cancel subscription?"
+            body="Recurring payments will stop. You'll keep your current plan until the end of the billing period, then drop to Basic."
+            actions={[
+              { label: "Keep plan", onClick: () => setConfirmCancel(false) },
+              {
+                label: busy === "cancel" ? "Cancelling…" : "Yes, cancel",
+                onClick: cancelSubscription,
+                primary: true,
+                destructive: true,
+                disabled: busy === "cancel",
+              },
+            ]}
+          />
+        </Modal>
+      )}
     </section>
+  );
+}
+
+function Modal({
+  children,
+  onClose,
+}: {
+  children: React.ReactNode;
+  onClose: () => void;
+}) {
+  return (
+    <div
+      className="fixed inset-0 z-[80] flex items-center justify-center bg-black/50 p-4"
+      onClick={onClose}
+    >
+      <div
+        role="dialog"
+        aria-modal="true"
+        className="w-full max-w-md rounded-lg border border-border bg-card p-6 shadow-xl"
+        onClick={(e) => e.stopPropagation()}
+      >
+        {children}
+      </div>
+    </div>
+  );
+}
+
+function ModalBody({
+  title,
+  body,
+  actions,
+}: {
+  title: string;
+  body: string;
+  actions: Array<{
+    label: string;
+    onClick: () => void;
+    primary?: boolean;
+    destructive?: boolean;
+    disabled?: boolean;
+  }>;
+}) {
+  return (
+    <>
+      <h2 className="font-heading text-[18px] font-medium mb-2">{title}</h2>
+      <p className="text-[13.5px] text-muted-foreground mb-5 whitespace-pre-wrap">{body}</p>
+      <div className="flex justify-end gap-2">
+        {actions.map((a) => (
+          <button
+            key={a.label}
+            type="button"
+            onClick={a.onClick}
+            disabled={a.disabled}
+            className={
+              a.primary
+                ? a.destructive
+                  ? "rounded-md bg-destructive text-white px-4 py-2 text-[13px] font-medium hover:opacity-90 disabled:opacity-50"
+                  : "rounded-md bg-primary text-primary-foreground px-4 py-2 text-[13px] font-medium hover:opacity-90 disabled:opacity-50"
+                : "rounded-md bg-card border border-border px-4 py-2 text-[13px] hover:bg-muted disabled:opacity-50"
+            }
+          >
+            {a.label}
+          </button>
+        ))}
+      </div>
+    </>
   );
 }
