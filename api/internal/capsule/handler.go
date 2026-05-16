@@ -1,6 +1,7 @@
 package capsule
 
 import (
+	"context"
 	"errors"
 	"net/http"
 	"strconv"
@@ -12,11 +13,20 @@ import (
 	"github.com/yusii/dropdat/api/internal/httpx"
 )
 
+// CanShare returns true when the user's current plan allows public sharing.
+type CanShare func(ctx context.Context, userID string) bool
+
 type Handler struct {
-	svc *Service
+	svc      *Service
+	canShare CanShare
 }
 
-func NewHandler(svc *Service) *Handler { return &Handler{svc: svc} }
+func NewHandler(svc *Service, canShare CanShare) *Handler {
+	if canShare == nil {
+		canShare = func(context.Context, string) bool { return false }
+	}
+	return &Handler{svc: svc, canShare: canShare}
+}
 
 func (h *Handler) Mount(r chi.Router) {
 	r.Post("/capsules", h.Create)
@@ -27,6 +37,64 @@ func (h *Handler) Mount(r chi.Router) {
 	r.Post("/capsules/{id}/versions", h.CreateVersion)
 	r.Get("/capsules/{id}/lineage", h.Lineage)
 	r.Post("/capsules/search", h.Search)
+	r.Post("/capsules/{id}/share", h.Share)
+	r.Delete("/capsules/{id}/share", h.Unshare)
+}
+
+// MountPublic mounts unauthenticated share-link reads.
+func (h *Handler) MountPublic(r chi.Router) {
+	r.Get("/public/capsules/share/{token}", h.PublicGet)
+}
+
+func (h *Handler) Share(w http.ResponseWriter, r *http.Request) {
+	uid := auth.UserID(r.Context())
+	if uid == "" {
+		httpx.Error(w, http.StatusUnauthorized, "auth required")
+		return
+	}
+	if !h.canShare(r.Context(), uid) {
+		httpx.Error(w, http.StatusPaymentRequired, "sharing requires Ultimate plan")
+		return
+	}
+	id, err := uuid.Parse(chi.URLParam(r, "id"))
+	if err != nil {
+		httpx.Error(w, http.StatusBadRequest, "invalid id")
+		return
+	}
+	tok, err := h.svc.Share(r.Context(), uid, id)
+	if err != nil {
+		writeServiceErr(w, err)
+		return
+	}
+	httpx.JSON(w, http.StatusOK, map[string]string{"share_token": tok})
+}
+
+func (h *Handler) Unshare(w http.ResponseWriter, r *http.Request) {
+	uid := auth.UserID(r.Context())
+	if uid == "" {
+		httpx.Error(w, http.StatusUnauthorized, "auth required")
+		return
+	}
+	id, err := uuid.Parse(chi.URLParam(r, "id"))
+	if err != nil {
+		httpx.Error(w, http.StatusBadRequest, "invalid id")
+		return
+	}
+	if err := h.svc.Unshare(r.Context(), uid, id); err != nil {
+		writeServiceErr(w, err)
+		return
+	}
+	w.WriteHeader(http.StatusNoContent)
+}
+
+func (h *Handler) PublicGet(w http.ResponseWriter, r *http.Request) {
+	token := chi.URLParam(r, "token")
+	c, err := h.svc.GetByShareToken(r.Context(), token)
+	if err != nil {
+		writeServiceErr(w, err)
+		return
+	}
+	httpx.JSON(w, http.StatusOK, c)
 }
 
 func (h *Handler) Search(w http.ResponseWriter, r *http.Request) {

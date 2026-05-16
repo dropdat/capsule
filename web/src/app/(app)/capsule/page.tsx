@@ -4,6 +4,7 @@ import { Suspense, useState } from "react";
 import useSWR from "swr";
 import { useApi, type Capsule } from "@/lib/api";
 import Link from "next/link";
+import { ShareControl } from "@/components/capsule/ShareControl";
 
 function CapsuleDetail() {
   const params = useSearchParams();
@@ -115,6 +116,7 @@ function CapsuleDetail() {
               <button onClick={startEdit} className="rounded-md bg-secondary border border-border px-4 py-2 text-[13px] font-medium hover:bg-card">
                 Edit
               </button>
+              <ShareControl capsuleId={capsule.id} initialToken={capsule.shareToken} />
               <button onClick={remove} className="rounded-md bg-card border border-border px-4 py-2 text-[13px] font-medium text-destructive hover:bg-accent-soft/40">
                 Delete
               </button>

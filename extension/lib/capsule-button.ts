@@ -9,7 +9,17 @@
  */
 import { captureCurrent } from "./capture";
 import { newCapsuleId } from "./uuid";
+import { showDialog, showToast } from "./overlay";
 import type { Capsule } from "./types";
+
+const UPGRADE_URL = "https://dropdat.app/billing";
+const NO_MESSAGES = Symbol("no-messages");
+class NoMessagesError extends Error {
+  marker = NO_MESSAGES;
+  constructor() {
+    super("no chat detected on this page");
+  }
+}
 
 const BTN_ID = "dropdat-capsule-btn";
 
@@ -262,11 +272,32 @@ function makeButton(): HTMLButtonElement {
     setState(ICON_LOADING, "#0562ef");
     btn.style.color = "#fff";
     try {
-      await captureAndSave();
+      const result = await captureAndSave();
       setState(ICON_OK, "#0a8f4a");
+      if (result?.quotaExceeded) {
+        await showDialog({
+          title: "Capsule saved locally — sync blocked",
+          body:
+            "You've hit the capsule limit on your current plan. The capsule is saved on this device and will sync automatically once you upgrade.",
+          actions: [
+            { label: "Maybe later" },
+            { label: "Upgrade plan", href: UPGRADE_URL, primary: true },
+          ],
+        });
+      }
     } catch (err) {
       console.error("[dropdat] capture failed", err);
       setState(ICON_FAIL, "#c0392b");
+      if (err instanceof NoMessagesError || (err as { marker?: symbol })?.marker === NO_MESSAGES) {
+        await showDialog({
+          title: "No chat detected",
+          body:
+            "Start a conversation in this AI app first — once there are messages on the page, hit the dropdat button to save them as a capsule.",
+          actions: [{ label: "Got it", primary: true }],
+        });
+      } else {
+        showToast("Couldn't capture this page. Try refreshing or sign in again.", "error");
+      }
     } finally {
       setTimeout(() => {
         btn.disabled = false;
@@ -450,10 +481,10 @@ function hoverScale(btn: HTMLButtonElement) {
   });
 }
 
-async function captureAndSave() {
+async function captureAndSave(): Promise<{ quotaExceeded?: boolean } | undefined> {
   const captured = captureCurrent();
   if (!captured || captured.messages.length === 0) {
-    throw new Error("no messages found on this page");
+    throw new NoMessagesError();
   }
   console.log(`[dropdat] captured ${captured.messages.length} messages from ${captured.source}`);
 
@@ -489,6 +520,8 @@ async function captureAndSave() {
   if (resp && typeof resp === "object" && "ok" in resp && (resp as { ok: boolean }).ok === false) {
     throw new Error(`background rejected capsule: ${JSON.stringify(resp)}`);
   }
+  const syncInfo = (resp as { sync?: { quotaExceeded?: boolean } } | undefined)?.sync;
+  return { quotaExceeded: syncInfo?.quotaExceeded === true };
 }
 
 type CapsuleListItem = {

@@ -52,3 +52,16 @@ ORDER BY version ASC;
 -- name: GetMaxVersionInLineage :one
 SELECT COALESCE(MAX(version), 0)::int AS max_version FROM capsules
 WHERE user_id = $1 AND root_id = $2;
+
+-- name: SetCapsuleShareToken :one
+UPDATE capsules SET share_token = $3, updated_at = now()
+WHERE id = $1 AND user_id = $2 AND deleted_at IS NULL
+RETURNING *;
+
+-- name: ClearCapsuleShareToken :exec
+UPDATE capsules SET share_token = NULL, updated_at = now()
+WHERE id = $1 AND user_id = $2;
+
+-- name: GetCapsuleByShareToken :one
+SELECT * FROM capsules
+WHERE share_token = $1 AND deleted_at IS NULL;

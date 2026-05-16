@@ -113,7 +113,14 @@ func main() {
 		return used < lim.CapsuleLimit, nil
 	})
 
-	capsuleHandler := capsule.NewHandler(capsuleSvc)
+	capsuleHandler := capsule.NewHandler(capsuleSvc, func(ctx context.Context, userID string) bool {
+		for _, s := range billing.TierLimits(tierFor(ctx, userID)).Scopes {
+			if s == billing.ScopeShare {
+				return true
+			}
+		}
+		return false
+	})
 	apiKeySvc := apikey.NewService(queries)
 	apiKeyHandler := apikey.NewHandler(apiKeySvc, func(ctx context.Context, userID string) []string {
 		return billing.TierLimits(tierFor(ctx, userID)).Scopes
@@ -127,6 +134,10 @@ func main() {
 
 	// Unauthenticated webhook receiver — dodo signs the body, no JWT.
 	billingHandler.MountWebhook(r)
+	// Public share-link reads (no auth).
+	r.Route("/api/v1", func(pr chi.Router) {
+		capsuleHandler.MountPublic(pr)
+	})
 
 	r.Route("/api/v1", func(r chi.Router) {
 		r.Use(verifier.Middleware)

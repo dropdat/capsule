@@ -49,9 +49,10 @@ type Capsule struct {
 	Tags      []string   `json:"tags"`
 	Version   int32      `json:"version"`
 	RootID    uuid.UUID  `json:"rootId"`
-	ParentID  *uuid.UUID `json:"parentId"`
-	CreatedAt time.Time  `json:"createdAt"`
-	UpdatedAt time.Time  `json:"updatedAt"`
+	ParentID   *uuid.UUID `json:"parentId"`
+	ShareToken *string    `json:"shareToken,omitempty"`
+	CreatedAt  time.Time  `json:"createdAt"`
+	UpdatedAt  time.Time  `json:"updatedAt"`
 }
 
 // CreateRequest body shape for POST /capsules. Client provides id (uuid v7).

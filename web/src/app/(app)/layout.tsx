@@ -14,9 +14,9 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
       </Show>
       <Show when="signed-in">
         <ThemeProvider>
-          <div className="relative z-[2] flex min-h-screen">
+          <div className="relative z-[2] min-h-screen md:pl-[240px]">
             <Sidebar open={open} onClose={() => setOpen(false)} />
-            <main className="flex-1 min-w-0 overflow-x-hidden">
+            <main className="min-w-0 overflow-x-hidden">
               <MobileTopBar onOpen={() => setOpen(true)} />
               <div className="mx-auto w-full max-w-[1200px] px-4 sm:px-6 lg:px-8 py-6 sm:py-10">
                 {children}

@@ -2,9 +2,12 @@ package capsule
 
 import (
 	"context"
+	"crypto/rand"
+	"encoding/base32"
 	"errors"
 	"fmt"
 	"log/slog"
+	"strings"
 	"time"
 
 	"github.com/google/uuid"
@@ -117,6 +120,50 @@ func (s *Service) Create(ctx context.Context, userID string, in CreateRequest) (
 
 func (s *Service) Get(ctx context.Context, userID string, id uuid.UUID) (Capsule, error) {
 	row, err := s.q.GetCapsule(ctx, dbgen.GetCapsuleParams{ID: id, UserID: userID})
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return Capsule{}, ErrNotFound
+		}
+		return Capsule{}, err
+	}
+	return toCapsule(row)
+}
+
+// Share assigns (or returns the existing) public share token for a capsule.
+func (s *Service) Share(ctx context.Context, userID string, id uuid.UUID) (string, error) {
+	existing, err := s.q.GetCapsule(ctx, dbgen.GetCapsuleParams{ID: id, UserID: userID})
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return "", ErrNotFound
+		}
+		return "", err
+	}
+	if existing.ShareToken != nil && *existing.ShareToken != "" {
+		return *existing.ShareToken, nil
+	}
+	token, err := newShareToken()
+	if err != nil {
+		return "", err
+	}
+	if _, err := s.q.SetCapsuleShareToken(ctx, dbgen.SetCapsuleShareTokenParams{
+		ID: id, UserID: userID, ShareToken: &token,
+	}); err != nil {
+		return "", err
+	}
+	return token, nil
+}
+
+func (s *Service) Unshare(ctx context.Context, userID string, id uuid.UUID) error {
+	return s.q.ClearCapsuleShareToken(ctx, dbgen.ClearCapsuleShareTokenParams{ID: id, UserID: userID})
+}
+
+// GetByShareToken loads a capsule via its public share token. Returns ErrNotFound
+// if no live capsule has that token.
+func (s *Service) GetByShareToken(ctx context.Context, token string) (Capsule, error) {
+	if token == "" {
+		return Capsule{}, ErrNotFound
+	}
+	row, err := s.q.GetCapsuleByShareToken(ctx, &token)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
 			return Capsule{}, ErrNotFound
@@ -301,11 +348,20 @@ func toCapsule(row dbgen.Capsule) (Capsule, error) {
 		Messages:  msgs,
 		Tags:      row.Tags,
 		Version:   row.Version,
-		RootID:    row.RootID,
-		ParentID:  parent,
-		CreatedAt: created,
-		UpdatedAt: updated,
+		RootID:     row.RootID,
+		ParentID:   parent,
+		ShareToken: row.ShareToken,
+		CreatedAt:  created,
+		UpdatedAt:  updated,
 	}, nil
+}
+
+func newShareToken() (string, error) {
+	b := make([]byte, 16)
+	if _, err := rand.Read(b); err != nil {
+		return "", err
+	}
+	return strings.ToLower(strings.TrimRight(base32.StdEncoding.EncodeToString(b), "=")), nil
 }
 
 func tsToTime(ts pgtype.Timestamptz) time.Time {

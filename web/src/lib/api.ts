@@ -71,6 +71,7 @@ export type Capsule = {
   version: number;
   root_id: string;
   parent_id: string | null;
+  shareToken?: string | null;
   created_at: string;
   updated_at: string;
 };

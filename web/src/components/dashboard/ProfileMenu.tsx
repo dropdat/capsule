@@ -1,0 +1,174 @@
+"use client";
+
+import Link from "next/link";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { SignOutButton, useAuth, useUser } from "@clerk/react";
+
+import type { Subscription } from "@/lib/api";
+
+const API_BASE = process.env.NEXT_PUBLIC_API_URL || "https://dropdat.app";
+
+const TIER_LABEL: Record<string, string> = {
+  basic: "Basic",
+  pro: "Pro",
+  premium: "Premium",
+  ultimate: "Ultimate",
+  enterprise: "Enterprise",
+};
+
+export function ProfileMenu() {
+  const { user } = useUser();
+  const { getToken } = useAuth();
+  const [open, setOpen] = useState(false);
+  const [sub, setSub] = useState<Subscription | null>(null);
+  const [portalBusy, setPortalBusy] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+
+  const load = useCallback(async () => {
+    try {
+      const token = await getToken();
+      const res = await fetch(`${API_BASE}/api/v1/billing/subscription`, {
+        headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+      });
+      if (res.ok) setSub(await res.json());
+    } catch {
+      // silent — menu still renders without sub data
+    }
+  }, [getToken]);
+
+  useEffect(() => {
+    if (open && !sub) load();
+  }, [open, sub, load]);
+
+  useEffect(() => {
+    if (!open) return;
+    const onClick = (e: MouseEvent) => {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+    };
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setOpen(false);
+    };
+    document.addEventListener("mousedown", onClick);
+    document.addEventListener("keydown", onKey);
+    return () => {
+      document.removeEventListener("mousedown", onClick);
+      document.removeEventListener("keydown", onKey);
+    };
+  }, [open]);
+
+  const openPortal = async () => {
+    setPortalBusy(true);
+    try {
+      const token = await getToken();
+      const res = await fetch(`${API_BASE}/api/v1/billing/portal`, {
+        headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+      });
+      if (!res.ok) throw new Error(await res.text());
+      const data: { link: string } = await res.json();
+      window.open(data.link, "_blank", "noopener,noreferrer");
+    } catch {
+      // fallback: send them to the in-app billing page
+      window.location.href = "/billing";
+    } finally {
+      setPortalBusy(false);
+    }
+  };
+
+  const email = user?.primaryEmailAddress?.emailAddress;
+  const initials =
+    (user?.firstName?.[0] ?? email?.[0] ?? "?").toUpperCase();
+  const tierLabel = sub ? TIER_LABEL[sub.tier] ?? sub.tier : "—";
+  const usage = sub
+    ? sub.capsule_limit < 0
+      ? `${sub.capsules_used} capsules (unlimited)`
+      : `${sub.capsules_used} / ${sub.capsule_limit} capsules`
+    : null;
+
+  return (
+    <div ref={ref} className="relative">
+      <button
+        type="button"
+        onClick={() => setOpen((v) => !v)}
+        aria-label="Open profile menu"
+        className="flex h-8 w-8 items-center justify-center rounded-full bg-primary text-primary-foreground text-[12px] font-medium hover:opacity-90"
+      >
+        {user?.imageUrl ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src={user.imageUrl} alt="" className="h-8 w-8 rounded-full object-cover" />
+        ) : (
+          initials
+        )}
+      </button>
+
+      {open && (
+        <div
+          role="menu"
+          className="absolute bottom-12 left-0 z-[60] w-[260px] rounded-lg border border-border bg-card shadow-lg overflow-hidden"
+        >
+          <div className="px-4 py-3 border-b border-border">
+            <div className="text-[13px] font-medium truncate">{user?.fullName ?? email ?? "Account"}</div>
+            {email && <div className="text-[12px] text-muted-foreground truncate">{email}</div>}
+          </div>
+
+          <div className="px-4 py-3 border-b border-border flex flex-col gap-1">
+            <div className="flex items-center justify-between gap-2">
+              <span className="text-[11.5px] uppercase tracking-wide text-muted-foreground">Plan</span>
+              <span className="text-[12.5px] font-medium">{tierLabel}</span>
+            </div>
+            {sub && (
+              <div className="flex items-center justify-between gap-2">
+                <span className="text-[11.5px] uppercase tracking-wide text-muted-foreground">Usage</span>
+                <span className="text-[12px]">{usage}</span>
+              </div>
+            )}
+            {sub?.status && (
+              <div className="flex items-center justify-between gap-2">
+                <span className="text-[11.5px] uppercase tracking-wide text-muted-foreground">Status</span>
+                <span className="text-[12px] capitalize">{sub.status}</span>
+              </div>
+            )}
+          </div>
+
+          <div className="px-4 py-2 text-[11.5px] text-muted-foreground border-b border-border">
+            Invoices and receipts are emailed automatically.
+          </div>
+
+          <nav className="py-1.5">
+            <Link
+              href="/billing"
+              onClick={() => setOpen(false)}
+              className="block px-4 py-2 text-[13px] hover:bg-muted"
+            >
+              Plans & billing
+            </Link>
+            {sub?.has_customer && (
+              <button
+                type="button"
+                onClick={openPortal}
+                disabled={portalBusy}
+                className="block w-full text-left px-4 py-2 text-[13px] hover:bg-muted disabled:opacity-50"
+              >
+                {portalBusy ? "Opening portal…" : "Manage billing portal"}
+              </button>
+            )}
+            <Link
+              href="/settings"
+              onClick={() => setOpen(false)}
+              className="block px-4 py-2 text-[13px] hover:bg-muted"
+            >
+              Settings
+            </Link>
+            <SignOutButton>
+              <button
+                type="button"
+                className="block w-full text-left px-4 py-2 text-[13px] hover:bg-muted text-destructive"
+              >
+                Sign out
+              </button>
+            </SignOutButton>
+          </nav>
+        </div>
+      )}
+    </div>
+  );
+}

@@ -14,8 +14,11 @@ Living index of shipped features. Updated each session when new features land.
   - **Capsule** — view / edit a single capsule
   - **Links** — saved link manager
   - **API Keys** — issue & revoke personal API keys (scopes derived from current plan)
-  - **Billing** — plan picker (Basic / Pro / Premium / Ultimate + Enterprise contact), monthly/annual toggle, current-plan + usage card, Manage-billing portal link
+  - **Billing** — plan picker (Basic / Pro / Premium / Ultimate + Enterprise contact) with per-feature check/cross matrix, monthly/annual toggle, current-plan + usage card, Manage-billing portal link
   - **Settings** — account settings
+- Profile menu (sidebar) — shows current plan, status, capsule usage, manage-billing portal link, and "invoices emailed automatically" hint
+- Capsule public sharing — Ultimate-tier toggle on any capsule generates a read-only `dropdat.app/s/<token>` URL; lower tiers get an in-app upgrade dialog
+- Sidebar pinned (no longer scrolls with content)
 - Folder organization for capsules
 - Mobile-safe layout (no horizontal overflow)
 - Dashboard logo links back to homepage
@@ -36,7 +39,8 @@ Living index of shipped features. Updated each session when new features land.
   - `POST /billing/checkout` — hosted dodopayments checkout session for a plan
   - `GET /billing/portal` — dodopayments customer portal link
   - `POST /webhooks/dodopayments` — HMAC-verified webhook upserting subscription state from `subscription.active|renewed|cancelled|expired|failed|paused`
-- Per-tier capsule limits enforced on create (`402 Payment Required` when exceeded)
+- Per-tier capsule limits enforced on create (`402 Payment Required` when exceeded): Basic 5, Pro 15, Premium 50, Ultimate unlimited
+- Capsule sharing — `POST /capsules/{id}/share` (Ultimate-gated, `402` otherwise), `DELETE /capsules/{id}/share`, public unauthenticated `GET /public/capsules/share/{token}`
 - Clerk JWT auth (JWKS verified server-side)
 - DEV_AUTH_BYPASS for local development
 - Client-supplied UUIDv7 ids for offline-first sync
@@ -55,6 +59,9 @@ Living index of shipped features. Updated each session when new features land.
 - Save-link feature (capture chat URL without full capsule)
 - Popup UI for capsule list / actions
 - IndexedDB offline storage with two-way sync (pulls remote capsules so a freshly-installed extension recovers prior captures)
+- In-page dialogs:
+  - "No chat detected" when the user clicks capsule on an empty page
+  - "Capsule saved locally — sync blocked" upgrade dialog when the server returns `402` (plan limit). Capsule stays pending and syncs after upgrade.
 - Clerk auth inside extension (`@clerk/chrome-extension`)
 
 ## MCP Server (for AI coding agents)

@@ -23,6 +23,7 @@ const (
 	ScopeTeams          = "teams"
 	ScopeTeamsCreate    = "teams:create"
 	ScopeVersioning     = "versioning"
+	ScopeShare          = "share"
 )
 
 // Limits describe per-tier quotas. CapsuleLimit == -1 means unlimited.
@@ -39,13 +40,13 @@ func TierLimits(tier string) Limits {
 			CapsuleLimit: 15,
 			Scopes: []string{
 				ScopeCapsulesRead, ScopeCapsulesWrite,
-				ScopeMCP, ScopeAttachments, ScopeVersioning,
+				ScopeVersioning,
 				ScopeTeams, ScopeTeamsCreate,
 			},
 		}
 	case TierPremium:
 		return Limits{
-			CapsuleLimit: -1,
+			CapsuleLimit: 50,
 			Scopes: []string{
 				ScopeCapsulesRead, ScopeCapsulesWrite,
 				ScopeMCP, ScopeAttachments, ScopeDynamicContext, ScopeVersioning,
@@ -58,7 +59,7 @@ func TierLimits(tier string) Limits {
 			Scopes: []string{
 				ScopeCapsulesRead, ScopeCapsulesWrite,
 				ScopeMCP, ScopeAttachments, ScopeDynamicContext, ScopeVersioning,
-				ScopeTeams, ScopeTeamsCreate,
+				ScopeTeams, ScopeTeamsCreate, ScopeShare,
 			},
 		}
 	default:
@@ -66,7 +67,6 @@ func TierLimits(tier string) Limits {
 			CapsuleLimit: 5,
 			Scopes: []string{
 				ScopeCapsulesRead, ScopeCapsulesWrite,
-				ScopeMCP, ScopeVersioning,
 			},
 		}
 	}

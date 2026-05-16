@@ -167,7 +167,7 @@ export default defineBackground(() => {
             const token = await getApiKey();
             const sync = await syncOnce(async () => token).catch((e) => {
               console.warn("[dropdat] sync after save failed:", e);
-              return { ok: 0, failed: 1 };
+              return { ok: 0, failed: 1, pulled: 0, quotaExceeded: false };
             });
             sendResponse({ ok: true, id: capsule.id, sync });
           } catch (err) {

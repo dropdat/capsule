@@ -2,8 +2,8 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { UserButton } from "@clerk/react";
 import { useTheme } from "./ThemeProvider";
+import { ProfileMenu } from "./ProfileMenu";
 
 const NAV = [
   { href: "/library", label: "Library", icon: LibraryIcon },
@@ -33,7 +33,7 @@ export function Sidebar({
         aria-hidden
       />
       <aside
-        className={`fixed md:sticky top-0 z-50 flex h-screen w-[240px] shrink-0 flex-col border-r transition-transform md:translate-x-0 ${
+        className={`fixed top-0 left-0 z-50 flex h-screen w-[240px] shrink-0 flex-col border-r transition-transform md:translate-x-0 ${
           open ? "translate-x-0" : "-translate-x-full md:translate-x-0"
         }`}
         style={{
@@ -89,7 +89,7 @@ export function Sidebar({
           className="border-t px-3 py-3 flex items-center justify-between"
           style={{ borderColor: "var(--sidebar-border)" }}
         >
-          <UserButton />
+          <ProfileMenu />
           <ThemeToggle />
         </div>
       </aside>

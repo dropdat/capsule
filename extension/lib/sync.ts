@@ -12,12 +12,13 @@ import type { Capsule } from "./types";
  */
 export async function syncOnce(
   getToken: () => Promise<string | null>,
-): Promise<{ ok: number; failed: number; pulled: number }> {
+): Promise<{ ok: number; failed: number; pulled: number; quotaExceeded: boolean }> {
   const token = await getToken();
   const pending = await capsuleStore.pendingSync();
   let ok = 0;
   let failed = 0;
   let pulled = 0;
+  let quotaExceeded = false;
 
   for (const c of pending) {
     try {
@@ -33,9 +34,18 @@ export async function syncOnce(
       await capsuleStore.markSynced(c.id);
       ok++;
     } catch (err) {
-      if (typeof err === "object" && err && "status" in err && (err as { status: number }).status === 409) {
+      const status =
+        typeof err === "object" && err && "status" in err
+          ? (err as { status: number }).status
+          : 0;
+      if (status === 409) {
         await capsuleStore.markSynced(c.id);
         ok++;
+      } else if (status === 402) {
+        // Plan limit reached. Leave capsule pending locally so it can sync
+        // once the user upgrades.
+        quotaExceeded = true;
+        failed++;
       } else {
         console.warn("[dropdat] sync push failed", c.id, err);
         failed++;
@@ -75,5 +85,5 @@ export async function syncOnce(
     }
   }
 
-  return { ok, failed, pulled };
+  return { ok, failed, pulled, quotaExceeded };
 }

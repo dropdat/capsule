@@ -7,13 +7,15 @@ import type { Subscription, Tier } from "@/lib/api";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || "https://dropdat.app";
 
+type Feature = { label: string; on: boolean };
+
 type Plan = {
   id: Tier;
   name: string;
   price: string;
   cadence: string;
   tagline: string;
-  features: string[];
+  features: Feature[];
   cta: "current" | "subscribe" | "contact";
   highlight?: boolean;
 };
@@ -26,10 +28,11 @@ const PLANS: Plan[] = [
     cadence: "/month",
     tagline: "Essential capsule management for casual users.",
     features: [
-      "5 total capsules",
-      "MCP access",
-      "Versioning (core)",
-      "Join existing teams",
+      { label: "5 total capsules", on: true },
+      { label: "MCP access", on: false },
+      { label: "Versioning (core)", on: false },
+      { label: "Join existing teams", on: false },
+      { label: "Share capsules publicly", on: false },
     ],
     cta: "current",
   },
@@ -40,10 +43,11 @@ const PLANS: Plan[] = [
     cadence: "/month",
     tagline: "Advanced features for solo power users.",
     features: [
-      "15 total capsules",
-      "MCP + attachments",
-      "Versioning",
-      "Create & join teams",
+      { label: "15 total capsules", on: true },
+      { label: "Versioning", on: true },
+      { label: "Create & join teams", on: true },
+      { label: "MCP access", on: false },
+      { label: "Share capsules publicly", on: false },
     ],
     cta: "subscribe",
     highlight: true,
@@ -53,12 +57,13 @@ const PLANS: Plan[] = [
     name: "Premium",
     price: "$5",
     cadence: "/month",
-    tagline: "Unlimited capsules with dynamic context.",
+    tagline: "MCP + attachments + dynamic context — built for serious knowledge workers.",
     features: [
-      "Unlimited capsules",
-      "MCP + attachments + dynamic context",
-      "Universal versioning",
-      "Create & join teams",
+      { label: "50 total capsules", on: true },
+      { label: "MCP + attachments + dynamic context", on: true },
+      { label: "Universal versioning", on: true },
+      { label: "Create & join teams", on: true },
+      { label: "Share capsules publicly", on: false },
     ],
     cta: "subscribe",
   },
@@ -69,13 +74,31 @@ const PLANS: Plan[] = [
     cadence: "/month",
     tagline: "Maximum collaboration and white-label.",
     features: [
-      "Everything in Premium",
-      "White-labeling",
-      "Priority support",
+      { label: "Unlimited capsules", on: true },
+      { label: "MCP + attachments + dynamic context", on: true },
+      { label: "Universal versioning", on: true },
+      { label: "Create & join teams", on: true },
+      { label: "Share capsules publicly", on: true },
     ],
     cta: "subscribe",
   },
 ];
+
+function CheckIcon({ className }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.8" className={className}>
+      <path d="M3 8.5l3.2 3.2L13 5" />
+    </svg>
+  );
+}
+function CrossIcon({ className }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.6" className={className}>
+      <line x1="4" y1="4" x2="12" y2="12" />
+      <line x1="12" y1="4" x2="4" y2="12" />
+    </svg>
+  );
+}
 
 export default function BillingPage() {
   const { getToken } = useAuth();
@@ -255,9 +278,15 @@ export default function BillingPage() {
               </div>
               <ul className="flex flex-col gap-1.5 text-[13px]">
                 {p.features.map((f) => (
-                  <li key={f} className="flex gap-2">
-                    <span className="text-primary">•</span>
-                    <span>{f}</span>
+                  <li key={f.label} className="flex items-start gap-2">
+                    {f.on ? (
+                      <CheckIcon className="mt-[3px] h-3.5 w-3.5 text-emerald-500 shrink-0" />
+                    ) : (
+                      <CrossIcon className="mt-[3px] h-3.5 w-3.5 text-muted-foreground/60 shrink-0" />
+                    )}
+                    <span className={f.on ? "" : "text-muted-foreground line-through decoration-muted-foreground/40"}>
+                      {f.label}
+                    </span>
                   </li>
                 ))}
               </ul>
