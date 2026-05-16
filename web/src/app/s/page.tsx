@@ -1,6 +1,7 @@
 "use client";
 
-import { use, useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
+import { useSearchParams } from "next/navigation";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || "https://dropdat.app";
 
@@ -18,19 +19,23 @@ type SharedCapsule = {
   updatedAt: string;
 };
 
-export default function SharedCapsulePage({
-  params,
-}: {
-  params: Promise<{ token: string }>;
-}) {
-  const { token } = use(params);
+function SharedView() {
+  const params = useSearchParams();
+  const token = params.get("t") ?? "";
   const [data, setData] = useState<SharedCapsule | null>(null);
   const [err, setErr] = useState<string | null>(null);
 
   useEffect(() => {
+    if (!token) {
+      setErr("Missing share token.");
+      return;
+    }
     fetch(`${API_BASE}/api/v1/public/capsules/share/${encodeURIComponent(token)}`)
       .then(async (res) => {
-        if (!res.ok) throw new Error(res.status === 404 ? "Capsule not found or link revoked." : "Failed to load.");
+        if (!res.ok)
+          throw new Error(
+            res.status === 404 ? "Capsule not found or link revoked." : "Failed to load."
+          );
         return res.json();
       })
       .then(setData)
@@ -43,13 +48,19 @@ export default function SharedCapsulePage({
         <div className="max-w-md text-center flex flex-col gap-3">
           <h1 className="font-heading text-[22px] font-medium">Link unavailable</h1>
           <p className="text-[14px] text-muted-foreground">{err}</p>
-          <a href="https://dropdat.app" className="text-[13px] underline">Visit dropdat</a>
+          <a href="https://dropdat.app" className="text-[13px] underline">
+            Visit dropdat
+          </a>
         </div>
       </main>
     );
   }
   if (!data) {
-    return <main className="min-h-screen flex items-center justify-center p-6 text-[13px] text-muted-foreground">Loading…</main>;
+    return (
+      <main className="min-h-screen flex items-center justify-center p-6 text-[13px] text-muted-foreground">
+        Loading…
+      </main>
+    );
   }
 
   return (
@@ -80,15 +91,35 @@ export default function SharedCapsulePage({
       <section className="flex flex-col gap-4">
         {data.messages.map((m, i) => (
           <div key={i} className="border border-border bg-card p-4">
-            <div className="text-[11.5px] uppercase tracking-[0.18em] text-muted-foreground mb-2">{m.role}</div>
+            <div className="text-[11.5px] uppercase tracking-[0.18em] text-muted-foreground mb-2">
+              {m.role}
+            </div>
             <div className="text-[14px] whitespace-pre-wrap">{m.content}</div>
           </div>
         ))}
       </section>
 
       <footer className="text-[12px] text-muted-foreground border-t border-border pt-4">
-        Shared via <a href="https://dropdat.app" className="underline">dropdat</a>.
+        Shared via{" "}
+        <a href="https://dropdat.app" className="underline">
+          dropdat
+        </a>
+        .
       </footer>
     </main>
+  );
+}
+
+export default function SharedPage() {
+  return (
+    <Suspense
+      fallback={
+        <main className="min-h-screen flex items-center justify-center p-6 text-[13px] text-muted-foreground">
+          Loading…
+        </main>
+      }
+    >
+      <SharedView />
+    </Suspense>
   );
 }

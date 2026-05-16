@@ -7,6 +7,7 @@ const cols = [
       { label: "How it works", href: "#how-it-works" },
       { label: "Features", href: "#features" },
       { label: "MCP server", href: "/mcp" },
+      { label: "Blog", href: "/blog" },
       { label: "FAQ", href: "/faq" },
       { label: "Download", href: "https://chromewebstore.google.com/detail/pfcnjelpgccnkagaekhdcddpfacighho" },
     ],

@@ -20,7 +20,7 @@ export function ShareControl({ capsuleId, initialToken, onChange }: Props) {
   const [copied, setCopied] = useState(false);
 
   const shareURL = token
-    ? `${typeof window !== "undefined" ? window.location.origin : "https://dropdat.app"}/s/${token}`
+    ? `${typeof window !== "undefined" ? window.location.origin : "https://dropdat.app"}/s?t=${token}`
     : null;
 
   const share = async () => {

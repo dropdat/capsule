@@ -13,6 +13,7 @@ export function Nav() {
           <li><a href="#how-it-works" className="hover:text-foreground transition-colors">How it works</a></li>
           <li><a href="#features" className="hover:text-foreground transition-colors">Features</a></li>
           <li><Link href="/mcp" className="hover:text-foreground transition-colors">MCP</Link></li>
+          <li><Link href="/blog" className="hover:text-foreground transition-colors">Blog</Link></li>
           <li><a href="#platforms" className="hover:text-foreground transition-colors">Supported AIs</a></li>
         </ul>
         <div className="flex items-center gap-2">

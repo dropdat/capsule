@@ -7,6 +7,7 @@ Living index of shipped features. Updated each session when new features land.
 - Marketing landing page
 - `/mcp` feature page — MCP server + semantic recall walkthrough,
   install steps, supported clients
+- `/blog` — long-form posts with JSON-LD Article schema, related-post graph, in sitemap
 - Privacy, Terms, Support static pages
 - Clerk-powered Sign-in / Sign-up flows
 - Authenticated dashboard shell (`(app)` route group)
