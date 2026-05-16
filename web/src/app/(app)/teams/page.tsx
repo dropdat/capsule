@@ -114,7 +114,7 @@ export default function TeamsPage() {
             {teams.map((t) => (
               <li key={t.id} className="border-t border-border first:border-t-0">
                 <Link
-                  href={`/teams/${t.id}`}
+                  href={`/teams/team?id=${t.id}`}
                   className="flex items-center justify-between px-5 py-3 hover:bg-muted/40 transition-colors"
                 >
                   <div className="flex flex-col">

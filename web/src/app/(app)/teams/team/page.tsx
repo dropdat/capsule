@@ -1,20 +1,27 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState, use } from "react";
+import { Suspense, useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useAuth, useUser } from "@clerk/react";
 
 import type { Capsule, Team, TeamMember } from "@/lib/api";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || "https://dropdat.app";
 
-export default function TeamDetail({
-  params,
-}: {
-  params: Promise<{ id: string }>;
-}) {
-  const { id } = use(params);
+export default function TeamDetailPage() {
+  return (
+    <Suspense
+      fallback={<section className="py-12 text-[13px] text-muted-foreground">Loading…</section>}
+    >
+      <TeamDetail />
+    </Suspense>
+  );
+}
+
+function TeamDetail() {
+  const params = useSearchParams();
+  const id = params.get("id") ?? "";
   const { getToken } = useAuth();
   const { user } = useUser();
   const router = useRouter();

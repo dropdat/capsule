@@ -40,7 +40,7 @@ function JoinInner() {
       const team: { id: string; name: string } = await res.json();
       setTeamName(team.name);
       setState("ok");
-      setTimeout(() => router.push(`/teams/${team.id}`), 1200);
+      setTimeout(() => router.push(`/teams/team?id=${team.id}`), 1200);
     } catch (e) {
       setError(e instanceof Error ? e.message : "Join failed");
       setState("error");
