@@ -1,4 +1,3 @@
-import Link from "next/link";
 import { Nav } from "@/components/Nav";
 import { Footer } from "@/components/Footer";
 import {
@@ -36,6 +35,11 @@ const tools = [
     name: "dropdat_capsule",
     body:
       "Save the current conversation as a new capsule. Call when the user says 'remember this' or at the end of a meaningful session.",
+  },
+  {
+    name: "dropdat_autocapsule",
+    body:
+      "Save the FULL verbatim Claude Code session by reading the on-disk .jsonl transcript — no model reconstruction, every message preserved.",
   },
 ];
 
@@ -117,7 +121,7 @@ export default function McpPage() {
         <section className="w-full max-w-[1200px] px-5 sm:px-6 py-12 sm:py-16">
           <div className="mb-10">
             <h2 className="font-heading text-[32px] max-md:text-[24px] font-medium tracking-[-0.03em] leading-[120%]">
-              Four tools. One library.
+              Five tools. One library.
             </h2>
             <p className="mt-3 text-[15px] text-muted-foreground max-w-[640px]">
               The MCP server exposes exactly the surface an agent needs — and
@@ -182,7 +186,17 @@ export default function McpPage() {
               Install in under a minute.
             </h2>
             <p className="mt-3 text-[15px] text-muted-foreground max-w-[640px]">
-              Build once, point any MCP-capable client at the binary.
+              One npm package, one config block, any MCP-capable client.
+              Source on{" "}
+              <a
+                href="https://github.com/dropdat/mcp"
+                className="underline"
+                target="_blank"
+                rel="noreferrer"
+              >
+                GitHub
+              </a>
+              .
             </p>
           </div>
 
@@ -203,12 +217,14 @@ export default function McpPage() {
             />
             <Step
               n={2}
-              title="Build the server"
+              title="Install from npm"
               body={
                 <pre className="font-mono text-[13px] leading-[1.6] bg-background border border-border p-4 overflow-x-auto">
-{`cd backend/mcp
-npm install
-npm run build`}
+{`# zero-install — runs the latest version on demand
+npx -y @dropdat/mcp
+
+# or pin a global install
+npm install -g @dropdat/mcp`}
                 </pre>
               }
             />
@@ -220,8 +236,8 @@ npm run build`}
 {`{
   "mcpServers": {
     "dropdat": {
-      "command": "node",
-      "args": ["/abs/path/to/backend/mcp/dist/index.js"],
+      "command": "npx",
+      "args": ["-y", "@dropdat/mcp"],
       "env": {
         "DROPDAT_API_KEY": "dk_live_xxx",
         "DROPDAT_API_BASE": "https://api.dropdat.app"
@@ -293,19 +309,19 @@ npm run build`}
                 Semantic recall ships on every tier.
               </p>
               <div className="flex flex-wrap items-center justify-center gap-3 pt-2">
-                <Link
-                  href="/sign-up"
+                <a
+                  href="https://capsule.dropdat.app/sign-up"
                   className="inline-flex items-center gap-2 bg-white text-foreground border border-white/20 px-5 py-2.5 text-[15px] font-medium hover:opacity-95 transition-opacity"
                 >
                   Create an account
-                </Link>
-                <Link
-                  href="/api-keys"
+                </a>
+                <a
+                  href="https://capsule.dropdat.app/api-keys"
                   className="inline-flex items-center gap-2 bg-transparent text-white border border-white/40 px-5 py-2.5 text-[15px] font-medium hover:bg-white/10 transition-colors"
                 >
                   Get an API key
                   <ArrowRightIcon className="w-4 h-4" />
-                </Link>
+                </a>
               </div>
             </div>
           </div>
