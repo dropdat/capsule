@@ -5,7 +5,7 @@ export default defineConfig({
   manifest: {
     name: "dropdat",
     description: "Capture any AI chat as a portable capsule. Drop it anywhere.",
-    version: "0.2.1",
+    version: "0.2.2",
     ...(process.env.EXT_KEY ? { key: process.env.EXT_KEY } : {}),
     permissions: ["storage", "activeTab", "contextMenus", "notifications"],
     host_permissions: [
