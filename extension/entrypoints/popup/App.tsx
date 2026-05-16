@@ -21,7 +21,7 @@ const sourceLabel: Record<Capsule["source"], string> = {
 };
 
 const DASHBOARD_URL =
-  (import.meta.env.VITE_DASHBOARD_URL as string | undefined) ?? "https://dropdat.app";
+  (import.meta.env.VITE_DASHBOARD_URL as string | undefined) ?? "https://capsule.dropdat.app";
 
 type Tab = "capsules" | "links";
 
@@ -53,7 +53,9 @@ export function App() {
     setStatus("Syncing…");
     try {
       const res = await chrome.runtime.sendMessage({ type: "REQUEST_SYNC" });
-      setStatus(`Synced ${res?.ok ?? 0} · failed ${res?.failed ?? 0}`);
+      setStatus(
+        `Synced ${res?.ok ?? 0} · pulled ${res?.pulled ?? 0} · failed ${res?.failed ?? 0}`,
+      );
       await refresh();
     } catch (err) {
       setStatus(`Sync error: ${String(err)}`);
@@ -188,7 +190,7 @@ export function App() {
             : "saved links"}
         </span>
         <a
-          href={`${DASHBOARD_URL}/`}
+          href={`${DASHBOARD_URL}/library`}
           target="_blank"
           rel="noreferrer"
           style={{ color: "var(--primary)", textDecoration: "none" }}

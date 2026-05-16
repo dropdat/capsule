@@ -29,7 +29,9 @@ export function Hero() {
 
           <div className="flex flex-wrap items-center gap-3 pt-2">
             <a
-              href="#download"
+              href="https://chromewebstore.google.com/detail/pfcnjelpgccnkagaekhdcddpfacighho"
+              target="_blank"
+              rel="noreferrer"
               className="inline-flex items-center gap-2 bg-primary text-primary-foreground border border-border px-5 py-2.5 text-[15px] font-medium hover:opacity-95 transition-opacity"
             >
               <ChromeIcon className="w-4 h-4" />

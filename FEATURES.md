@@ -47,7 +47,7 @@ Living index of shipped features. Updated each session when new features land.
   - Perplexity
 - Save-link feature (capture chat URL without full capsule)
 - Popup UI for capsule list / actions
-- IndexedDB offline storage with later sync
+- IndexedDB offline storage with two-way sync (pulls remote capsules so a freshly-installed extension recovers prior captures)
 - Clerk auth inside extension (`@clerk/chrome-extension`)
 
 ## MCP Server (for AI coding agents)

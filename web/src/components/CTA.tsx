@@ -21,7 +21,9 @@ export function CTA() {
           </p>
           <div className="flex flex-wrap items-center justify-center gap-3 pt-2">
             <a
-              href="#"
+              href="https://chromewebstore.google.com/detail/pfcnjelpgccnkagaekhdcddpfacighho"
+              target="_blank"
+              rel="noreferrer"
               className="inline-flex items-center gap-2 bg-white text-foreground border border-white/20 px-5 py-2.5 text-[15px] font-medium hover:opacity-95 transition-opacity"
             >
               <ChromeIcon className="w-4 h-4" />

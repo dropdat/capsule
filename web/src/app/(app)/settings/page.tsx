@@ -34,7 +34,9 @@ export default function SettingsPage() {
             popup to sign in.
           </p>
           <a
-            href="#"
+            href="https://chromewebstore.google.com/detail/pfcnjelpgccnkagaekhdcddpfacighho"
+            target="_blank"
+            rel="noreferrer"
             className="self-start rounded-md bg-primary text-primary-foreground px-5 py-2 text-[13.5px] font-medium transition-opacity hover:opacity-90"
           >
             Add to Chrome

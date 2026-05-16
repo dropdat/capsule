@@ -1,18 +1,23 @@
 import { api } from "./api";
 import { capsuleStore } from "./storage";
+import type { Capsule } from "./types";
 
 /**
- * Drains the pending-sync queue once. Idempotent — server uses client-supplied
- * uuid v7 ids, so re-trying a capsule that already landed is safe (server returns
- * conflict; we treat any 2xx OR 409 as "synced").
+ * Two-way sync: pushes pending local capsules to the server, then pulls the
+ * server's full capsule list and merges anything missing locally. This lets a
+ * freshly-installed extension recover capsules created on another device.
+ *
+ * Idempotent — server uses client-supplied uuid v7 ids, so retrying a capsule
+ * that already landed is safe (treat 2xx and 409 as "synced").
  */
-export async function syncOnce(getToken: () => Promise<string | null>): Promise<{ ok: number; failed: number }> {
-  const pending = await capsuleStore.pendingSync();
-  if (pending.length === 0) return { ok: 0, failed: 0 };
-
+export async function syncOnce(
+  getToken: () => Promise<string | null>,
+): Promise<{ ok: number; failed: number; pulled: number }> {
   const token = await getToken();
+  const pending = await capsuleStore.pendingSync();
   let ok = 0;
   let failed = 0;
+  let pulled = 0;
 
   for (const c of pending) {
     try {
@@ -28,15 +33,47 @@ export async function syncOnce(getToken: () => Promise<string | null>): Promise<
       await capsuleStore.markSynced(c.id);
       ok++;
     } catch (err) {
-      // Treat 409 (already exists) as success — idempotent retry
       if (typeof err === "object" && err && "status" in err && (err as { status: number }).status === 409) {
         await capsuleStore.markSynced(c.id);
         ok++;
       } else {
-        console.warn("[dropdat] sync failed", c.id, err);
+        console.warn("[dropdat] sync push failed", c.id, err);
         failed++;
       }
     }
   }
-  return { ok, failed };
+
+  if (token) {
+    try {
+      const remote = await api.listCapsules(token);
+      const local = await capsuleStore.all();
+      const localById = new Map(local.map((c) => [c.id, c] as const));
+      for (const r of remote) {
+        const existing = localById.get(r.id);
+        if (existing?.pendingSync) continue;
+        if (existing && existing.updatedAt >= r.updatedAt) continue;
+        const merged: Capsule = {
+          id: r.id,
+          userId: r.userId,
+          title: r.title,
+          summary: r.summary,
+          source: r.source,
+          sourceUrl: r.sourceUrl,
+          messages: r.messages,
+          tags: r.tags,
+          version: r.version,
+          rootId: r.rootId,
+          parentId: r.parentId,
+          createdAt: r.createdAt,
+          updatedAt: r.updatedAt,
+        };
+        await capsuleStore.put(merged);
+        pulled++;
+      }
+    } catch (err) {
+      console.warn("[dropdat] sync pull failed", err);
+    }
+  }
+
+  return { ok, failed, pulled };
 }

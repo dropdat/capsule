@@ -8,7 +8,7 @@ const cols = [
       { label: "Features", href: "#features" },
       { label: "MCP server", href: "/mcp" },
       { label: "Supported AIs", href: "#platforms" },
-      { label: "Download", href: "#download" },
+      { label: "Download", href: "https://chromewebstore.google.com/detail/pfcnjelpgccnkagaekhdcddpfacighho" },
     ],
   },
   {

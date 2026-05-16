@@ -103,12 +103,12 @@ export default function McpPage() {
                 Install the MCP server
                 <ArrowRightIcon className="w-4 h-4" />
               </a>
-              <Link
-                href="/library"
+              <a
+                href="https://capsule.dropdat.app/library"
                 className="inline-flex items-center gap-2 bg-card text-foreground border border-border px-5 py-2.5 text-[15px] font-medium hover:bg-accent transition-colors"
               >
                 Get an API key
-              </Link>
+              </a>
             </div>
           </div>
         </section>
@@ -193,9 +193,9 @@ export default function McpPage() {
               body={
                 <>
                   Open the{" "}
-                  <Link href="/api-keys" className="underline">
+                  <a href="https://capsule.dropdat.app/api-keys" className="underline">
                     API Keys
-                  </Link>{" "}
+                  </a>{" "}
                   page in your dashboard and create a key. Tokens are shown
                   once and look like <code className="font-mono">dk_live_…</code>.
                 </>

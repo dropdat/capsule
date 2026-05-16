@@ -22,14 +22,16 @@ export function Nav() {
           <a href="https://x.com" aria-label="X" className="hidden sm:inline-flex items-center justify-center w-9 h-9 text-foreground/70 hover:text-foreground transition-colors">
             <XIcon className="w-4 h-4" />
           </a>
-          <Link
-            href="/library"
+          <a
+            href="https://capsule.dropdat.app/library"
             className="inline-flex items-center gap-1.5 sm:gap-2 bg-card text-foreground border border-border px-3 sm:px-4 py-1.5 sm:py-2 text-[13px] sm:text-[14px] font-medium whitespace-nowrap hover:bg-accent transition-colors"
           >
             Console
-          </Link>
+          </a>
           <a
-            href="#download"
+            href="https://chromewebstore.google.com/detail/pfcnjelpgccnkagaekhdcddpfacighho"
+            target="_blank"
+            rel="noreferrer"
             className="inline-flex items-center gap-1.5 sm:gap-2 bg-primary text-primary-foreground border border-border px-3 sm:px-4 py-1.5 sm:py-2 text-[13px] sm:text-[14px] font-medium whitespace-nowrap hover:opacity-95 transition-opacity"
           >
             Add to Chrome
