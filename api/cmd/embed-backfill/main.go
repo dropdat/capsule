@@ -52,6 +52,15 @@ func main() {
 			batch = n
 		}
 	}
+	// RPM cap — voyage's free tier (no payment method) is 3 RPM. Set
+	// EMBED_RPM=3 to stay under that without losing rows.
+	var minInterval time.Duration
+	if v := os.Getenv("EMBED_RPM"); v != "" {
+		if n, err := strconv.Atoi(v); err == nil && n > 0 {
+			minInterval = time.Minute / time.Duration(n)
+			fmt.Printf("throttling to %d req/min (%.1fs between calls)\n", n, minInterval.Seconds())
+		}
+	}
 
 	total := 0
 	for {
@@ -86,7 +95,10 @@ func main() {
 			break
 		}
 
-		for _, r := range pending {
+		for i, r := range pending {
+			if minInterval > 0 && i > 0 {
+				time.Sleep(minInterval)
+			}
 			text := buildText(r.title, r.summary, r.tags, r.messages)
 			ectx, ecancel := context.WithTimeout(ctx, 30*time.Second)
 			vec, err := emb.Embed(ectx, text)
