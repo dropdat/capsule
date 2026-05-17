@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 
 import { useApi, ApiError, type CapsuleGraph } from "@/lib/api";
@@ -64,24 +64,27 @@ export default function GraphPage() {
   }, []);
 
   const [paywall, setPaywall] = useState<string | null>(null);
-  const load = useCallback(async () => {
-    setError(null);
-    setPaywall(null);
-    try {
-      const g = await api<CapsuleGraph>("/api/v1/capsules/graph?nodes=300&k=4");
-      setGraph(g);
-    } catch (e) {
-      if (e instanceof ApiError && e.status === 402) {
-        setPaywall(e.message);
-        return;
-      }
-      setError(e instanceof Error ? e.message : "Load failed");
-    }
-  }, [api]);
-
+  // useApi() returns a fresh function each render; depending on it in a
+  // useEffect causes an infinite fetch loop. Pin it in a ref and run once.
+  const apiRef = useRef(api);
+  apiRef.current = api;
   useEffect(() => {
-    load();
-  }, [load]);
+    let cancelled = false;
+    (async () => {
+      try {
+        const g = await apiRef.current<CapsuleGraph>("/api/v1/capsules/graph?nodes=300&k=4");
+        if (!cancelled) setGraph(g);
+      } catch (e) {
+        if (cancelled) return;
+        if (e instanceof ApiError && e.status === 402) {
+          setPaywall(e.message);
+          return;
+        }
+        setError(e instanceof Error ? e.message : "Load failed");
+      }
+    })();
+    return () => { cancelled = true; };
+  }, []);
 
   useEffect(() => {
     const update = () => {

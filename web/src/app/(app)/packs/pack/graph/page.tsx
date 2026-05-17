@@ -1,6 +1,6 @@
 "use client";
 
-import { Suspense, useCallback, useEffect, useState } from "react";
+import { Suspense, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 
@@ -34,29 +34,34 @@ function PackGraphInner() {
   const [paywall, setPaywall] = useState<string | null>(null);
   const [selected, setSelected] = useState<(ChordNode & { degree: number }) | null>(null);
 
-  const load = useCallback(async () => {
-    if (!id) return;
-    setError(null);
-    setPaywall(null);
-    try {
-      const [p, g] = await Promise.all([
-        api<ContextPack>(`/api/v1/packs/${id}`),
-        api<CapsuleGraph>(`/api/v1/packs/${id}/graph?k=4`),
-      ]);
-      setPack(p);
-      setGraph(g);
-    } catch (e) {
-      if (e instanceof ApiError && e.status === 402) {
-        setPaywall(e.message);
-        return;
-      }
-      setError(e instanceof Error ? e.message : "Load failed");
-    }
-  }, [api, id]);
-
+  // useApi() returns a fresh function each render; depending on it in a
+  // useEffect causes an infinite fetch loop. Pin it in a ref and key the
+  // effect on `id` only.
+  const apiRef = useRef(api);
+  apiRef.current = api;
   useEffect(() => {
-    load();
-  }, [load]);
+    if (!id) return;
+    let cancelled = false;
+    (async () => {
+      try {
+        const [p, g] = await Promise.all([
+          apiRef.current<ContextPack>(`/api/v1/packs/${id}`),
+          apiRef.current<CapsuleGraph>(`/api/v1/packs/${id}/graph?k=4`),
+        ]);
+        if (cancelled) return;
+        setPack(p);
+        setGraph(g);
+      } catch (e) {
+        if (cancelled) return;
+        if (e instanceof ApiError && e.status === 402) {
+          setPaywall(e.message);
+          return;
+        }
+        setError(e instanceof Error ? e.message : "Load failed");
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [id]);
 
   if (paywall) {
     return (

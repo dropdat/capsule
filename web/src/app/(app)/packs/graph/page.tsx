@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 
 import { ChordGraph, type ChordNode } from "@/components/ChordGraph";
@@ -16,24 +16,27 @@ export default function PacksOverviewGraphPage() {
   const [paywall, setPaywall] = useState<string | null>(null);
   const [selected, setSelected] = useState<(ChordNode & { degree: number }) | null>(null);
 
-  const load = useCallback(async () => {
-    setError(null);
-    setPaywall(null);
-    try {
-      const g = await api<CapsuleGraph>("/api/v1/packs/graph");
-      setGraph(g);
-    } catch (e) {
-      if (e instanceof ApiError && e.status === 402) {
-        setPaywall(e.message);
-        return;
-      }
-      setError(e instanceof Error ? e.message : "Load failed");
-    }
-  }, [api]);
-
+  // useApi() returns a fresh function each render; depending on it in a
+  // useEffect causes an infinite fetch loop. Pin it in a ref and run once.
+  const apiRef = useRef(api);
+  apiRef.current = api;
   useEffect(() => {
-    load();
-  }, [load]);
+    let cancelled = false;
+    (async () => {
+      try {
+        const g = await apiRef.current<CapsuleGraph>("/api/v1/packs/graph");
+        if (!cancelled) setGraph(g);
+      } catch (e) {
+        if (cancelled) return;
+        if (e instanceof ApiError && e.status === 402) {
+          setPaywall(e.message);
+          return;
+        }
+        setError(e instanceof Error ? e.message : "Load failed");
+      }
+    })();
+    return () => { cancelled = true; };
+  }, []);
 
   if (paywall) {
     return (
