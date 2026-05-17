@@ -281,6 +281,64 @@ export default defineBackground(() => {
           return;
         }
 
+        case "FETCH_CAPSULE_ATTACHMENTS": {
+          try {
+            const token = await getApiKey();
+            if (!token) {
+              sendResponse({ ok: true, items: [] });
+              return;
+            }
+            const capsuleId = msg.capsuleId as string;
+            const base = (import.meta.env.VITE_API_URL as string | undefined) ?? "https://dropdat.app";
+            const listRes = await fetch(`${base}/api/v1/capsules/${capsuleId}/attachments`, {
+              headers: { Authorization: `Bearer ${token}` },
+            });
+            if (!listRes.ok) {
+              sendResponse({ ok: true, items: [] });
+              return;
+            }
+            const list = (await listRes.json()) as Array<{
+              id: string;
+              filename: string;
+              contentType?: string;
+              content_type?: string;
+            }>;
+            const items: Array<{ id: string; filename: string; contentType: string; dataUrl: string }> = [];
+            for (const a of list) {
+              try {
+                const dl = await fetch(`${base}/api/v1/attachments/${a.id}/download`, {
+                  headers: { Authorization: `Bearer ${token}` },
+                });
+                if (!dl.ok) continue;
+                const { url } = (await dl.json()) as { url: string };
+                const file = await fetch(url);
+                if (!file.ok) continue;
+                const blob = await file.blob();
+                // base64 data URL — DataTransfer can't cross process boundaries,
+                // so the content script reconstructs a File from this.
+                const dataUrl: string = await new Promise((res, rej) => {
+                  const fr = new FileReader();
+                  fr.onload = () => res(fr.result as string);
+                  fr.onerror = () => rej(fr.error);
+                  fr.readAsDataURL(blob);
+                });
+                items.push({
+                  id: a.id,
+                  filename: a.filename,
+                  contentType: a.contentType || a.content_type || blob.type || "application/octet-stream",
+                  dataUrl,
+                });
+              } catch (err) {
+                console.warn("[dropdat] attachment fetch failed", a.id, err);
+              }
+            }
+            sendResponse({ ok: true, items });
+          } catch (err) {
+            sendResponse({ ok: false, error: String(err) });
+          }
+          return;
+        }
+
         case "REQUEST_SYNC": {
           const token = await getApiKey();
           const result = await syncOnce(async () => token);

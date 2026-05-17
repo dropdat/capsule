@@ -269,6 +269,7 @@ function makeButton(): HTMLButtonElement {
 
   const runDrop = async () => {
     btn.disabled = true;
+    playGenerateAnimation(btn);
     setState(ICON_LOADING, "#0562ef");
     btn.style.color = "#fff";
     try {
@@ -534,23 +535,71 @@ type CapsuleListItem = {
   messages: Array<{ role: string; content: string }>;
 };
 
+const ASSISTANT_INSTRUCTION =
+  "You are assistant now and observe the above context and answer the user questions.";
+
 async function dropCapsule(item: CapsuleListItem) {
+  playDropAnimation();
   const preamble = `Adding Context of Capsule: ${item.title || "Untitled"}`;
   const body = (item.messages || []).map((m) => `${m.role.toUpperCase()}: ${m.content}`).join("\n\n");
-  const text = body ? `${preamble}\n\n${body}` : preamble;
+  const text = body
+    ? `${preamble}\n\n${body}\n\n${ASSISTANT_INSTRUCTION}`
+    : `${preamble}\n\n${ASSISTANT_INSTRUCTION}`;
 
   const target = findComposerInput();
   if (!target) {
     console.warn("[dropdat] no composer input found to drop capsule");
     return;
   }
-  setComposerText(target, text);
+
+  // Attachments first — file paste must precede text paste so the composer
+  // doesn't lose focus mid-flow.
+  await attachCapsuleFiles(target, item.id);
+
+  await setComposerText(target, text);
   // Give the host app a tick to enable its send button after the input event.
-  await new Promise((r) => setTimeout(r, 120));
+  await new Promise((r) => setTimeout(r, 200));
   clickSend();
 }
 
-function setComposerText(target: HTMLElement, text: string) {
+async function attachCapsuleFiles(target: HTMLElement, capsuleId: string) {
+  try {
+    const resp = (await chrome.runtime.sendMessage({
+      type: "FETCH_CAPSULE_ATTACHMENTS",
+      capsuleId,
+    })) as { ok: boolean; items?: Array<{ filename: string; contentType: string; dataUrl: string }> };
+    const items = resp?.items ?? [];
+    if (items.length === 0) return;
+    const files: File[] = [];
+    for (const a of items) {
+      const blob = await (await fetch(a.dataUrl)).blob();
+      files.push(new File([blob], a.filename, { type: a.contentType || blob.type }));
+    }
+    target.focus();
+    const dt = new DataTransfer();
+    for (const f of files) dt.items.add(f);
+    // Most chat composers accept files via paste OR drop. Try both.
+    target.dispatchEvent(
+      new ClipboardEvent("paste", { clipboardData: dt, bubbles: true, cancelable: true })
+    );
+    target.dispatchEvent(
+      new DragEvent("drop", { dataTransfer: dt, bubbles: true, cancelable: true })
+    );
+    await new Promise((r) => setTimeout(r, 250));
+  } catch (err) {
+    console.warn("[dropdat] attach files failed", err);
+  }
+}
+
+/**
+ * Inserts text into a composer without freezing the page.
+ *
+ * Why not execCommand("insertText"): ProseMirror/Lexical/Slate process insertText
+ * character-by-character on the input event path. For multi-KB capsules this
+ * pegs the main thread for seconds. A single synthetic "paste" event with the
+ * full string in DataTransfer is absorbed atomically by all three editors.
+ */
+async function setComposerText(target: HTMLElement, text: string) {
   if (target instanceof HTMLTextAreaElement) {
     target.focus();
     target.value = text;
@@ -558,18 +607,126 @@ function setComposerText(target: HTMLElement, text: string) {
     return;
   }
   target.focus();
-  // Select all existing content, then replace via insertText so React/Lexical/Slate-backed
-  // editors register the change as a real edit (and the send button activates).
+  // Clear any existing selection/content first.
   const sel = window.getSelection();
   const range = document.createRange();
   range.selectNodeContents(target);
   sel?.removeAllRanges();
   sel?.addRange(range);
-  const ok = document.execCommand("insertText", false, text);
-  if (!ok) {
-    target.textContent = text;
-    target.dispatchEvent(new InputEvent("input", { bubbles: true, inputType: "insertText", data: text }));
+
+  // One-shot paste — fixes freeze on long capsules.
+  try {
+    const dt = new DataTransfer();
+    dt.setData("text/plain", text);
+    const pasted = target.dispatchEvent(
+      new ClipboardEvent("paste", { clipboardData: dt, bubbles: true, cancelable: true })
+    );
+    // If paste was canceled (handled by editor), we're done.
+    if (!pasted) return;
+  } catch (err) {
+    console.warn("[dropdat] paste path failed, falling back", err);
   }
+
+  // Fallback path — chunk insertText so the main thread can breathe.
+  const CHUNK = 4000;
+  if (text.length <= CHUNK) {
+    if (!document.execCommand("insertText", false, text)) {
+      target.textContent = text;
+      target.dispatchEvent(
+        new InputEvent("input", { bubbles: true, inputType: "insertText", data: text })
+      );
+    }
+    return;
+  }
+  for (let i = 0; i < text.length; i += CHUNK) {
+    const chunk = text.slice(i, i + CHUNK);
+    if (!document.execCommand("insertText", false, chunk)) {
+      target.textContent = (target.textContent || "") + chunk;
+      target.dispatchEvent(
+        new InputEvent("input", { bubbles: true, inputType: "insertText", data: chunk })
+      );
+    }
+    await new Promise((r) => setTimeout(r, 0));
+  }
+}
+
+function playGenerateAnimation(btn: HTMLElement) {
+  const rect = btn.getBoundingClientRect();
+  const ghost = document.createElement("div");
+  ghost.innerHTML = ICON_NORMAL;
+  Object.assign(ghost.style, {
+    position: "fixed",
+    left: `${rect.left}px`,
+    top: `${rect.top}px`,
+    width: `${rect.width}px`,
+    height: `${rect.height}px`,
+    pointerEvents: "none",
+    zIndex: "2147483647",
+    transition: "transform 800ms cubic-bezier(.4,.0,.2,1), opacity 800ms ease-out",
+    transformOrigin: "center center",
+    filter: "drop-shadow(0 6px 18px rgba(5,98,239,0.5))",
+  } satisfies Partial<CSSStyleDeclaration>);
+  document.body.appendChild(ghost);
+  // Pop bigger first, then fly to the extension toolbar area (top-right).
+  const dx = window.innerWidth - rect.left - rect.width / 2 - 20;
+  const dy = -(rect.top + rect.height / 2 - 20);
+  requestAnimationFrame(() => {
+    ghost.style.transform = `scale(3) rotate(-12deg)`;
+  });
+  setTimeout(() => {
+    ghost.style.transform = `translate(${dx}px, ${dy}px) scale(1.6) rotate(25deg)`;
+    ghost.style.opacity = "0";
+  }, 180);
+  setTimeout(() => ghost.remove(), 1000);
+}
+
+function playDropAnimation() {
+  const existing = document.getElementById("dropdat-drop-anim");
+  if (existing) existing.remove();
+  const wrap = document.createElement("div");
+  wrap.id = "dropdat-drop-anim";
+  Object.assign(wrap.style, {
+    position: "fixed",
+    left: "50%",
+    top: "50%",
+    transform: "translate(-50%, -50%) scale(2.2)",
+    pointerEvents: "none",
+    zIndex: "2147483647",
+    opacity: "1",
+    transition: "opacity 400ms ease-out, transform 400ms ease-in",
+    filter: "drop-shadow(0 8px 24px rgba(5,98,239,0.45))",
+  } satisfies Partial<CSSStyleDeclaration>);
+  wrap.innerHTML = ICON_NORMAL;
+  // Style the inner svg for the shake.
+  const svg = wrap.querySelector("svg");
+  if (svg) {
+    (svg as SVGElement).style.width = "120px";
+    (svg as SVGElement).style.height = "120px";
+    (svg as SVGElement).style.animation = "dropdatShake 600ms ease-in-out";
+  }
+  // Inject keyframes once.
+  if (!document.getElementById("dropdat-anim-styles")) {
+    const style = document.createElement("style");
+    style.id = "dropdat-anim-styles";
+    style.textContent = `
+      @keyframes dropdatShake {
+        0%   { transform: translate(0,0) rotate(0deg); }
+        15%  { transform: translate(-6px,0) rotate(-6deg); }
+        30%  { transform: translate(6px,0) rotate(6deg); }
+        45%  { transform: translate(-5px,0) rotate(-5deg); }
+        60%  { transform: translate(5px,0) rotate(5deg); }
+        75%  { transform: translate(-3px,0) rotate(-3deg); }
+        100% { transform: translate(0,0) rotate(0deg); }
+      }
+    `;
+    document.head.appendChild(style);
+  }
+  document.body.appendChild(wrap);
+  setTimeout(() => {
+    wrap.style.opacity = "0";
+    wrap.style.transform = "translate(-50%, -50%) scale(0.3)";
+  }, 550);
+  setTimeout(() => wrap.remove(), 1000);
 }
 
 function clickSend(): boolean {

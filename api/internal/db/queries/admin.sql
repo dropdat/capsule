@@ -38,6 +38,22 @@ GROUP BY tier
 ORDER BY users DESC;
 
 -- name: AdminUsersList :many
+-- Capsule counts via a single grouped scan instead of N correlated subqueries.
+-- Previously this ran COUNT(capsules) once per row; with 300 rows that was
+-- 300 sequential counts and made /admin take many seconds to load.
+WITH recent AS (
+  SELECT user_id, last_seen_at, last_path, request_count
+  FROM user_activity
+  ORDER BY last_seen_at DESC
+  LIMIT $1
+),
+cap_counts AS (
+  SELECT c.user_id, COUNT(*)::BIGINT AS n
+  FROM capsules c
+  WHERE c.deleted_at IS NULL
+    AND c.user_id IN (SELECT user_id FROM recent)
+  GROUP BY c.user_id
+)
 SELECT
   a.user_id,
   a.last_seen_at,
@@ -45,11 +61,11 @@ SELECT
   a.request_count,
   COALESCE(s.tier, 'basic')         AS tier,
   COALESCE(s.status, '')            AS subscription_status,
-  (SELECT COUNT(*) FROM capsules c WHERE c.user_id = a.user_id AND c.deleted_at IS NULL)::BIGINT AS capsule_count,
+  COALESCE(cc.n, 0)::BIGINT         AS capsule_count,
   o.banned_at,
   COALESCE(o.banned_reason, '')     AS banned_reason
-FROM user_activity a
+FROM recent a
 LEFT JOIN subscriptions   s ON s.user_id = a.user_id
 LEFT JOIN user_overrides  o ON o.user_id = a.user_id
-ORDER BY a.last_seen_at DESC
-LIMIT $1;
+LEFT JOIN cap_counts     cc ON cc.user_id = a.user_id
+ORDER BY a.last_seen_at DESC;

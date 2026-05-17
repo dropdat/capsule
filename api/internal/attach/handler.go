@@ -3,6 +3,8 @@ package attach
 import (
 	"bytes"
 	"context"
+	"crypto/sha256"
+	"encoding/hex"
 	"errors"
 	"io"
 	"net/http"
@@ -98,6 +100,21 @@ func (h *Handler) Direct(w http.ResponseWriter, r *http.Request) {
 		httpx.Error(w, http.StatusBadRequest, "empty body")
 		return
 	}
+	// Content-hash dedupe — same bytes uploaded twice to the same capsule
+	// return the existing row instead of creating a duplicate. Fixes the
+	// extension retrying uploads and the user re-pressing Generate.
+	sum := sha256.Sum256(body)
+	hash := hex.EncodeToString(sum[:])
+	if existing, err := h.q.FindAttachmentByHash(r.Context(), dbgen.FindAttachmentByHashParams{
+		CapsuleID: capsuleID, UserID: uid, ContentHash: hash,
+	}); err == nil {
+		httpx.JSON(w, http.StatusOK, attachmentDTO{
+			ID: existing.ID.String(), Filename: existing.Filename, ContentType: existing.ContentType,
+			SizeBytes: existing.SizeBytes, CreatedAt: existing.CreatedAt.Time.Format(time.RFC3339),
+		})
+		return
+	}
+
 	attID := uuid.New()
 	key := path.Join(uid, capsuleID.String(), attID.String()+"-"+safeName(filename))
 	if err := h.store.Put(r.Context(), key, contentType, bytes.NewReader(body), int64(len(body))); err != nil {
@@ -112,6 +129,7 @@ func (h *Handler) Direct(w http.ResponseWriter, r *http.Request) {
 		ContentType: contentType,
 		SizeBytes:   int64(len(body)),
 		StorageKey:  key,
+		ContentHash: hash,
 	})
 	if err != nil {
 		// Best-effort: try to clean up the object we just wrote.
@@ -187,6 +205,9 @@ func (h *Handler) Init(w http.ResponseWriter, r *http.Request) {
 		ContentType: body.ContentType,
 		SizeBytes:   body.SizeBytes,
 		StorageKey:  key,
+		// Init path: hash unknown until bytes land. Leave empty — dedupe only
+		// applies to Direct uploads where we see the bytes server-side.
+		ContentHash: "",
 	})
 	if err != nil {
 		httpx.Error(w, http.StatusInternalServerError, err.Error())

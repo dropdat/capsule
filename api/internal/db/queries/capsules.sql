@@ -35,7 +35,9 @@ LIMIT $3;
 
 -- name: UpdateCapsuleMeta :one
 UPDATE capsules
-SET title = $3, summary = $4, tags = $5, updated_at = now()
+SET title = $3, summary = $4, tags = $5,
+    version = version + 1,
+    updated_at = now()
 WHERE id = $1 AND user_id = $2 AND deleted_at IS NULL
 RETURNING *;
 

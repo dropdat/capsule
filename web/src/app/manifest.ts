@@ -20,11 +20,14 @@ export default function manifest(): MetadataRoute.Manifest {
     share_target: {
       action: "/share",
       method: "GET",
+      // Chrome warns if enctype is unset even for GET; default would still be
+      // x-www-form-urlencoded, so we set it explicitly to silence the console.
+      enctype: "application/x-www-form-urlencoded",
       params: {
         title: "title",
         text: "text",
         url: "url",
       },
-    },
+    } as MetadataRoute.Manifest["share_target"],
   } satisfies MetadataRoute.Manifest;
 }
