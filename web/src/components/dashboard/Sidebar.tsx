@@ -13,6 +13,7 @@ const NAV = [
   { href: "/teams", label: "Teams", icon: TeamsIcon },
   { href: "/api-keys", label: "API Keys", icon: KeyIcon },
   { href: "/billing", label: "Billing", icon: BillingIcon },
+  { href: "/help", label: "Help", icon: HelpIcon },
   { href: "/settings", label: "Settings", icon: SettingsIcon },
 ];
 
@@ -188,6 +189,16 @@ function BillingIcon({ className }: IconProps) {
       <rect x="1.5" y="3.5" width="13" height="9" rx="1.5" />
       <line x1="1.5" y1="6.5" x2="14.5" y2="6.5" />
       <line x1="4" y1="10" x2="7" y2="10" />
+    </svg>
+  );
+}
+
+function HelpIcon({ className }: IconProps) {
+  return (
+    <svg className={className} viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.4">
+      <circle cx="8" cy="8" r="6.5" />
+      <path d="M6 6.2c.2-1.1 1.1-1.7 2.1-1.7 1.2 0 2 .8 2 1.8 0 .9-.6 1.3-1.3 1.7-.6.4-.9.7-.9 1.4" />
+      <circle cx="8" cy="11.6" r="0.5" fill="currentColor" />
     </svg>
   );
 }
