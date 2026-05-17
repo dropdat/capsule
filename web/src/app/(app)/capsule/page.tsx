@@ -83,7 +83,43 @@ function CapsuleDetail() {
     const body = capsule.messages
       .map((m) => `\n\n## ${m.role}\n${m.content}`)
       .join("");
-    const text = `${header}\n${meta}${sum}${body}`;
+
+    // Append image attachments as inline markdown — Claude/ChatGPT/Gemini
+    // all resolve `![alt](url)` when pasted, so this gets the images into
+    // the destination chat alongside the text.
+    let attachmentsBlock = "";
+    try {
+      type AttachmentRow = {
+        id: string;
+        filename: string;
+        contentType: string;
+        sizeBytes: number;
+      };
+      const rows = await api<AttachmentRow[]>(`/api/v1/capsules/${capsule.id}/attachments`);
+      const images = (rows ?? []).filter((a) => a.contentType.startsWith("image/"));
+      if (images.length > 0) {
+        const presigned = await Promise.all(
+          images.map(async (a) => {
+            try {
+              const { url } = await api<{ url: string }>(`/api/v1/attachments/${a.id}/download`);
+              return { url, filename: a.filename };
+            } catch {
+              return null;
+            }
+          }),
+        );
+        const live = presigned.filter((x): x is { url: string; filename: string } => x !== null);
+        if (live.length > 0) {
+          attachmentsBlock =
+            `\n\n---\n\n## Attachments\n` +
+            live.map((a) => `\n![${a.filename}](${a.url})`).join("");
+        }
+      }
+    } catch {
+      // attachments fetch failed — copy text only, don't block the user
+    }
+
+    const text = `${header}\n${meta}${sum}${body}${attachmentsBlock}`;
     try {
       await navigator.clipboard.writeText(text);
       setCopied(true);
