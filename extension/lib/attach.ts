@@ -18,17 +18,9 @@ export async function uploadPendingAttachments(
   getToken: () => Promise<string | null>,
 ): Promise<{ uploaded: number; failed: number }> {
   const token = await getToken();
-  if (!token) {
-    console.warn("[dropdat] image upload pass skipped — no API key set");
-    return { uploaded: 0, failed: 0 };
-  }
+  if (!token) return { uploaded: 0, failed: 0 };
   const queued = await capsuleStore.pendingImageUploads();
-  console.log(`[dropdat] image upload pass — eligible capsules: ${queued.length}`);
   if (queued.length === 0) return { uploaded: 0, failed: 0 };
-  console.log(
-    `[dropdat] image upload pass: ${queued.length} capsule(s) with pending images`,
-    queued.map((c) => ({ id: c.id, n: c.pendingImages?.length ?? 0 })),
-  );
   let uploaded = 0;
   let failed = 0;
   for (const capsule of queued) {
@@ -42,32 +34,23 @@ export async function uploadPendingAttachments(
       }
       try {
         const blob = await fetchImage(img.url);
-        if (!blob) {
-          console.warn("[dropdat] fetchImage returned null (CORS/404/expired/too-large)", img.url);
-          continue; // dead URL — drop, no retry
-        }
+        if (!blob) continue; // dead URL — drop, no retry
         const filename = guessFilename(img.url, blob.type, img.alt);
-        const row = await api.directUploadAttachment(token, capsule.id, blob, filename);
-        console.log(`[dropdat] uploaded image ${row.filename} (${row.sizeBytes}B) → capsule ${capsule.id}`);
+        await api.directUploadAttachment(token, capsule.id, blob, filename);
         uploaded++;
       } catch (err) {
         if (err instanceof ApiError && err.status === 402) {
-          console.warn(
-            `[dropdat] attachments paywall (402) for capsule ${capsule.id} — dropping image queue; upgrade plan to enable`,
-          );
+          // Plan disallows attachments — drop the queue for this capsule.
           stopThisCapsule = "paywall";
           remaining.length = 0;
           break;
         }
         if (err instanceof ApiError && err.status === 503) {
-          console.warn(
-            "[dropdat] attachments storage unavailable (503) — R2 env not configured on server; will retry next tick",
-          );
+          // Storage not configured server-side — keep the queue, retry next tick.
           stopThisCapsule = "transient";
           remaining.push(img);
           continue;
         }
-        console.warn("[dropdat] image upload failed (will retry)", img.url, err);
         remaining.push(img);
         failed++;
       }
@@ -78,7 +61,6 @@ export async function uploadPendingAttachments(
       await capsuleStore.put({ ...capsule, pendingImages: remaining });
     }
   }
-  console.log(`[dropdat] image upload pass done — uploaded=${uploaded} failed=${failed}`);
   return { uploaded, failed };
 }
 

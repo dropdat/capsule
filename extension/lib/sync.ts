@@ -16,9 +16,6 @@ export async function syncOnce(
 ): Promise<{ ok: number; failed: number; pulled: number; quotaExceeded: boolean }> {
   const token = await getToken();
   const pending = await capsuleStore.pendingSync();
-  console.log(
-    `[dropdat] sync start — token=${token ? "set" : "MISSING"} pending=${pending.length}`,
-  );
   let ok = 0;
   let failed = 0;
   let pulled = 0;
@@ -36,7 +33,6 @@ export async function syncOnce(
         tags: c.tags,
       });
       await capsuleStore.markSynced(c.id);
-      console.log(`[dropdat] sync pushed capsule ${c.id} (pendingImages=${c.pendingImages?.length ?? 0})`);
       ok++;
     } catch (err) {
       const status =
