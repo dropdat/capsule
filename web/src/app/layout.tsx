@@ -52,6 +52,7 @@ export const metadata: Metadata = {
   publisher: "dropdat",
   category: "developer tools",
   icons: { icon: "/seo/favicon.svg" },
+  manifest: "/manifest.webmanifest",
   alternates: { canonical: "/" },
   openGraph: {
     type: "website",

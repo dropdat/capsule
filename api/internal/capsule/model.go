@@ -13,11 +13,12 @@ const (
 	SourceChatGPT Source = "chatgpt"
 	SourceClaude  Source = "claude"
 	SourceGemini  Source = "gemini"
+	SourceMobile  Source = "mobile" // captured via mobile share-target / Shortcut
 )
 
 func (s Source) Valid() bool {
 	switch s {
-	case SourceChatGPT, SourceClaude, SourceGemini:
+	case SourceChatGPT, SourceClaude, SourceGemini, SourceMobile:
 		return true
 	}
 	return false

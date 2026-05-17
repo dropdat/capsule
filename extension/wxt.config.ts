@@ -25,6 +25,15 @@ export default defineConfig({
     action: {
       default_title: "dropdat — capsule library",
     },
+    // Firefox requires an extension id under browser_specific_settings.gecko
+    // for AMO submission and signed updates. Falls back to a dev id locally
+    // so `wxt -b firefox` works without env.
+    browser_specific_settings: {
+      gecko: {
+        id: process.env.FIREFOX_EXT_ID ?? "dropdat@dropdat.app",
+        strict_min_version: "115.0",
+      },
+    },
   },
   srcDir: ".",
 });

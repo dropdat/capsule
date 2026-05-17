@@ -34,6 +34,23 @@ lib/
 ## Build for store
 
 ```bash
-npm run build       # .output/chrome-mv3
-npm run zip         # distributable zip
+npm run build           # .output/chrome-mv3
+npm run zip             # Chrome distributable zip
+
+npm run build:firefox   # .output/firefox-mv3
+npm run zip:firefox     # Firefox/AMO distributable zip
 ```
+
+### Safari (macOS only)
+
+WXT has no Safari target, but Safari accepts a converted Chrome MV3 bundle:
+
+```bash
+npm run build           # produces .output/chrome-mv3
+xcrun safari-web-extension-converter .output/chrome-mv3 \
+  --project-location ./safari --app-name dropdat --bundle-identifier app.dropdat.safari
+open ./safari/dropdat/dropdat.xcodeproj  # build & sign in Xcode
+```
+
+You need a paid Apple Developer account to distribute. For local testing
+toggle `Develop → Allow Unsigned Extensions` in Safari.

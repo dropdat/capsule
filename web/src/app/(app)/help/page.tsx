@@ -56,6 +56,17 @@ const SECTIONS: Section[] = [
     plan: "Pro and above",
   },
   {
+    id: "mobile",
+    title: "Mobile capture",
+    summary: "Save anything from your phone — share-sheet on Android, Shortcut on iOS.",
+    steps: [
+      "Android: visit dropdat.app on Chrome and tap Install app. Once installed, the system share-sheet shows dropdat as a target — share any page or text and a quick-capture form opens, pre-filled.",
+      "iOS: build a Shortcut with the action 'Get Contents of URL' POSTing to https://dropdat.app/api/v1/capsules with Authorization: Bearer <your API key>. Body: { id: UUID, title, source: \"mobile\", messages: [{role:\"user\", content: <Shortcut input>, capturedAt: now}] }.",
+      "Or open /share directly with ?title=&text=&url= params to land on the quick-capture form pre-filled.",
+    ],
+    links: [{ href: "/share", label: "Open /share" }],
+  },
+  {
     id: "links",
     title: "Links",
     summary: "Stash URLs alongside your capsules — same library, different shape.",

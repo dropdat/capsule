@@ -59,7 +59,7 @@ Living index of shipped features. Updated each session when new features land.
 - Client-supplied UUIDv7 ids for offline-first sync
 - Goose migrations, slog structured logging
 
-## Browser Extension (WXT + React, Chrome MV3)
+## Browser Extension (WXT + React, Chrome / Firefox MV3)
 
 - One-click capture of AI chat sessions as portable capsules
 - Provider content scripts:
@@ -76,6 +76,13 @@ Living index of shipped features. Updated each session when new features land.
   - "No chat detected" when the user clicks capsule on an empty page
   - "Capsule saved locally — sync blocked" upgrade dialog when the server returns `402` (plan limit). Capsule stays pending and syncs after upgrade.
 - Clerk auth inside extension (`@clerk/chrome-extension`)
+- Cross-browser builds: `npm run build:firefox` produces an AMO-ready bundle; Safari path documented (xcrun safari-web-extension-converter, macOS only)
+
+## Mobile Capture
+
+- PWA-installed dropdat registers as a system share-target on Android — sharing any page/text from another app opens the Quick Capture form pre-filled
+- `/share?title=&text=&url=` quick-capture page accepts shared content via URL params, lets the user edit title/text/tags/source URL, saves as a `mobile`-source capsule
+- iOS Shortcut recipe (in the Help page): POST to `/api/v1/capsules` with an API key to save the Shortcut's input as a capsule from anywhere on iOS
 
 ## MCP Server (for AI coding agents)
 
