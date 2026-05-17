@@ -149,7 +149,11 @@ func main() {
 		t := tierFor(ctx, userID)
 		return t == billing.TierUltimate || t == billing.TierEnterprise
 	})
-	verifier.SetAPIKeyVerifier(apiKeySvc)
+	// Wrap the API key verifier so the effective scopes on each request are
+	// re-intersected with the user's CURRENT subscription scopes. This means a
+	// key created when MCP was allowed stops granting MCP if the user later
+	// downgrades — the key is not revoked, just narrowed at request time.
+	verifier.SetAPIKeyVerifier(tierFilteredVerifier{inner: apiKeySvc, tierFor: tierFor})
 
 	// Unauthenticated webhook receiver — dodo signs the body, no JWT.
 	billingHandler.MountWebhook(r)
@@ -161,6 +165,7 @@ func main() {
 
 		r.Group(func(r chi.Router) {
 			r.Use(verifier.Middleware)
+			r.Use(requireMCPScopeForMCPClient)
 
 			r.Get("/me", func(w http.ResponseWriter, r *http.Request) {
 				httpx.JSON(w, http.StatusOK, map[string]string{"userId": auth.UserID(r.Context())})
@@ -198,4 +203,55 @@ func main() {
 	if err := srv.Shutdown(shutdownCtx); err != nil {
 		slog.Error("graceful shutdown failed", "err", err)
 	}
+}
+
+// tierFilteredVerifier narrows an API key's granted scopes to those the
+// user's current subscription still allows. Stops a downgraded user from
+// continuing to use a higher-tier scope (e.g. MCP) on a previously issued key.
+type tierFilteredVerifier struct {
+	inner   *apikey.Service
+	tierFor func(ctx context.Context, userID string) string
+}
+
+// requireMCPScopeForMCPClient blocks API-key requests that declare themselves
+// as MCP traffic (X-Dropdat-Client: mcp) unless the effective scopes still
+// include "mcp". This enforces MCP entitlement at request time, so a user who
+// downgrades below Premium loses MCP access even if their key was issued
+// while they were entitled.
+func requireMCPScopeForMCPClient(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.Header.Get("X-Dropdat-Client") == "mcp" && auth.Kind(r.Context()) == auth.AuthKindAPIKey {
+			ok := false
+			for _, s := range auth.Scopes(r.Context()) {
+				if s == billing.ScopeMCP {
+					ok = true
+					break
+				}
+			}
+			if !ok {
+				httpx.Error(w, http.StatusPaymentRequired, "MCP access requires Premium plan or higher")
+				return
+			}
+		}
+		next.ServeHTTP(w, r)
+	})
+}
+
+func (v tierFilteredVerifier) Verify(ctx context.Context, token string) (string, []string, error) {
+	uid, scopes, err := v.inner.Verify(ctx, token)
+	if err != nil {
+		return "", nil, err
+	}
+	allowed := billing.TierLimits(v.tierFor(ctx, uid)).Scopes
+	allow := make(map[string]struct{}, len(allowed))
+	for _, s := range allowed {
+		allow[s] = struct{}{}
+	}
+	filtered := make([]string, 0, len(scopes))
+	for _, s := range scopes {
+		if _, ok := allow[s]; ok {
+			filtered = append(filtered, s)
+		}
+	}
+	return uid, filtered, nil
 }

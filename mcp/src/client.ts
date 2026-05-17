@@ -75,6 +75,7 @@ export class DropdatClient {
       headers: {
         "Content-Type": "application/json",
         Authorization: `Bearer ${this.token}`,
+        "X-Dropdat-Client": "mcp",
       },
       body: body === undefined ? undefined : JSON.stringify(body),
     });
