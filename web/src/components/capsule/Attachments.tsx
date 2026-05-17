@@ -32,10 +32,29 @@ export function Attachments({ capsuleId }: { capsuleId: string }) {
   const [error, setError] = useState<string | null>(null);
   const [upgrade, setUpgrade] = useState(false);
 
+  const [previewUrls, setPreviewUrls] = useState<Record<string, string>>({});
+  const [lightbox, setLightbox] = useState<string | null>(null);
+
   const refresh = useCallback(async () => {
     try {
       const rows = await api<Attachment[]>(`/api/v1/capsules/${capsuleId}/attachments`);
       setItems(rows ?? []);
+      // Lazily fetch presigned URLs for image-type attachments so we can show
+      // thumbnails. One presign per image; cached in state for the page life.
+      const next: Record<string, string> = {};
+      await Promise.all(
+        (rows ?? [])
+          .filter((a) => a.contentType.startsWith("image/"))
+          .map(async (a) => {
+            try {
+              const { url } = await api<{ url: string }>(`/api/v1/attachments/${a.id}/download`);
+              next[a.id] = url;
+            } catch {
+              // skip preview if presign fails
+            }
+          }),
+      );
+      setPreviewUrls(next);
     } catch (e) {
       setError(e instanceof Error ? e.message : "Load failed");
     }
@@ -139,30 +158,65 @@ export function Attachments({ capsuleId }: { capsuleId: string }) {
         <p className="text-[13px] text-muted-foreground">No attachments yet.</p>
       ) : (
         <ul className="flex flex-col gap-1.5">
-          {items.map((a) => (
-            <li
-              key={a.id}
-              className="flex items-center justify-between gap-2 rounded-md border border-border bg-background px-3 py-2"
-            >
-              <button
-                onClick={() => download(a.id)}
-                className="flex-1 text-left text-[13px] truncate hover:text-primary"
-                title={a.filename}
+          {items.map((a) => {
+            const preview = previewUrls[a.id];
+            return (
+              <li
+                key={a.id}
+                className="flex items-center gap-3 rounded-md border border-border bg-background px-3 py-2"
               >
-                {a.filename}
-              </button>
-              <span className="text-[11px] font-mono text-muted-foreground whitespace-nowrap">
-                {formatSize(a.sizeBytes)}
-              </span>
-              <button
-                onClick={() => remove(a.id)}
-                className="text-[11.5px] text-destructive hover:opacity-80"
-              >
-                Delete
-              </button>
-            </li>
-          ))}
+                {preview ? (
+                  <button
+                    onClick={() => setLightbox(preview)}
+                    className="shrink-0 h-10 w-10 rounded overflow-hidden border border-border bg-card"
+                    title="Click to enlarge"
+                  >
+                    <img
+                      src={preview}
+                      alt={a.filename}
+                      className="h-full w-full object-cover"
+                      loading="lazy"
+                    />
+                  </button>
+                ) : (
+                  <div className="shrink-0 h-10 w-10 rounded border border-border bg-card flex items-center justify-center text-[10px] font-mono text-muted-foreground">
+                    {(a.contentType.split("/")[1] || "file").slice(0, 4)}
+                  </div>
+                )}
+                <button
+                  onClick={() => download(a.id)}
+                  className="flex-1 min-w-0 text-left text-[13px] truncate hover:text-primary"
+                  title={a.filename}
+                >
+                  {a.filename}
+                </button>
+                <span className="text-[11px] font-mono text-muted-foreground whitespace-nowrap">
+                  {formatSize(a.sizeBytes)}
+                </span>
+                <button
+                  onClick={() => remove(a.id)}
+                  className="text-[11.5px] text-destructive hover:opacity-80"
+                >
+                  Delete
+                </button>
+              </li>
+            );
+          })}
         </ul>
+      )}
+
+      {lightbox && (
+        <div
+          className="fixed inset-0 z-[80] flex items-center justify-center bg-black/80 p-4"
+          onClick={() => setLightbox(null)}
+        >
+          <img
+            src={lightbox}
+            alt=""
+            className="max-h-[90vh] max-w-[90vw] object-contain rounded-md shadow-xl"
+            onClick={(e) => e.stopPropagation()}
+          />
+        </div>
       )}
 
       {upgrade && (
