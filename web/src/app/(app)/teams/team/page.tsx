@@ -316,7 +316,7 @@ function TeamDetail() {
                     <span className="text-[11.5px] font-mono uppercase tracking-[0.18em] text-muted-foreground">{c.source}</span>
                   </div>
                   <span className="text-[12px] text-muted-foreground">
-                    {new Date(c.updated_at).toLocaleDateString()}
+                    {new Date(c.updatedAt).toLocaleDateString()}
                   </span>
                 </Link>
               </li>

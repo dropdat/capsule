@@ -6,10 +6,11 @@ const sourceLabel: Record<Capsule["source"], string> = {
   chatgpt: "ChatGPT",
   claude: "Claude",
   gemini: "Gemini",
+  mobile: "Mobile",
 };
 
 export function CapsuleCard({ capsule }: { capsule: Capsule }) {
-  const updated = new Date(capsule.updated_at).toLocaleDateString(undefined, {
+  const updated = new Date(capsule.updatedAt).toLocaleDateString(undefined, {
     month: "short",
     day: "numeric",
     year: "numeric",

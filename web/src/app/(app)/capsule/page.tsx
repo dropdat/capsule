@@ -95,16 +95,16 @@ function CapsuleDetail() {
             <span>·</span>
             <span>v{capsule.version}</span>
             <span>·</span>
-            <span>{new Date(capsule.updated_at).toLocaleString()}</span>
+            <span>{new Date(capsule.updatedAt).toLocaleString()}</span>
           </div>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-wrap [&>button]:whitespace-nowrap [&_button]:whitespace-nowrap">
           {editing ? (
             <>
-              <button onClick={save} className="bg-primary text-primary-foreground border border-border px-4 py-2 text-[13px] font-medium">
+              <button onClick={save} className="rounded-md bg-primary text-primary-foreground border border-border px-4 py-2 text-[13px] font-medium">
                 Save
               </button>
-              <button onClick={() => setEditing(false)} className="bg-secondary border border-border px-4 py-2 text-[13px] font-medium">
+              <button onClick={() => setEditing(false)} className="rounded-md bg-secondary border border-border px-4 py-2 text-[13px] font-medium">
                 Cancel
               </button>
             </>
@@ -202,7 +202,7 @@ function CapsuleDetail() {
                     <span className="font-mono text-[11px] text-primary">v{v.version}</span>
                     <span className="flex-1 truncate">{v.title}</span>
                     <span className="text-[11px] text-muted-foreground">
-                      {new Date(v.created_at).toLocaleDateString()}
+                      {new Date(v.createdAt).toLocaleDateString()}
                     </span>
                   </Link>
                 </li>
@@ -212,14 +212,14 @@ function CapsuleDetail() {
 
           <div className="border border-border bg-card p-5">
             <h2 className="font-heading text-[14px] font-medium uppercase tracking-[0.18em] text-muted-foreground mb-3">Source</h2>
-            {capsule.source_url ? (
+            {capsule.sourceUrl ? (
               <a
-                href={capsule.source_url}
+                href={capsule.sourceUrl}
                 target="_blank"
                 rel="noreferrer"
                 className="text-[13px] text-primary underline-offset-4 hover:underline break-all"
               >
-                {capsule.source_url}
+                {capsule.sourceUrl}
               </a>
             ) : (
               <p className="text-[13px] text-muted-foreground">No source URL.</p>

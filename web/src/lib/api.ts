@@ -57,23 +57,23 @@ export type SavedLink = {
   updatedAt: string;
 };
 
-export type CapsuleSource = "chatgpt" | "claude" | "gemini";
+export type CapsuleSource = "chatgpt" | "claude" | "gemini" | "mobile";
 
 export type Capsule = {
   id: string;
-  user_id: string;
+  userId: string;
   title: string;
   summary: string;
   source: CapsuleSource;
-  source_url: string;
+  sourceUrl: string;
   messages: Array<{ role: "user" | "assistant" | "system"; content: string; capturedAt: string }>;
   tags: string[];
   version: number;
-  root_id: string;
-  parent_id: string | null;
+  rootId: string;
+  parentId: string | null;
   shareToken?: string | null;
-  created_at: string;
-  updated_at: string;
+  createdAt: string;
+  updatedAt: string;
 };
 
 export type Tier = "basic" | "pro" | "premium" | "ultimate" | "enterprise";
