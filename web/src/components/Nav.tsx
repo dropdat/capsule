@@ -17,10 +17,10 @@ export function Nav() {
           <li><a href="#platforms" className="hover:text-foreground transition-colors">Supported AIs</a></li>
         </ul>
         <div className="flex items-center gap-2">
-          <a href="https://github.com" aria-label="GitHub" className="hidden sm:inline-flex items-center justify-center w-9 h-9 text-foreground/70 hover:text-foreground transition-colors">
+          <a href="https://github.com/dropdat/mcp" aria-label="GitHub" className="hidden sm:inline-flex items-center justify-center w-9 h-9 text-foreground/70 hover:text-foreground transition-colors">
             <GithubIcon className="w-4 h-4" />
           </a>
-          <a href="https://x.com" aria-label="X" className="hidden sm:inline-flex items-center justify-center w-9 h-9 text-foreground/70 hover:text-foreground transition-colors">
+          <a href="https://x.com/Dropdat_" aria-label="X" className="hidden sm:inline-flex items-center justify-center w-9 h-9 text-foreground/70 hover:text-foreground transition-colors">
             <XIcon className="w-4 h-4" />
           </a>
           <a
