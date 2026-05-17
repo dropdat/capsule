@@ -2,7 +2,7 @@
 import { useSearchParams, useRouter } from "next/navigation";
 import { Suspense, useState } from "react";
 import useSWR from "swr";
-import { useApi, type Capsule } from "@/lib/api";
+import { useApi, ApiError, type Capsule } from "@/lib/api";
 import Link from "next/link";
 import { ShareControl } from "@/components/capsule/ShareControl";
 import { ShareToTeam } from "@/components/capsule/ShareToTeam";
@@ -33,6 +33,7 @@ function CapsuleDetail() {
   const [copiedDyn, setCopiedDyn] = useState(false);
   const [dynBusy, setDynBusy] = useState(false);
   const [dynError, setDynError] = useState<string | null>(null);
+  const [dynPaywall, setDynPaywall] = useState<string | null>(null);
 
   if (!id) return <p className="text-[14px] text-muted-foreground">Missing capsule id.</p>;
   if (error) return <p className="text-[14px] text-destructive">Failed to load: {String(error)}</p>;
@@ -70,7 +71,11 @@ function CapsuleDetail() {
       setCopiedDyn(true);
       setTimeout(() => setCopiedDyn(false), 2000);
     } catch (e) {
-      setDynError(e instanceof Error ? e.message : "Dynamic copy failed");
+      if (e instanceof ApiError && e.status === 402) {
+        setDynPaywall(e.message || "Dynamic context is a Premium feature.");
+      } else {
+        setDynError(e instanceof Error ? e.message : "Dynamic copy failed");
+      }
     } finally {
       setDynBusy(false);
     }
@@ -291,6 +296,43 @@ function CapsuleDetail() {
           </div>
         </aside>
       </section>
+
+      {dynPaywall && (
+        <div
+          className="fixed inset-0 z-[80] flex items-center justify-center bg-black/50 p-4"
+          onClick={() => setDynPaywall(null)}
+        >
+          <div
+            role="dialog"
+            aria-modal="true"
+            className="w-full max-w-md rounded-lg border border-border bg-card p-6 shadow-xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h2 className="font-heading text-[18px] font-medium mb-2">
+              Dynamic context is a Premium feature
+            </h2>
+            <p className="text-[13.5px] text-muted-foreground mb-5">
+              {dynPaywall} Upgrade to bundle this capsule with its top-5 related
+              capsules as a single markdown block — ready to paste into any LLM.
+            </p>
+            <div className="flex justify-end gap-2">
+              <button
+                type="button"
+                onClick={() => setDynPaywall(null)}
+                className="rounded-md bg-card border border-border px-4 py-2 text-[13px] hover:bg-muted"
+              >
+                Not now
+              </button>
+              <Link
+                href="/billing"
+                className="rounded-md bg-primary text-primary-foreground px-4 py-2 text-[13px] font-medium hover:opacity-90"
+              >
+                See plans
+              </Link>
+            </div>
+          </div>
+        </div>
+      )}
     </article>
   );
 }
