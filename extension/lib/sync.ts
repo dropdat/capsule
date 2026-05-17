@@ -81,6 +81,10 @@ export async function syncOnce(
           parentId: r.parentId,
           createdAt: r.createdAt,
           updatedAt: r.updatedAt,
+          // Preserve local-only fields that the server doesn't know about,
+          // otherwise this pull pass wipes a freshly-queued image upload list
+          // immediately after the corresponding push succeeds.
+          pendingImages: existing?.pendingImages,
         };
         await capsuleStore.put(merged);
         pulled++;
