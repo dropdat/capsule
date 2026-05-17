@@ -142,9 +142,8 @@ export default function GraphPage() {
     fg?.pauseAnimation?.();
   }, [data.nodes]);
 
-  // After the ref is set, tune the d3 simulation forces to spread the graph
-  // out — defaults are way too tight for our node counts and produce a
-  // congested ball that keeps wobbling.
+  // After the ref is set, tune the d3 simulation forces. Keep forces gentle —
+  // strong charge on a small graph causes endless oscillation (the "shake").
   useEffect(() => {
     const fg = fgRef.current as
       | {
@@ -153,10 +152,19 @@ export default function GraphPage() {
       | null;
     if (!fg) return;
     const link = fg.d3Force("link");
-    if (link?.distance) link.distance(70);
+    if (link?.distance) link.distance(55);
     const charge = fg.d3Force("charge");
-    if (charge?.strength) charge.strength(-220);
+    if (charge?.strength) charge.strength(-90);
   }, [data]);
+
+  // Hard fallback: regardless of cooldown, freeze the layout after a short
+  // window. Some graphs (small node counts, dense clusters) oscillate forever
+  // because forces re-energize each tick — onEngineStop never fires.
+  useEffect(() => {
+    if (!data.nodes.length) return;
+    const t = window.setTimeout(stop, 2500);
+    return () => window.clearTimeout(t);
+  }, [data, stop]);
 
   return (
     <section className="flex flex-col gap-6">
@@ -261,12 +269,12 @@ export default function GraphPage() {
                   ctx.fillText(label, n.x!, n.y! + r + 2);
                 }
               }}
-              warmupTicks={100}
-              cooldownTicks={40}
-              cooldownTime={2000}
-              d3AlphaMin={0.05}
-              d3AlphaDecay={0.08}
-              d3VelocityDecay={0.7}
+              warmupTicks={80}
+              cooldownTicks={30}
+              cooldownTime={1500}
+              d3AlphaMin={0.12}
+              d3AlphaDecay={0.1}
+              d3VelocityDecay={0.85}
               enableNodeDrag={true}
               onEngineStop={stop}
               onNodeDragEnd={(n) => {
