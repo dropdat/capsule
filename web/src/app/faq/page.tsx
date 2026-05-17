@@ -56,6 +56,14 @@ const faqs = [
     q: "Can I self-host?",
     a: "The MCP server is open source. The API/backend is currently hosted at dropdat.app; self-host instructions will be published as the API stabilises.",
   },
+  {
+    q: "How do I cancel my plan?",
+    a: "Open Billing in the dashboard and hit Cancel plan. The cancellation takes effect at the end of your current billing period — you keep access until then.",
+  },
+  {
+    q: "Do you offer refunds?",
+    a: "Yes — we refund any plan as long as you haven't used a paid feature after purchase. Contact support from the dashboard with your account email and we'll process it.",
+  },
 ];
 
 const jsonLd = {
