@@ -15,6 +15,11 @@ type Props = {
   groupOrder?: string[]; // ordering for nodes by source group
 };
 
+// Labels and edges inherit foreground via currentColor — the parent CSS
+// already sets `color: var(--foreground)`, so light/dark just works. We used
+// to read --foreground from documentElement which always returned the light
+// value because the .dark class lives on an inner wrapper, not on <html>.
+
 type LaidOutNode = ChordNode & {
   degree: number;
   angle: number;
@@ -34,20 +39,6 @@ export function ChordGraph({
   const containerRef = useRef<HTMLDivElement | null>(null);
   const [dims, setDims] = useState({ w: 800, h: 520 });
   const [hovered, setHovered] = useState<string | null>(null);
-  const [theme, setTheme] = useState({ fg: "#0b1015", fgMuted: "rgba(140,140,140,0.6)" });
-
-  useEffect(() => {
-    const update = () => {
-      if (typeof window === "undefined") return;
-      const cs = getComputedStyle(document.documentElement);
-      const fg = cs.getPropertyValue("--foreground").trim() || "#0b1015";
-      setTheme({ fg, fgMuted: fg + "66" });
-    };
-    update();
-    const obs = new MutationObserver(update);
-    obs.observe(document.documentElement, { attributes: true, attributeFilter: ["class"] });
-    return () => obs.disconnect();
-  }, []);
 
   useEffect(() => {
     const update = () => {
@@ -119,9 +110,13 @@ export function ChordGraph({
   };
 
   return (
-    <div ref={containerRef} className="w-full" style={{ height: dims.h }}>
+    <div
+      ref={containerRef}
+      className="w-full text-foreground"
+      style={{ height: dims.h }}
+    >
       {nodes.length === 0 ? null : (
-        <svg width={dims.w} height={dims.h} style={{ display: "block" }}>
+        <svg width={dims.w} height={dims.h} style={{ display: "block", color: "currentColor" }}>
           <g>
             {edges.map((e, i) => {
               const a = byId.get(e.from);
@@ -136,8 +131,8 @@ export function ChordGraph({
                   key={i}
                   d={`M ${a.x} ${a.y} Q ${mx} ${my} ${b.x} ${b.y}`}
                   fill="none"
-                  stroke={active ? "#0562ef" : "rgba(120,120,120,0.35)"}
-                  strokeOpacity={dimmed ? 0.08 : active ? 0.9 : Math.min(0.6, 0.2 + e.weight * 0.6)}
+                  stroke={active ? "#0562ef" : "currentColor"}
+                  strokeOpacity={dimmed ? 0.06 : active ? 0.9 : Math.min(0.5, 0.15 + e.weight * 0.5)}
                   strokeWidth={active ? 1.8 : Math.max(0.5, e.weight * 1.4)}
                 />
               );
@@ -181,7 +176,8 @@ export function ChordGraph({
                     textAnchor={anchor}
                     dominantBaseline="middle"
                     fontSize={11}
-                    fill={active ? theme.fg : theme.fgMuted}
+                    fill="currentColor"
+                    opacity={active ? 1 : 0.4}
                     style={{
                       pointerEvents: "none",
                       fontFamily: "ui-sans-serif, system-ui, sans-serif",

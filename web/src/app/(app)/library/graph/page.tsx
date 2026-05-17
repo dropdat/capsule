@@ -41,14 +41,23 @@ export default function GraphPage() {
   const [theme, setTheme] = useState({ fg: "#0b1015", fgMuted: "rgba(140,140,140,0.6)" });
 
   useEffect(() => {
+    const findDarkRoot = () => {
+      // Dark mode class lives on an inner wrapper (ThemeProvider), not on
+      // <html>, so read --foreground from the nearest element that resolves
+      // the correct value. Falls back to <html> if the wrapper isn't found.
+      const node = containerRef.current?.closest("[data-dashboard]") ?? document.documentElement;
+      return node as Element;
+    };
     const update = () => {
       if (typeof window === "undefined") return;
-      const cs = getComputedStyle(document.documentElement);
-      const fg = cs.getPropertyValue("--foreground").trim() || "#0b1015";
-      setTheme({ fg, fgMuted: fg + "66" });
+      const cs = getComputedStyle(findDarkRoot());
+      const fg = cs.getPropertyValue("--foreground").trim() || cs.color || "#0b1015";
+      setTheme({ fg, fgMuted: fg + "99" });
     };
     update();
+    const root = findDarkRoot();
     const obs = new MutationObserver(update);
+    obs.observe(root, { attributes: true, attributeFilter: ["class"] });
     obs.observe(document.documentElement, { attributes: true, attributeFilter: ["class"] });
     return () => obs.disconnect();
   }, []);
