@@ -18,16 +18,18 @@ import (
 	"github.com/go-chi/chi/v5"
 
 	"github.com/yusii/dropdat/api/internal/auth"
+	"github.com/yusii/dropdat/api/internal/clerk"
 	"github.com/yusii/dropdat/api/internal/db/dbgen"
 	"github.com/yusii/dropdat/api/internal/httpx"
 )
 
 type Handler struct {
 	q       *dbgen.Queries
+	clerk   *clerk.Client // nil = no name lookup, fall back to raw ids
 	adminID map[string]struct{}
 }
 
-func NewHandler(q *dbgen.Queries) *Handler {
+func NewHandler(q *dbgen.Queries, ck *clerk.Client) *Handler {
 	ids := strings.Split(os.Getenv("ADMIN_USER_IDS"), ",")
 	set := make(map[string]struct{}, len(ids))
 	for _, id := range ids {
@@ -36,7 +38,7 @@ func NewHandler(q *dbgen.Queries) *Handler {
 			set[id] = struct{}{}
 		}
 	}
-	return &Handler{q: q, adminID: set}
+	return &Handler{q: q, clerk: ck, adminID: set}
 }
 
 func (h *Handler) IsAdmin(userID string) bool {
@@ -50,6 +52,7 @@ func (h *Handler) Mount(r chi.Router) {
 	r.Get("/admin/users", h.guard(h.Users))
 	r.Post("/admin/users/{id}/ban", h.guard(h.Ban))
 	r.Post("/admin/users/{id}/unban", h.guard(h.Unban))
+	r.Get("/admin/users/{id}/capsules", h.guard(h.UserCapsules))
 }
 
 func (h *Handler) guard(next http.HandlerFunc) http.HandlerFunc {
@@ -98,6 +101,9 @@ func (h *Handler) Stats(w http.ResponseWriter, r *http.Request) {
 
 type userDTO struct {
 	UserID             string `json:"userId"`
+	DisplayName        string `json:"displayName"`
+	Email              string `json:"email"`
+	AvatarURL          string `json:"avatarUrl"`
 	Tier               string `json:"tier"`
 	SubscriptionStatus string `json:"subscriptionStatus"`
 	CapsuleCount       int64  `json:"capsuleCount"`
@@ -120,22 +126,81 @@ func (h *Handler) Users(w http.ResponseWriter, r *http.Request) {
 		httpx.Error(w, http.StatusInternalServerError, err.Error())
 		return
 	}
+	// Batch-resolve display names via Clerk. nil client (CLERK_SECRET_KEY
+	// unset) → fall back to bare ids.
+	ids := make([]string, 0, len(rows))
+	for _, row := range rows {
+		ids = append(ids, row.UserID)
+	}
+	people := map[string]clerk.User{}
+	if h.clerk != nil {
+		people = h.clerk.GetUsers(r.Context(), ids)
+	}
 	out := make([]userDTO, 0, len(rows))
-	for _, r := range rows {
+	for _, row := range rows {
+		u := people[row.UserID]
+		display := row.UserID
+		if u.ID != "" {
+			display = u.Display()
+		}
 		out = append(out, userDTO{
-			UserID:             r.UserID,
-			Tier:               r.Tier,
-			SubscriptionStatus: r.SubscriptionStatus,
-			CapsuleCount:       r.CapsuleCount,
-			LastSeenAt:         r.LastSeenAt.Time.Format(time.RFC3339),
-			LastPath:           r.LastPath,
-			RequestCount:       r.RequestCount,
-			Banned:             r.BannedAt.Valid,
-			BannedReason:       r.BannedReason,
+			UserID:             row.UserID,
+			DisplayName:        display,
+			Email:              u.PrimaryEmail,
+			AvatarURL:          u.ImageURL,
+			Tier:               row.Tier,
+			SubscriptionStatus: row.SubscriptionStatus,
+			CapsuleCount:       row.CapsuleCount,
+			LastSeenAt:         row.LastSeenAt.Time.Format(time.RFC3339),
+			LastPath:           row.LastPath,
+			RequestCount:       row.RequestCount,
+			Banned:             row.BannedAt.Valid,
+			BannedReason:       row.BannedReason,
 		})
 	}
 	httpx.JSON(w, http.StatusOK, out)
 }
+
+type capsuleSummaryDTO struct {
+	ID        string `json:"id"`
+	Title     string `json:"title"`
+	Summary   string `json:"summary"`
+	Source    string `json:"source"`
+	UpdatedAt string `json:"updatedAt"`
+	CreatedAt string `json:"createdAt"`
+	Version   int32  `json:"version"`
+}
+
+// UserCapsules lists the most recent capsules owned by an arbitrary user.
+// Admin-only; bypasses the per-user scoping in the normal capsule handler.
+func (h *Handler) UserCapsules(w http.ResponseWriter, r *http.Request) {
+	uid := chi.URLParam(r, "id")
+	if uid == "" {
+		httpx.Error(w, http.StatusBadRequest, "id required")
+		return
+	}
+	rows, err := h.q.AdminListUserCapsules(r.Context(), dbgen.AdminListUserCapsulesParams{
+		UserID: uid, Limit: 200,
+	})
+	if err != nil {
+		httpx.Error(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+	out := make([]capsuleSummaryDTO, 0, len(rows))
+	for _, c := range rows {
+		out = append(out, capsuleSummaryDTO{
+			ID:        c.ID.String(),
+			Title:     c.Title,
+			Summary:   c.Summary,
+			Source:    string(c.Source),
+			UpdatedAt: c.UpdatedAt.Time.Format(time.RFC3339),
+			CreatedAt: c.CreatedAt.Time.Format(time.RFC3339),
+			Version:   c.Version,
+		})
+	}
+	httpx.JSON(w, http.StatusOK, out)
+}
+
 
 type banRequest struct {
 	Reason string `json:"reason"`

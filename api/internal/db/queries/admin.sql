@@ -31,6 +31,14 @@ SELECT
   (SELECT COALESCE(SUM(size_bytes), 0)::BIGINT FROM capsule_attachments)          AS attachment_bytes,
   (SELECT COUNT(*)::BIGINT FROM user_overrides WHERE banned_at IS NOT NULL)       AS banned_users;
 
+-- name: AdminListUserCapsules :many
+-- Admin-only: list recent capsules for any user, bypassing per-user scoping.
+SELECT id, user_id, title, summary, source, version, created_at, updated_at
+FROM capsules
+WHERE user_id = $1 AND deleted_at IS NULL
+ORDER BY updated_at DESC
+LIMIT $2;
+
 -- name: AdminTierBreakdown :many
 SELECT tier, COUNT(*)::BIGINT AS users
 FROM subscriptions

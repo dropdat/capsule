@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 import { useApi } from "@/lib/api";
 
@@ -18,6 +18,9 @@ type Stats = {
 
 type UserRow = {
   userId: string;
+  displayName: string;
+  email: string;
+  avatarUrl: string;
   tier: string;
   subscriptionStatus: string;
   capsuleCount: number;
@@ -26,6 +29,16 @@ type UserRow = {
   requestCount: number;
   banned: boolean;
   bannedReason: string;
+};
+
+type UserCapsule = {
+  id: string;
+  title: string;
+  summary: string;
+  source: string;
+  updatedAt: string;
+  createdAt: string;
+  version: number;
 };
 
 function formatBytes(n: number): string {
@@ -52,24 +65,68 @@ export default function AdminPage() {
   const [users, setUsers] = useState<UserRow[]>([]);
   const [filter, setFilter] = useState("");
   const [error, setError] = useState<string | null>(null);
+  const [selectedUser, setSelectedUser] = useState<UserRow | null>(null);
+  const [userCapsules, setUserCapsules] = useState<UserCapsule[]>([]);
+  const [capsulesLoading, setCapsulesLoading] = useState(false);
 
-  const loadStats = useCallback(async () => {
-    try {
-      const s = await api<Stats>("/api/v1/admin/stats");
-      setStats(s);
-    } catch (e) {
-      setError(e instanceof Error ? e.message : "Stats load failed");
-    }
-  }, [api]);
+  // Background polls would flash "Failed to fetch" on every transient hiccup.
+  // We only surface errors after two consecutive failures, and clear them on
+  // the next success. Initial loads still report immediately.
+  const statsFails = useRef(0);
+  const usersFails = useRef(0);
 
-  const loadUsers = useCallback(async () => {
-    try {
-      const u = await api<UserRow[]>("/api/v1/admin/users?limit=300");
-      setUsers(u ?? []);
-    } catch (e) {
-      setError(e instanceof Error ? e.message : "Users load failed");
-    }
-  }, [api]);
+  const loadStats = useCallback(
+    async (silent = false) => {
+      try {
+        const s = await api<Stats>("/api/v1/admin/stats");
+        setStats(s);
+        statsFails.current = 0;
+        setError(null);
+      } catch (e) {
+        statsFails.current += 1;
+        if (!silent || statsFails.current >= 2) {
+          setError(e instanceof Error ? e.message : "Stats load failed");
+        }
+      }
+    },
+    [api],
+  );
+
+  const loadUsers = useCallback(
+    async (silent = false) => {
+      try {
+        const u = await api<UserRow[]>("/api/v1/admin/users?limit=300");
+        setUsers(u ?? []);
+        usersFails.current = 0;
+        setError(null);
+      } catch (e) {
+        usersFails.current += 1;
+        if (!silent || usersFails.current >= 2) {
+          setError(e instanceof Error ? e.message : "Users load failed");
+        }
+      }
+    },
+    [api],
+  );
+
+  const openUser = useCallback(
+    async (u: UserRow) => {
+      setSelectedUser(u);
+      setUserCapsules([]);
+      setCapsulesLoading(true);
+      try {
+        const cs = await api<UserCapsule[]>(
+          `/api/v1/admin/users/${encodeURIComponent(u.userId)}/capsules`,
+        );
+        setUserCapsules(cs ?? []);
+      } catch (e) {
+        setError(e instanceof Error ? e.message : "Capsules load failed");
+      } finally {
+        setCapsulesLoading(false);
+      }
+    },
+    [api],
+  );
 
   useEffect(() => {
     api<{ admin: boolean }>("/api/v1/admin/me")
@@ -79,9 +136,12 @@ export default function AdminPage() {
 
   useEffect(() => {
     if (allowed) {
-      loadStats();
-      loadUsers();
-      const t = setInterval(loadStats, 15000);
+      loadStats(false);
+      loadUsers(false);
+      const t = setInterval(() => {
+        loadStats(true);
+        loadUsers(true);
+      }, 15000);
       return () => clearInterval(t);
     }
   }, [allowed, loadStats, loadUsers]);
@@ -185,6 +245,82 @@ export default function AdminPage() {
         </div>
       )}
 
+      {/* User capsules drawer */}
+      {selectedUser && (
+        <div
+          className="fixed inset-0 z-40 bg-black/30 backdrop-blur-sm flex justify-end"
+          onClick={() => setSelectedUser(null)}
+        >
+          <aside
+            className="h-full w-full max-w-[520px] bg-card border-l border-border overflow-y-auto"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <header className="sticky top-0 bg-card border-b border-border px-5 py-3 flex items-center justify-between gap-3">
+              <div className="flex items-center gap-3 min-w-0">
+                {selectedUser.avatarUrl ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    src={selectedUser.avatarUrl}
+                    alt=""
+                    className="w-8 h-8 rounded-full flex-none"
+                  />
+                ) : (
+                  <span className="w-8 h-8 rounded-full bg-muted flex-none" />
+                )}
+                <div className="min-w-0">
+                  <div className="font-heading text-[15px] truncate">
+                    {selectedUser.displayName}
+                  </div>
+                  <div className="text-[11px] text-muted-foreground font-mono truncate">
+                    {selectedUser.userId}
+                  </div>
+                </div>
+              </div>
+              <button
+                onClick={() => setSelectedUser(null)}
+                className="text-[12px] text-muted-foreground hover:text-foreground"
+              >
+                Close
+              </button>
+            </header>
+
+            <div className="px-5 py-4 flex flex-col gap-3">
+              <div className="text-[11px] uppercase tracking-wider text-muted-foreground">
+                Capsules · {userCapsules.length}
+              </div>
+              {capsulesLoading ? (
+                <p className="text-[13px] text-muted-foreground">Loading…</p>
+              ) : userCapsules.length === 0 ? (
+                <p className="text-[13px] text-muted-foreground">No capsules.</p>
+              ) : (
+                <ul className="flex flex-col gap-1">
+                  {userCapsules.map((c) => (
+                    <li
+                      key={c.id}
+                      className="rounded-md border border-border bg-background px-3 py-2"
+                    >
+                      <div className="flex items-baseline justify-between gap-3">
+                        <span className="font-medium text-[13px] truncate">
+                          {c.title || "Untitled"}
+                        </span>
+                        <span className="text-[10.5px] text-muted-foreground flex-none">
+                          v{c.version} · {c.source} · {relativeTime(c.updatedAt)}
+                        </span>
+                      </div>
+                      {c.summary && (
+                        <p className="text-[11.5px] text-muted-foreground line-clamp-2">
+                          {c.summary}
+                        </p>
+                      )}
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+          </aside>
+        </div>
+      )}
+
       {/* Users table */}
       <div className="rounded-lg border border-border bg-card overflow-hidden">
         <div className="border-b border-border px-5 py-3 flex items-center justify-between gap-3">
@@ -212,14 +348,35 @@ export default function AdminPage() {
             </thead>
             <tbody>
               {filtered.map((u) => (
-                <tr key={u.userId} className="border-t border-border/60">
-                  <td className="px-5 py-2 font-mono text-[11.5px] truncate max-w-[240px]" title={u.userId}>
+                <tr
+                  key={u.userId}
+                  className="border-t border-border/60 cursor-pointer hover:bg-accent-soft/40"
+                  onClick={() => openUser(u)}
+                >
+                  <td className="px-5 py-2 max-w-[280px]" title={`${u.userId}${u.email ? ` · ${u.email}` : ""}`}>
                     {u.banned && (
                       <span className="inline-block mr-2 rounded px-1.5 py-0.5 text-[10px] uppercase tracking-wider bg-destructive/15 text-destructive">
                         banned
                       </span>
                     )}
-                    {u.userId}
+                    <div className="flex items-center gap-2 min-w-0">
+                      {u.avatarUrl ? (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img
+                          src={u.avatarUrl}
+                          alt=""
+                          className="w-5 h-5 rounded-full flex-none"
+                        />
+                      ) : (
+                        <span className="w-5 h-5 rounded-full bg-muted flex-none" />
+                      )}
+                      <span className="truncate text-[12.5px]">{u.displayName}</span>
+                    </div>
+                    {u.email && (
+                      <span className="block text-[10.5px] text-muted-foreground truncate">
+                        {u.email}
+                      </span>
+                    )}
                   </td>
                   <td className="px-5 py-2 capitalize">{u.tier}</td>
                   <td className="px-5 py-2">{u.capsuleCount}</td>
@@ -233,14 +390,20 @@ export default function AdminPage() {
                   <td className="px-5 py-2 text-right">
                     {u.banned ? (
                       <button
-                        onClick={() => unban(u.userId)}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          unban(u.userId);
+                        }}
                         className="text-[12px] text-primary hover:opacity-80"
                       >
                         Unban
                       </button>
                     ) : (
                       <button
-                        onClick={() => ban(u.userId)}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          ban(u.userId);
+                        }}
                         className="text-[12px] text-destructive hover:opacity-80"
                       >
                         Ban

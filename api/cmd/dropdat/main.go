@@ -177,7 +177,7 @@ func main() {
 	// downgrades — the key is not revoked, just narrowed at request time.
 	verifier.SetAPIKeyVerifier(tierFilteredVerifier{inner: apiKeySvc, tierFor: tierFor})
 
-	adminHandler := admin.NewHandler(queries)
+	adminHandler := admin.NewHandler(queries, clerkClient)
 
 	// Unauthenticated webhook receiver — dodo signs the body, no JWT.
 	billingHandler.MountWebhook(r)
