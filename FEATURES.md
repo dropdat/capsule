@@ -74,6 +74,7 @@ Living index of shipped features. Updated each session when new features land.
 - Save-link feature (capture chat URL without full capsule)
 - Popup UI for capsule list / actions
 - IndexedDB offline storage with two-way sync (pulls remote capsules so a freshly-installed extension recovers prior captures)
+- Inline image capture — every `<img>` in the captured chat (up to 20/capsule) is queued and the background uploads each as a capsule attachment after sync; per-capsule queue persists offline and retries on the next sync tick
 - In-page dialogs:
   - "No chat detected" when the user clicks capsule on an empty page
   - "Capsule saved locally — sync blocked" upgrade dialog when the server returns `402` (plan limit). Capsule stays pending and syncs after upgrade.

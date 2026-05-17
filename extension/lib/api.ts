@@ -37,6 +37,20 @@ export const api = {
     request<ServerCapsule[]>("/api/v1/capsules", { token }),
   getMe: (token: string | null) =>
     request<{ userId: string }>("/api/v1/me", { token }),
+  initAttachment: (
+    token: string | null,
+    capsuleId: string,
+    body: { filename: string; contentType: string; sizeBytes: number },
+  ) =>
+    request<{ id: string; uploadUrl: string; expiresIn: number }>(
+      `/api/v1/capsules/${capsuleId}/attachments`,
+      { method: "POST", body: JSON.stringify(body), token },
+    ),
+  commitAttachment: (token: string | null, capsuleId: string, attachmentId: string) =>
+    request<void>(
+      `/api/v1/capsules/${capsuleId}/attachments/${attachmentId}/commit`,
+      { method: "POST", token },
+    ),
 };
 
 /** Server returns snake_case; convert when needed. */

@@ -71,6 +71,16 @@ export const capsuleStore = {
     delete c.pendingSync;
     await this.put(c);
   },
+  async clearPendingImages(id: string) {
+    const c = await this.get(id);
+    if (!c) return;
+    delete c.pendingImages;
+    await this.put(c);
+  },
+  async pendingImageUploads(): Promise<Capsule[]> {
+    const all = await this.all();
+    return all.filter((c) => !c.pendingSync && c.pendingImages && c.pendingImages.length > 0);
+  },
   async delete(id: string) {
     return tx("readwrite", (s) => reqToPromise(s.delete(id)));
   },

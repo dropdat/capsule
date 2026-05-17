@@ -9,6 +9,11 @@ export type CapsuleSource =
 
 export type Role = "user" | "assistant" | "system";
 
+export interface ImageRef {
+  url: string;
+  alt?: string;
+}
+
 export interface Message {
   role: Role;
   content: string;
@@ -32,6 +37,9 @@ export interface Capsule {
   updatedAt: string;
   /** Local-only: present until successfully synced to server. */
   pendingSync?: boolean;
+  /** Local-only: image URLs captured from the chat DOM, queued for upload as
+   * attachments once the capsule itself has synced. */
+  pendingImages?: ImageRef[];
 }
 
 export interface CreateCapsuleInput {

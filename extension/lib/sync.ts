@@ -1,5 +1,6 @@
 import { api } from "./api";
 import { capsuleStore } from "./storage";
+import { uploadPendingAttachments } from "./attach";
 import type { Capsule } from "./types";
 
 /**
@@ -83,6 +84,14 @@ export async function syncOnce(
     } catch (err) {
       console.warn("[dropdat] sync pull failed", err);
     }
+  }
+
+  // Drain any queued image attachments for capsules that successfully synced.
+  // Best-effort; never blocks the rest of sync.
+  try {
+    await uploadPendingAttachments(getToken);
+  } catch (err) {
+    console.warn("[dropdat] image attachment upload pass failed", err);
   }
 
   return { ok, failed, pulled, quotaExceeded };

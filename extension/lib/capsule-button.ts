@@ -505,6 +505,7 @@ async function captureAndSave(): Promise<{ quotaExceeded?: boolean } | undefined
     createdAt: now,
     updatedAt: now,
     pendingSync: true,
+    pendingImages: captured.images,
   };
 
   // Send to background — it owns the extension-origin IndexedDB.
