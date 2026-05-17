@@ -127,7 +127,7 @@ export default function OG() {
           </div>
         </div>
 
-        {/* Footer chip row */}
+        {/* Footer: chip row on the left, CTA button on the right */}
         <div
           style={{
             marginTop: 48,
@@ -143,7 +143,23 @@ export default function OG() {
           <Chip label="Gemini" />
           <Chip label="MCP" />
           <div style={{ flex: 1, display: "flex" }} />
-          <div style={{ color: primary, fontWeight: 500, display: "flex" }}>dropdat.app</div>
+          <div
+            style={{
+              padding: "16px 28px",
+              borderRadius: 14,
+              background: primary,
+              color: "#ffffff",
+              fontWeight: 600,
+              fontSize: 26,
+              display: "flex",
+              alignItems: "center",
+              gap: 12,
+              boxShadow: "0 14px 32px rgba(5,98,239,0.30)",
+            }}
+          >
+            Try free at dropdat.app
+            <span style={{ display: "flex" }}>→</span>
+          </div>
         </div>
       </div>
     ),
