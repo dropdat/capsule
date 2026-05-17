@@ -18,16 +18,23 @@ import (
 // CanCreate returns true when the user's plan allows creating context packs.
 type CanCreate func(ctx context.Context, userID string) bool
 
+// CanGraph returns true when the user's plan allows the similarity graph views.
+type CanGraph func(ctx context.Context, userID string) bool
+
 type Handler struct {
 	svc       *Service
 	canCreate CanCreate
+	canGraph  CanGraph
 }
 
-func NewHandler(svc *Service, canCreate CanCreate) *Handler {
+func NewHandler(svc *Service, canCreate CanCreate, canGraph CanGraph) *Handler {
 	if canCreate == nil {
 		canCreate = func(context.Context, string) bool { return true }
 	}
-	return &Handler{svc: svc, canCreate: canCreate}
+	if canGraph == nil {
+		canGraph = func(context.Context, string) bool { return true }
+	}
+	return &Handler{svc: svc, canCreate: canCreate, canGraph: canGraph}
 }
 
 func (h *Handler) Mount(r chi.Router) {
@@ -53,6 +60,10 @@ func (h *Handler) PackGraph(w http.ResponseWriter, r *http.Request) {
 		httpx.Error(w, http.StatusUnauthorized, "auth required")
 		return
 	}
+	if !h.canGraph(r.Context(), uid) {
+		httpx.Error(w, http.StatusPaymentRequired, "similarity graphs require Ultimate plan")
+		return
+	}
 	id, err := uuid.Parse(chi.URLParam(r, "id"))
 	if err != nil {
 		httpx.Error(w, http.StatusBadRequest, "invalid id")
@@ -75,6 +86,10 @@ func (h *Handler) OverviewGraph(w http.ResponseWriter, r *http.Request) {
 		httpx.Error(w, http.StatusUnauthorized, "auth required")
 		return
 	}
+	if !h.canGraph(r.Context(), uid) {
+		httpx.Error(w, http.StatusPaymentRequired, "similarity graphs require Ultimate plan")
+		return
+	}
 	minOverlap, _ := strconv.ParseFloat(r.URL.Query().Get("min_overlap"), 64)
 	g, err := h.svc.OverviewGraph(r.Context(), uid, minOverlap)
 	if err != nil {
@@ -88,6 +103,10 @@ func (h *Handler) Graph(w http.ResponseWriter, r *http.Request) {
 	uid := auth.UserID(r.Context())
 	if uid == "" {
 		httpx.Error(w, http.StatusUnauthorized, "auth required")
+		return
+	}
+	if !h.canGraph(r.Context(), uid) {
+		httpx.Error(w, http.StatusPaymentRequired, "similarity graphs require Ultimate plan")
 		return
 	}
 	q := r.URL.Query()

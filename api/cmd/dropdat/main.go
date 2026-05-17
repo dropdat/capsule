@@ -141,8 +141,13 @@ func main() {
 	}, clerkClient)
 	packSvc := pack.NewService(queries)
 	packHandler := pack.NewHandler(packSvc, func(ctx context.Context, userID string) bool {
-		// Context-pack creation gated to paid plans.
-		return tierFor(ctx, userID) != billing.TierBasic
+		// Context-pack creation gated to Premium and above.
+		t := tierFor(ctx, userID)
+		return t == billing.TierPremium || t == billing.TierUltimate || t == billing.TierEnterprise
+	}, func(ctx context.Context, userID string) bool {
+		// Similarity graph views (library + pack + overlap) gated to Ultimate.
+		t := tierFor(ctx, userID)
+		return t == billing.TierUltimate || t == billing.TierEnterprise
 	})
 	verifier.SetAPIKeyVerifier(apiKeySvc)
 

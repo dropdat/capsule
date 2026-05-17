@@ -50,9 +50,9 @@ Living index of shipped features. Updated each session when new features land.
 - Teams (paid-plan only, `402` for Basic) — `POST /teams`, `POST /teams/join {token}`, `GET /teams`, `GET /teams/{id}`, `PATCH /teams/{id}`, `DELETE /teams/{id}`, `POST /teams/{id}/rotate-link`, roster `GET/PATCH/DELETE /teams/{id}/members[/{user_id}]`, team library `GET /teams/{id}/capsules` and `/folders`, share capsules/folders via `POST /capsules/{id}/team` and `/folders/{id}/team`
 - Context packs (paid-plan only) — `GET/POST /packs`, `GET/PATCH/DELETE /packs/{id}`, items `GET/POST/DELETE /packs/{id}/items[/{capsule_id}]`, `POST /packs/{id}/autofill` (top-K embedding neighbours of a seed capsule), `GET /packs/{id}/render` returns a single markdown block ready to paste into any AI
 - Related capsules — `GET /capsules/{id}/related?limit=N` uses pgvector HNSW cosine to surface the user's most-similar capsules; falls back to empty list if the seed has no embedding yet
-- Capsule graph — `GET /capsules/graph?nodes=N&k=K&min_sim=X` returns `{nodes, edges}` for a library-wide visualization; edges deduped across reciprocal neighbours
-- Pack graph — `GET /packs/{id}/graph?k=K&min_sim=X` returns `{nodes, edges}` for a single pack's capsules; pairwise cosine in-process
-- Packs overview graph — `GET /packs/graph?min_overlap=X` returns `{nodes, edges}` where each node is a pack and edge weights are Jaccard overlap of shared capsules
+- Capsule graph (Ultimate only) — `GET /capsules/graph?nodes=N&k=K&min_sim=X` returns `{nodes, edges}` for a library-wide visualization; edges deduped across reciprocal neighbours
+- Pack graph (Ultimate only) — `GET /packs/{id}/graph?k=K&min_sim=X` returns `{nodes, edges}` for a single pack's capsules; pairwise cosine in-process
+- Packs overview graph (Ultimate only) — `GET /packs/graph?min_overlap=X` returns `{nodes, edges}` where each node is a pack and edge weights are Jaccard overlap of shared capsules
 - Clerk JWT auth (JWKS verified server-side)
 - DEV_AUTH_BYPASS for local development
 - Client-supplied UUIDv7 ids for offline-first sync

@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 
-import { useApi, ApiError, type ContextPack } from "@/lib/api";
+import { useApi, ApiError, type ContextPack, type Subscription } from "@/lib/api";
 
 export default function PacksPage() {
   const api = useApi();
@@ -14,6 +14,8 @@ export default function PacksPage() {
   const [goal, setGoal] = useState("");
   const [busy, setBusy] = useState(false);
   const [upgrade, setUpgrade] = useState(false);
+  const [tier, setTier] = useState<Subscription["tier"] | null>(null);
+  const canGraph = tier === "ultimate" || tier === "enterprise";
 
   const load = useCallback(async () => {
     try {
@@ -28,7 +30,10 @@ export default function PacksPage() {
 
   useEffect(() => {
     load();
-  }, [load]);
+    api<Subscription>("/api/v1/billing/subscription")
+      .then((s) => setTier(s.tier))
+      .catch(() => setTier("basic"));
+  }, [load, api]);
 
   const create = async () => {
     if (!name.trim()) return;
@@ -63,12 +68,14 @@ export default function PacksPage() {
             copy the rendered markdown into any AI app.
           </p>
         </div>
-        <Link
-          href="/packs/graph"
-          className="rounded-md bg-secondary border border-border px-3 py-2 text-[13px] hover:bg-card"
-        >
-          View overlap graph
-        </Link>
+        {canGraph && (
+          <Link
+            href="/packs/graph"
+            className="rounded-md bg-secondary border border-border px-3 py-2 text-[13px] hover:bg-card"
+          >
+            View overlap graph
+          </Link>
+        )}
       </header>
 
       {error && (

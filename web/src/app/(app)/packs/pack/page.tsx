@@ -4,7 +4,7 @@ import { Suspense, useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 
-import { useApi, type ContextPack, type PackItem } from "@/lib/api";
+import { useApi, type ContextPack, type PackItem, type Subscription } from "@/lib/api";
 
 export default function PackDetailPage() {
   return (
@@ -30,6 +30,14 @@ function PackDetail() {
   const [goal, setGoal] = useState("");
   const [editing, setEditing] = useState(false);
   const [renderedCopied, setRenderedCopied] = useState(false);
+  const [tier, setTier] = useState<Subscription["tier"] | null>(null);
+  const canGraph = tier === "ultimate" || tier === "enterprise";
+
+  useEffect(() => {
+    api<Subscription>("/api/v1/billing/subscription")
+      .then((s) => setTier(s.tier))
+      .catch(() => setTier("basic"));
+  }, [api]);
 
   const load = useCallback(async () => {
     setError(null);
@@ -215,12 +223,14 @@ function PackDetail() {
                 <button onClick={copyRendered} disabled={busy === "render"} className="rounded-md bg-primary text-primary-foreground px-4 py-2 text-[13px] font-medium hover:opacity-90 disabled:opacity-50">
                   {renderedCopied ? "Copied ✓" : busy === "render" ? "Rendering…" : "Copy as context"}
                 </button>
-                <Link
-                  href={`/packs/pack/graph?id=${id}`}
-                  className="rounded-md bg-secondary border border-border px-4 py-2 text-[13px]"
-                >
-                  View graph
-                </Link>
+                {canGraph && (
+                  <Link
+                    href={`/packs/pack/graph?id=${id}`}
+                    className="rounded-md bg-secondary border border-border px-4 py-2 text-[13px]"
+                  >
+                    View graph
+                  </Link>
+                )}
                 <button onClick={() => setEditing(true)} className="rounded-md bg-secondary border border-border px-4 py-2 text-[13px]">
                   Edit
                 </button>
