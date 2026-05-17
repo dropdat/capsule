@@ -3,7 +3,8 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 
-import { useApi, type CapsuleGraph } from "@/lib/api";
+import { useApi, ApiError, type CapsuleGraph } from "@/lib/api";
+import { Paywall } from "@/components/Paywall";
 
 type GraphNode = {
   id: string;
@@ -62,12 +63,18 @@ export default function GraphPage() {
     return () => obs.disconnect();
   }, []);
 
+  const [paywall, setPaywall] = useState<string | null>(null);
   const load = useCallback(async () => {
     setError(null);
+    setPaywall(null);
     try {
       const g = await api<CapsuleGraph>("/api/v1/capsules/graph?nodes=300&k=4");
       setGraph(g);
     } catch (e) {
+      if (e instanceof ApiError && e.status === 402) {
+        setPaywall(e.message);
+        return;
+      }
       setError(e instanceof Error ? e.message : "Load failed");
     }
   }, [api]);
@@ -161,6 +168,20 @@ export default function GraphPage() {
     if (!hovered) return false;
     return l.from === hovered || l.to === hovered;
   };
+
+  if (paywall) {
+    return (
+      <section className="flex flex-col gap-6">
+        <div className="flex flex-col gap-1">
+          <Link href="/library" className="text-[12px] text-muted-foreground hover:text-foreground">
+            ← Library
+          </Link>
+          <h1 className="font-heading text-[22px] sm:text-[26px] font-medium tracking-tight">Capsule graph</h1>
+        </div>
+        <Paywall title="Similarity graphs are an Ultimate feature" message={paywall} requiredTier="Ultimate" />
+      </section>
+    );
+  }
 
   return (
     <section className="flex flex-col gap-6">

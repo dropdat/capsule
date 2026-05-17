@@ -5,7 +5,8 @@ import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 
 import { ChordGraph, type ChordNode } from "@/components/ChordGraph";
-import { useApi, type CapsuleGraph, type ContextPack } from "@/lib/api";
+import { useApi, ApiError, type CapsuleGraph, type ContextPack } from "@/lib/api";
+import { Paywall } from "@/components/Paywall";
 
 const SOURCE_COLOR: Record<string, string> = {
   chatgpt: "#10a37f",
@@ -30,11 +31,13 @@ function PackGraphInner() {
   const [pack, setPack] = useState<ContextPack | null>(null);
   const [graph, setGraph] = useState<CapsuleGraph | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [paywall, setPaywall] = useState<string | null>(null);
   const [selected, setSelected] = useState<(ChordNode & { degree: number }) | null>(null);
 
   const load = useCallback(async () => {
     if (!id) return;
     setError(null);
+    setPaywall(null);
     try {
       const [p, g] = await Promise.all([
         api<ContextPack>(`/api/v1/packs/${id}`),
@@ -43,6 +46,10 @@ function PackGraphInner() {
       setPack(p);
       setGraph(g);
     } catch (e) {
+      if (e instanceof ApiError && e.status === 402) {
+        setPaywall(e.message);
+        return;
+      }
       setError(e instanceof Error ? e.message : "Load failed");
     }
   }, [api, id]);
@@ -50,6 +57,20 @@ function PackGraphInner() {
   useEffect(() => {
     load();
   }, [load]);
+
+  if (paywall) {
+    return (
+      <section className="flex flex-col gap-6">
+        <div className="flex flex-col gap-1">
+          <Link href={`/packs/pack?id=${id}`} className="text-[12px] text-muted-foreground hover:text-foreground">
+            ← {pack?.name ?? "Pack"}
+          </Link>
+          <h1 className="font-heading text-[22px] sm:text-[26px] font-medium tracking-tight">Pack graph</h1>
+        </div>
+        <Paywall title="Similarity graphs are an Ultimate feature" message={paywall} requiredTier="Ultimate" />
+      </section>
+    );
+  }
 
   return (
     <section className="flex flex-col gap-6">

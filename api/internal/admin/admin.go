@@ -189,14 +189,17 @@ func ActivityMiddleware(q *dbgen.Queries) func(http.Handler) http.Handler {
 				httpx.Error(w, http.StatusForbidden, reason)
 				return
 			}
-			// Async touch — never block.
+			// Skip activity tracking for admin self-traffic — the dashboard
+			// auto-refreshes /admin/stats and /admin/me, which would otherwise
+			// pin the admin's last_path to those routes and flicker the table.
 			path := r.URL.Path
-			go func(ctx context.Context, p string) {
-				touchCtx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
-				defer cancel()
-				_ = q.TouchUserActivity(touchCtx, dbgen.TouchUserActivityParams{UserID: uid, LastPath: p})
-				_ = ctx
-			}(r.Context(), path)
+			if !strings.HasPrefix(path, "/api/v1/admin/") {
+				go func(p string) {
+					touchCtx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
+					defer cancel()
+					_ = q.TouchUserActivity(touchCtx, dbgen.TouchUserActivityParams{UserID: uid, LastPath: p})
+				}(path)
+			}
 			next.ServeHTTP(w, r)
 		})
 	}

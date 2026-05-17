@@ -29,7 +29,16 @@ export function useApi() {
     const res = await fetch(`${BASE}${path}`, { ...init, headers });
     if (!res.ok) {
       const body = await res.text();
-      throw new ApiError(res.status, body || res.statusText);
+      // Server returns {"error":"..."} — surface just the message so callers
+      // don't have to render raw JSON.
+      let message = body || res.statusText;
+      try {
+        const parsed = JSON.parse(body);
+        if (parsed && typeof parsed.error === "string") message = parsed.error;
+      } catch {
+        /* not JSON, keep as-is */
+      }
+      throw new ApiError(res.status, message);
     }
     if (res.status === 204) return undefined as T;
     return (await res.json()) as T;
