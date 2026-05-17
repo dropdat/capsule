@@ -7,6 +7,7 @@ import Link from "next/link";
 import { ShareControl } from "@/components/capsule/ShareControl";
 import { ShareToTeam } from "@/components/capsule/ShareToTeam";
 import { SaveToPack } from "@/components/capsule/SaveToPack";
+import { Attachments } from "@/components/capsule/Attachments";
 import { RelatedPanel } from "@/components/capsule/RelatedPanel";
 
 function CapsuleDetail() {
@@ -29,6 +30,9 @@ function CapsuleDetail() {
   const [summary, setSummary] = useState("");
   const [tagsInput, setTagsInput] = useState("");
   const [copied, setCopied] = useState(false);
+  const [copiedDyn, setCopiedDyn] = useState(false);
+  const [dynBusy, setDynBusy] = useState(false);
+  const [dynError, setDynError] = useState<string | null>(null);
 
   if (!id) return <p className="text-[14px] text-muted-foreground">Missing capsule id.</p>;
   if (error) return <p className="text-[14px] text-destructive">Failed to load: {String(error)}</p>;
@@ -55,6 +59,21 @@ function CapsuleDetail() {
     if (!confirm("Delete this capsule?")) return;
     await api(`/api/v1/capsules/${capsule.id}`, { method: "DELETE" });
     router.push("/library");
+  };
+
+  const copyDynamic = async () => {
+    setDynBusy(true);
+    setDynError(null);
+    try {
+      const { markdown } = await api<{ markdown: string }>(`/api/v1/capsules/${capsule.id}/dynamic-context?k=5`);
+      await navigator.clipboard.writeText(markdown);
+      setCopiedDyn(true);
+      setTimeout(() => setCopiedDyn(false), 2000);
+    } catch (e) {
+      setDynError(e instanceof Error ? e.message : "Dynamic copy failed");
+    } finally {
+      setDynBusy(false);
+    }
   };
 
   const copyText = async () => {
@@ -115,6 +134,14 @@ function CapsuleDetail() {
                 className="rounded-md bg-primary text-primary-foreground px-4 py-2 text-[13px] font-medium transition-opacity hover:opacity-90"
               >
                 {copied ? "Copied ✓" : "Copy capsule"}
+              </button>
+              <button
+                onClick={copyDynamic}
+                disabled={dynBusy}
+                title="Capsule + top-5 related, as one markdown block"
+                className="rounded-md bg-secondary border border-border px-4 py-2 text-[13px] font-medium hover:bg-card disabled:opacity-50"
+              >
+                {copiedDyn ? "Copied ✓" : dynBusy ? "Bundling…" : "Copy dynamic context"}
               </button>
               <button onClick={startEdit} className="rounded-md bg-secondary border border-border px-4 py-2 text-[13px] font-medium hover:bg-card">
                 Edit
@@ -187,6 +214,7 @@ function CapsuleDetail() {
         </div>
 
         <aside className="flex flex-col gap-5">
+          <Attachments capsuleId={capsule.id} />
           <RelatedPanel capsuleId={capsule.id} />
           <div className="border border-border bg-card p-5">
             <h2 className="font-heading text-[14px] font-medium uppercase tracking-[0.18em] text-muted-foreground mb-3">Version timeline</h2>

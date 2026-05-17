@@ -21,20 +21,27 @@ type CanCreate func(ctx context.Context, userID string) bool
 // CanGraph returns true when the user's plan allows the similarity graph views.
 type CanGraph func(ctx context.Context, userID string) bool
 
+// CanDynamic returns true when the user's plan allows dynamic-context bundles.
+type CanDynamic func(ctx context.Context, userID string) bool
+
 type Handler struct {
-	svc       *Service
-	canCreate CanCreate
-	canGraph  CanGraph
+	svc        *Service
+	canCreate  CanCreate
+	canGraph   CanGraph
+	canDynamic CanDynamic
 }
 
-func NewHandler(svc *Service, canCreate CanCreate, canGraph CanGraph) *Handler {
+func NewHandler(svc *Service, canCreate CanCreate, canGraph CanGraph, canDynamic CanDynamic) *Handler {
 	if canCreate == nil {
 		canCreate = func(context.Context, string) bool { return true }
 	}
 	if canGraph == nil {
 		canGraph = func(context.Context, string) bool { return true }
 	}
-	return &Handler{svc: svc, canCreate: canCreate, canGraph: canGraph}
+	if canDynamic == nil {
+		canDynamic = func(context.Context, string) bool { return true }
+	}
+	return &Handler{svc: svc, canCreate: canCreate, canGraph: canGraph, canDynamic: canDynamic}
 }
 
 func (h *Handler) Mount(r chi.Router) {
@@ -49,6 +56,7 @@ func (h *Handler) Mount(r chi.Router) {
 	r.Post("/packs/{id}/autofill", h.AutoFill)
 	r.Get("/packs/{id}/render", h.Render)
 	r.Get("/capsules/{id}/related", h.Related)
+	r.Get("/capsules/{id}/dynamic-context", h.DynamicContext)
 	r.Get("/capsules/graph", h.Graph)
 	r.Get("/packs/{id}/graph", h.PackGraph)
 	r.Get("/packs/graph", h.OverviewGraph)
@@ -389,6 +397,39 @@ func (h *Handler) Related(w http.ResponseWriter, r *http.Request) {
 		rows = []RelatedCapsule{}
 	}
 	httpx.JSON(w, http.StatusOK, rows)
+}
+
+// DynamicContext returns a markdown bundle of the seed capsule plus its
+// top-K most-similar neighbours. The "dynamic" part is that the bundle
+// reflects the user's current corpus — copying it always pulls the freshest
+// related material rather than a static snapshot.
+func (h *Handler) DynamicContext(w http.ResponseWriter, r *http.Request) {
+	uid := auth.UserID(r.Context())
+	if uid == "" {
+		httpx.Error(w, http.StatusUnauthorized, "auth required")
+		return
+	}
+	if !h.canDynamic(r.Context(), uid) {
+		httpx.Error(w, http.StatusPaymentRequired, "dynamic context requires Premium plan or higher")
+		return
+	}
+	id, err := uuid.Parse(chi.URLParam(r, "id"))
+	if err != nil {
+		httpx.Error(w, http.StatusBadRequest, "invalid id")
+		return
+	}
+	k := 5
+	if s := r.URL.Query().Get("k"); s != "" {
+		if n, err := strconv.Atoi(s); err == nil && n > 0 && n <= 20 {
+			k = n
+		}
+	}
+	md, err := h.svc.DynamicContext(r.Context(), id, uid, k)
+	if err != nil {
+		writeErr(w, err)
+		return
+	}
+	httpx.JSON(w, http.StatusOK, map[string]string{"markdown": md})
 }
 
 func writeErr(w http.ResponseWriter, err error) {

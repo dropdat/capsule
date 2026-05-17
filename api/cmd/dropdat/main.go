@@ -26,6 +26,7 @@ import (
 	"github.com/yusii/dropdat/api/internal/folder"
 	"github.com/yusii/dropdat/api/internal/httpx"
 	"github.com/yusii/dropdat/api/internal/link"
+	"github.com/yusii/dropdat/api/internal/attach"
 	"github.com/yusii/dropdat/api/internal/pack"
 	"github.com/yusii/dropdat/api/internal/team"
 )
@@ -140,6 +141,14 @@ func main() {
 		return tierFor(ctx, userID) != billing.TierBasic
 	}, clerkClient)
 	packSvc := pack.NewService(queries)
+	hasScope := func(ctx context.Context, userID, scope string) bool {
+		for _, s := range billing.TierLimits(tierFor(ctx, userID)).Scopes {
+			if s == scope {
+				return true
+			}
+		}
+		return false
+	}
 	packHandler := pack.NewHandler(packSvc, func(ctx context.Context, userID string) bool {
 		// Context-pack creation gated to Premium and above.
 		t := tierFor(ctx, userID)
@@ -148,6 +157,18 @@ func main() {
 		// Similarity graph views (library + pack + overlap) gated to Ultimate.
 		t := tierFor(ctx, userID)
 		return t == billing.TierUltimate || t == billing.TierEnterprise
+	}, func(ctx context.Context, userID string) bool {
+		return hasScope(ctx, userID, billing.ScopeDynamicContext)
+	})
+
+	// Attachments — optional. Disabled if R2 env vars are absent; the handler
+	// will return 503 on upload attempts so it's safe to mount unconditionally.
+	r2Store, err := attach.NewFromEnv(ctx)
+	if err != nil {
+		slog.Warn("attachments storage init failed", "err", err)
+	}
+	attachHandler := attach.NewHandler(queries, r2Store, func(ctx context.Context, userID string) bool {
+		return hasScope(ctx, userID, billing.ScopeAttachments)
 	})
 	// Wrap the API key verifier so the effective scopes on each request are
 	// re-intersected with the user's CURRENT subscription scopes. This means a
@@ -178,6 +199,7 @@ func main() {
 			billingHandler.Mount(r)
 			teamHandler.Mount(r)
 			packHandler.Mount(r)
+			attachHandler.Mount(r)
 		})
 	})
 

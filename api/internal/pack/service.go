@@ -412,6 +412,46 @@ func cosine(a, b []float32) float64 {
 	return dot / (math.Sqrt(na) * math.Sqrt(nb))
 }
 
+// DynamicContext renders a markdown bundle containing the seed capsule's
+// title/summary/messages plus its top-K nearest neighbours. Used to drop a
+// live, embedding-driven context block into any AI.
+func (s *Service) DynamicContext(ctx context.Context, seedID uuid.UUID, userID string, k int) (string, error) {
+	if k <= 0 || k > 20 {
+		k = 5
+	}
+	seed, err := s.q.GetCapsule(ctx, dbgen.GetCapsuleParams{ID: seedID, UserID: userID})
+	if err != nil {
+		return "", ErrNotFound
+	}
+	related, err := s.Related(ctx, seedID, userID, k)
+	if err != nil {
+		if errors.Is(err, ErrNoEmbedding) {
+			related = []RelatedCapsule{}
+		} else {
+			return "", err
+		}
+	}
+	var b strings.Builder
+	fmt.Fprintf(&b, "# %s\n", seed.Title)
+	if seed.Summary != "" {
+		fmt.Fprintf(&b, "\n%s\n", seed.Summary)
+	}
+	fmt.Fprintf(&b, "\n_Source: %s · v%d · assembled by dropdat dynamic-context_\n", seed.Source, seed.Version)
+	if msgs := renderMessages(seed.Messages); msgs != "" {
+		fmt.Fprintf(&b, "\n%s\n", msgs)
+	}
+	if len(related) > 0 {
+		fmt.Fprintf(&b, "\n---\n\n## Related capsules (%d)\n", len(related))
+		for _, r := range related {
+			fmt.Fprintf(&b, "\n### %s\n_Source: %s · similarity %.2f_\n", r.Title, r.Source, r.Similarity)
+			if r.Summary != "" {
+				fmt.Fprintf(&b, "\n%s\n", r.Summary)
+			}
+		}
+	}
+	return b.String(), nil
+}
+
 func (s *Service) Related(ctx context.Context, seedID uuid.UUID, userID string, limit int) ([]RelatedCapsule, error) {
 	if limit <= 0 || limit > 50 {
 		limit = 10
