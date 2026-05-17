@@ -21,6 +21,20 @@ export default defineConfig({
       "https://*.dropdat.app/*",
       "https://*.clerk.accounts.dev/*",
       "https://clerk.accounts.dev/*",
+      // Image CDNs — needed so the service worker can fetch chat images and
+      // re-upload them as capsule attachments. Without these, signed/cookie-
+      // gated image URLs fail with CORS or 401 in the background context.
+      "https://images.openai.com/*",
+      "https://files.oaiusercontent.com/*",
+      "https://cdn.oaistatic.com/*",
+      "https://*.anthropic.com/*",
+      "https://files.claude.ai/*",
+      "https://lh3.googleusercontent.com/*",
+      "https://lh4.googleusercontent.com/*",
+      "https://lh5.googleusercontent.com/*",
+      "https://lh6.googleusercontent.com/*",
+      "https://*.gstatic.com/*",
+      "https://*.googleusercontent.com/*",
     ],
     action: {
       default_title: "dropdat — capsule library",
