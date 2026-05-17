@@ -245,13 +245,12 @@ export default function GraphPage() {
                   const color = SOURCE_COLOR[n.source] ?? "#6c7080";
                   const active = isActiveNode(n.id);
                   const sel = selected?.id === n.id;
-                  const labelR = radius + 14;
+                  const labelR = radius + 12;
                   const lx = cx + Math.cos(n.angle) * labelR;
                   const ly = cy + Math.sin(n.angle) * labelR;
-                  const deg = (n.angle * 180) / Math.PI;
-                  const flip = deg > 90 || deg < -90;
-                  const rotate = flip ? deg + 180 : deg;
-                  const anchor = flip ? "end" : "start";
+                  // Always horizontal — anchor based on which half we're on.
+                  const onRight = Math.cos(n.angle) >= 0;
+                  const anchor = onRight ? "start" : "end";
                   const label = n.title.length > 28 ? n.title.slice(0, 28) + "…" : n.title;
                   return (
                     <g
@@ -276,7 +275,6 @@ export default function GraphPage() {
                       <text
                         x={lx}
                         y={ly}
-                        transform={`rotate(${rotate} ${lx} ${ly})`}
                         textAnchor={anchor}
                         dominantBaseline="middle"
                         fontSize={11}
