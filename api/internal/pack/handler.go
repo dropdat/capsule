@@ -43,6 +43,45 @@ func (h *Handler) Mount(r chi.Router) {
 	r.Get("/packs/{id}/render", h.Render)
 	r.Get("/capsules/{id}/related", h.Related)
 	r.Get("/capsules/graph", h.Graph)
+	r.Get("/packs/{id}/graph", h.PackGraph)
+	r.Get("/packs/graph", h.OverviewGraph)
+}
+
+func (h *Handler) PackGraph(w http.ResponseWriter, r *http.Request) {
+	uid := auth.UserID(r.Context())
+	if uid == "" {
+		httpx.Error(w, http.StatusUnauthorized, "auth required")
+		return
+	}
+	id, err := uuid.Parse(chi.URLParam(r, "id"))
+	if err != nil {
+		httpx.Error(w, http.StatusBadRequest, "invalid id")
+		return
+	}
+	q := r.URL.Query()
+	perNode, _ := strconv.Atoi(q.Get("k"))
+	minSim, _ := strconv.ParseFloat(q.Get("min_sim"), 64)
+	g, err := h.svc.PackGraph(r.Context(), id, uid, perNode, minSim)
+	if err != nil {
+		writeErr(w, err)
+		return
+	}
+	httpx.JSON(w, http.StatusOK, g)
+}
+
+func (h *Handler) OverviewGraph(w http.ResponseWriter, r *http.Request) {
+	uid := auth.UserID(r.Context())
+	if uid == "" {
+		httpx.Error(w, http.StatusUnauthorized, "auth required")
+		return
+	}
+	minOverlap, _ := strconv.ParseFloat(r.URL.Query().Get("min_overlap"), 64)
+	g, err := h.svc.OverviewGraph(r.Context(), uid, minOverlap)
+	if err != nil {
+		httpx.Error(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+	httpx.JSON(w, http.StatusOK, g)
 }
 
 func (h *Handler) Graph(w http.ResponseWriter, r *http.Request) {

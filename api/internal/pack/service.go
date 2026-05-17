@@ -8,6 +8,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"math"
 	"strings"
 
 	"github.com/google/uuid"
@@ -263,6 +264,152 @@ type GraphEdge struct {
 type GraphResponse struct {
 	Nodes []GraphNode `json:"nodes"`
 	Edges []GraphEdge `json:"edges"`
+}
+
+// PackGraph builds a graph of capsules inside one pack. Nodes are the pack's
+// capsules; edges connect each capsule to its top-K nearest neighbours within
+// the same pack (cosine similarity above minSim). Pairwise computed in-process
+// since N is small.
+func (s *Service) PackGraph(ctx context.Context, packID uuid.UUID, userID string, perNode int, minSim float64) (*GraphResponse, error) {
+	if perNode <= 0 || perNode > 10 {
+		perNode = 3
+	}
+	if minSim < 0 {
+		minSim = 0
+	}
+	if _, err := s.Get(ctx, packID, userID); err != nil {
+		return nil, err
+	}
+	items, err := s.q.ListPackItems(ctx, packID)
+	if err != nil {
+		return nil, err
+	}
+	nodes := make([]GraphNode, 0, len(items))
+	type vecRef struct {
+		id  string
+		vec []float32
+	}
+	withEmb := make([]vecRef, 0, len(items))
+	for _, it := range items {
+		nodes = append(nodes, GraphNode{ID: it.ID.String(), Title: it.Title, Source: it.Source})
+		if it.Embedding != nil {
+			withEmb = append(withEmb, vecRef{id: it.ID.String(), vec: it.Embedding.Slice()})
+		}
+	}
+	type pair struct{ a, b string }
+	seen := make(map[pair]float64)
+	for i, a := range withEmb {
+		// Find top-K most similar (excluding self), then keep those above minSim.
+		type cand struct {
+			id  string
+			sim float64
+		}
+		cands := make([]cand, 0, len(withEmb)-1)
+		for j, b := range withEmb {
+			if i == j {
+				continue
+			}
+			s := cosine(a.vec, b.vec)
+			if s < minSim {
+				continue
+			}
+			cands = append(cands, cand{id: b.id, sim: s})
+		}
+		// Partial sort: simple O(n^2) for small N.
+		for k := 0; k < perNode && k < len(cands); k++ {
+			best := k
+			for l := k + 1; l < len(cands); l++ {
+				if cands[l].sim > cands[best].sim {
+					best = l
+				}
+			}
+			cands[k], cands[best] = cands[best], cands[k]
+			x, y := a.id, cands[k].id
+			if x > y {
+				x, y = y, x
+			}
+			if prev, ok := seen[pair{x, y}]; !ok || cands[k].sim > prev {
+				seen[pair{x, y}] = cands[k].sim
+			}
+		}
+	}
+	edges := make([]GraphEdge, 0, len(seen))
+	for p, w := range seen {
+		edges = append(edges, GraphEdge{From: p.a, To: p.b, Weight: w})
+	}
+	return &GraphResponse{Nodes: nodes, Edges: edges}, nil
+}
+
+// OverviewGraph builds a graph where nodes are the user's packs and edges
+// weight the overlap (Jaccard) of shared capsules between any two packs.
+func (s *Service) OverviewGraph(ctx context.Context, userID string, minOverlap float64) (*GraphResponse, error) {
+	if minOverlap < 0 {
+		minOverlap = 0
+	}
+	packs, err := s.q.ListContextPacks(ctx, userID)
+	if err != nil {
+		return nil, err
+	}
+	nodes := make([]GraphNode, 0, len(packs))
+	type packSet struct {
+		id  string
+		ids map[uuid.UUID]struct{}
+	}
+	sets := make([]packSet, 0, len(packs))
+	for _, p := range packs {
+		items, err := s.q.ListPackItems(ctx, p.ID)
+		if err != nil {
+			continue
+		}
+		set := make(map[uuid.UUID]struct{}, len(items))
+		for _, it := range items {
+			set[it.ID] = struct{}{}
+		}
+		nodes = append(nodes, GraphNode{ID: p.ID.String(), Title: p.Name, Source: "pack"})
+		sets = append(sets, packSet{id: p.ID.String(), ids: set})
+	}
+	edges := make([]GraphEdge, 0)
+	for i := 0; i < len(sets); i++ {
+		for j := i + 1; j < len(sets); j++ {
+			a, b := sets[i].ids, sets[j].ids
+			if len(a) == 0 || len(b) == 0 {
+				continue
+			}
+			inter := 0
+			for id := range a {
+				if _, ok := b[id]; ok {
+					inter++
+				}
+			}
+			if inter == 0 {
+				continue
+			}
+			union := len(a) + len(b) - inter
+			w := float64(inter) / float64(union)
+			if w < minOverlap {
+				continue
+			}
+			edges = append(edges, GraphEdge{From: sets[i].id, To: sets[j].id, Weight: w})
+		}
+	}
+	return &GraphResponse{Nodes: nodes, Edges: edges}, nil
+}
+
+func cosine(a, b []float32) float64 {
+	if len(a) != len(b) || len(a) == 0 {
+		return 0
+	}
+	var dot, na, nb float64
+	for i := range a {
+		x, y := float64(a[i]), float64(b[i])
+		dot += x * y
+		na += x * x
+		nb += y * y
+	}
+	if na == 0 || nb == 0 {
+		return 0
+	}
+	return dot / (math.Sqrt(na) * math.Sqrt(nb))
 }
 
 func (s *Service) Related(ctx context.Context, seedID uuid.UUID, userID string, limit int) ([]RelatedCapsule, error) {

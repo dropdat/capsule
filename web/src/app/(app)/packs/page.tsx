@@ -55,12 +55,20 @@ export default function PacksPage() {
 
   return (
     <section className="flex flex-col gap-8">
-      <header className="flex flex-col gap-2">
-        <h1 className="font-heading text-[22px] sm:text-[26px] font-medium tracking-tight">Context packs</h1>
-        <p className="text-[13.5px] text-muted-foreground max-w-[640px]">
-          Bundle related capsules into one drop-in context block. Pick a goal, add the capsules,
-          copy the rendered markdown into any AI app.
-        </p>
+      <header className="flex flex-wrap items-end justify-between gap-3">
+        <div className="flex flex-col gap-2">
+          <h1 className="font-heading text-[22px] sm:text-[26px] font-medium tracking-tight">Context packs</h1>
+          <p className="text-[13.5px] text-muted-foreground max-w-[640px]">
+            Bundle related capsules into one drop-in context block. Pick a goal, add the capsules,
+            copy the rendered markdown into any AI app.
+          </p>
+        </div>
+        <Link
+          href="/packs/graph"
+          className="rounded-md bg-secondary border border-border px-3 py-2 text-[13px] hover:bg-card"
+        >
+          View overlap graph
+        </Link>
       </header>
 
       {error && (

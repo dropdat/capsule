@@ -215,6 +215,12 @@ function PackDetail() {
                 <button onClick={copyRendered} disabled={busy === "render"} className="rounded-md bg-primary text-primary-foreground px-4 py-2 text-[13px] font-medium hover:opacity-90 disabled:opacity-50">
                   {renderedCopied ? "Copied ✓" : busy === "render" ? "Rendering…" : "Copy as context"}
                 </button>
+                <Link
+                  href={`/packs/pack/graph?id=${id}`}
+                  className="rounded-md bg-secondary border border-border px-4 py-2 text-[13px]"
+                >
+                  View graph
+                </Link>
                 <button onClick={() => setEditing(true)} className="rounded-md bg-secondary border border-border px-4 py-2 text-[13px]">
                   Edit
                 </button>

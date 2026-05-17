@@ -18,7 +18,9 @@ Living index of shipped features. Updated each session when new features land.
   - **Billing** — plan picker (Basic / Pro / Premium / Ultimate + Enterprise contact) with per-feature check/cross matrix, monthly/annual toggle, current-plan + usage card, Cancel-plan + Refresh-from-payment-processor
   - **Teams** — create teams, public join-link with rotate, member roster with owner/admin/member roles, team capsule library, delete team
   - **Packs** — context packs: bundle capsules into a single drop-in markdown block (Copy as context), one-click Autofill related, per-capsule Related panel
-  - **Library graph** — force-directed visual of every embedded capsule, edges are top-K cosine neighbours; click any node to open the capsule
+  - **Library graph** — chord/arc visual of every embedded capsule, edges are top-K cosine neighbours; click any node to open the capsule
+  - **Packs overlap graph** — chord/arc view of every pack, arcs weight by shared-capsule Jaccard overlap
+  - **Per-pack graph** — chord/arc view of capsules inside one pack, edges are pairwise cosine neighbours
   - **Settings** — account settings
 - Profile menu (sidebar) — shows current plan, status, capsule usage, manage-billing portal link, and "invoices emailed automatically" hint
 - Capsule public sharing — Ultimate-tier toggle on any capsule generates a read-only `dropdat.app/s/<token>` URL; lower tiers get an in-app upgrade dialog
@@ -49,6 +51,8 @@ Living index of shipped features. Updated each session when new features land.
 - Context packs (paid-plan only) — `GET/POST /packs`, `GET/PATCH/DELETE /packs/{id}`, items `GET/POST/DELETE /packs/{id}/items[/{capsule_id}]`, `POST /packs/{id}/autofill` (top-K embedding neighbours of a seed capsule), `GET /packs/{id}/render` returns a single markdown block ready to paste into any AI
 - Related capsules — `GET /capsules/{id}/related?limit=N` uses pgvector HNSW cosine to surface the user's most-similar capsules; falls back to empty list if the seed has no embedding yet
 - Capsule graph — `GET /capsules/graph?nodes=N&k=K&min_sim=X` returns `{nodes, edges}` for a library-wide visualization; edges deduped across reciprocal neighbours
+- Pack graph — `GET /packs/{id}/graph?k=K&min_sim=X` returns `{nodes, edges}` for a single pack's capsules; pairwise cosine in-process
+- Packs overview graph — `GET /packs/graph?min_overlap=X` returns `{nodes, edges}` where each node is a pack and edge weights are Jaccard overlap of shared capsules
 - Clerk JWT auth (JWKS verified server-side)
 - DEV_AUTH_BYPASS for local development
 - Client-supplied UUIDv7 ids for offline-first sync
