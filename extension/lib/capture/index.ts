@@ -32,6 +32,7 @@ export function captureCurrent(): { source: CapsuleSource; title: string; messag
   // Image scrape — main is the chat region on every supported provider.
   const root = document.querySelector<HTMLElement>("main") ?? document.body;
   const images = collectImages(root).slice(0, 20); // hard cap per capsule
+  console.log(`[dropdat] capture: ${base.messages.length} messages, ${images.length} images`, images);
   return { ...base, images };
 }
 

@@ -20,21 +20,27 @@ export async function uploadPendingAttachments(
   const token = await getToken();
   if (!token) return { uploaded: 0, failed: 0 };
   const queued = await capsuleStore.pendingImageUploads();
+  if (queued.length === 0) return { uploaded: 0, failed: 0 };
+  console.log(
+    `[dropdat] image upload pass: ${queued.length} capsule(s) with pending images`,
+    queued.map((c) => ({ id: c.id, n: c.pendingImages?.length ?? 0 })),
+  );
   let uploaded = 0;
   let failed = 0;
   for (const capsule of queued) {
     const remaining: ImageRef[] = [];
-    let attachmentsDisabled = false;
+    let stopThisCapsule: "paywall" | "transient" | null = null;
     for (const img of capsule.pendingImages ?? []) {
-      if (attachmentsDisabled) {
+      if (stopThisCapsule === "transient") {
+        // Keep remaining queue intact for next tick — server might be back.
         remaining.push(img);
         continue;
       }
       try {
         const blob = await fetchImage(img.url);
         if (!blob) {
-          // Couldn't fetch (CORS, 404, expired) — drop, no point retrying.
-          continue;
+          console.warn("[dropdat] fetchImage returned null (CORS/404/expired/too-large)", img.url);
+          continue; // dead URL — drop, no retry
         }
         const filename = guessFilename(img.url, blob.type, img.alt);
         const init = await api.initAttachment(token, capsule.id, {
@@ -47,18 +53,31 @@ export async function uploadPendingAttachments(
           headers: { "Content-Type": blob.type || "application/octet-stream" },
           body: blob,
         });
-        if (!put.ok) throw new Error(`PUT ${put.status}`);
+        if (!put.ok) {
+          const body = await put.text().catch(() => "");
+          throw new Error(`R2 PUT ${put.status}: ${body.slice(0, 200)}`);
+        }
         await api.commitAttachment(token, capsule.id, init.id);
+        console.log(`[dropdat] uploaded image ${filename} (${blob.size}B) → capsule ${capsule.id}`);
         uploaded++;
       } catch (err) {
-        if (err instanceof ApiError && (err.status === 402 || err.status === 503)) {
-          // Plan disallows attachments, or storage is offline. Drop the
-          // whole queue for this capsule — they're not coming back.
-          attachmentsDisabled = true;
+        if (err instanceof ApiError && err.status === 402) {
+          console.warn(
+            `[dropdat] attachments paywall (402) for capsule ${capsule.id} — dropping image queue; upgrade plan to enable`,
+          );
+          stopThisCapsule = "paywall";
           remaining.length = 0;
           break;
         }
-        console.warn("[dropdat] image upload failed", img.url, err);
+        if (err instanceof ApiError && err.status === 503) {
+          console.warn(
+            "[dropdat] attachments storage unavailable (503) — R2 env not configured on server; will retry next tick",
+          );
+          stopThisCapsule = "transient";
+          remaining.push(img);
+          continue;
+        }
+        console.warn("[dropdat] image upload failed (will retry)", img.url, err);
         remaining.push(img);
         failed++;
       }
@@ -66,10 +85,10 @@ export async function uploadPendingAttachments(
     if (remaining.length === 0) {
       await capsuleStore.clearPendingImages(capsule.id);
     } else {
-      // Persist the trimmed queue for the next sync tick.
       await capsuleStore.put({ ...capsule, pendingImages: remaining });
     }
   }
+  console.log(`[dropdat] image upload pass done — uploaded=${uploaded} failed=${failed}`);
   return { uploaded, failed };
 }
 
