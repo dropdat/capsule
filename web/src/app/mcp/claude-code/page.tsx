@@ -33,7 +33,7 @@ export default function Page() {
       configLocation="~/.claude/mcp.json (or project .mcp.json)"
       installSnippet={`claude mcp add dropdat \\
   --env DROPDAT_API_KEY=dk_live_xxx \\
-  --env DROPDAT_API_BASE=https://api.dropdat.app \\
+  --env DROPDAT_API_BASE=https://dropdat.app \\
   -- npx -y @dropdat/mcp`}
       configSnippet={`{
   "mcpServers": {
@@ -42,7 +42,7 @@ export default function Page() {
       "args": ["-y", "@dropdat/mcp"],
       "env": {
         "DROPDAT_API_KEY": "dk_live_xxx",
-        "DROPDAT_API_BASE": "https://api.dropdat.app"
+        "DROPDAT_API_BASE": "https://dropdat.app"
       }
     }
   }

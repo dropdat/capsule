@@ -289,7 +289,7 @@ npm install -g @dropdat/mcp`}
                     <pre className="font-mono text-[13px] leading-[1.6] bg-background border border-border p-4 overflow-x-auto">
 {`claude mcp add dropdat \\
   --env DROPDAT_API_KEY=dk_live_xxx \\
-  --env DROPDAT_API_BASE=https://api.dropdat.app \\
+  --env DROPDAT_API_BASE=https://dropdat.app \\
   -- npx -y @dropdat/mcp`}
                     </pre>
                     <span className="text-[13px] text-muted-foreground">
@@ -314,7 +314,7 @@ npm install -g @dropdat/mcp`}
       "args": ["-y", "@dropdat/mcp"],
       "env": {
         "DROPDAT_API_KEY": "dk_live_xxx",
-        "DROPDAT_API_BASE": "https://api.dropdat.app"
+        "DROPDAT_API_BASE": "https://dropdat.app"
       }
     }
   }

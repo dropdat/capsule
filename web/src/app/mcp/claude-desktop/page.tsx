@@ -40,7 +40,7 @@ npm install -g @dropdat/mcp`}
       "args": ["-y", "@dropdat/mcp"],
       "env": {
         "DROPDAT_API_KEY": "dk_live_xxx",
-        "DROPDAT_API_BASE": "https://api.dropdat.app"
+        "DROPDAT_API_BASE": "https://dropdat.app"
       }
     }
   }

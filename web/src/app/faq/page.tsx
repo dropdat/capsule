@@ -53,12 +53,8 @@ const faqs = [
     a: "Capsules are embedded with OpenAI on save. Queries embed and run against pgvector cosine similarity, then fuse with BM25 keyword ranking via Reciprocal Rank Fusion.",
   },
   {
-    q: "What happens without an OPENAI_API_KEY on the server?",
-    a: "Recall gracefully degrades to BM25 keyword search only. Your capsule library stays fully searchable, just less semantically smart.",
-  },
-  {
     q: "Can I self-host?",
-    a: "The MCP server is open source. The API/backend is currently hosted at api.dropdat.app; self-host instructions will be published as the API stabilises.",
+    a: "The MCP server is open source. The API/backend is currently hosted at dropdat.app; self-host instructions will be published as the API stabilises.",
   },
 ];
 
