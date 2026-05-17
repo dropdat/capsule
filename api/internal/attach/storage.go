@@ -6,6 +6,7 @@ package attach
 import (
 	"context"
 	"fmt"
+	"io"
 	"os"
 	"time"
 
@@ -81,6 +82,20 @@ func (s *Storage) PresignGet(ctx context.Context, key string, expires time.Durat
 		return "", err
 	}
 	return out.URL, nil
+}
+
+// Put uploads bytes to R2 directly (server-side). Used for clients that can't
+// reach R2 over CORS (e.g. browser extensions whose chrome-extension:// origin
+// is awkward to allowlist).
+func (s *Storage) Put(ctx context.Context, key, contentType string, body io.Reader, size int64) error {
+	_, err := s.Client.PutObject(ctx, &s3.PutObjectInput{
+		Bucket:        aws.String(s.Bucket),
+		Key:           aws.String(key),
+		Body:          body,
+		ContentType:   aws.String(contentType),
+		ContentLength: aws.Int64(size),
+	})
+	return err
 }
 
 // Delete removes an object from R2.

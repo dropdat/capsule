@@ -1,8 +1,10 @@
 package attach
 
 import (
+	"bytes"
 	"context"
 	"errors"
+	"io"
 	"net/http"
 	"path"
 	"strings"
@@ -35,9 +37,92 @@ func NewHandler(q *dbgen.Queries, store *Storage, canUse CanUse) *Handler {
 func (h *Handler) Mount(r chi.Router) {
 	r.Post("/capsules/{id}/attachments", h.Init)
 	r.Post("/capsules/{id}/attachments/{aid}/commit", h.Commit)
+	r.Post("/capsules/{id}/attachments/direct", h.Direct)
 	r.Get("/capsules/{id}/attachments", h.List)
 	r.Get("/attachments/{aid}/download", h.Download)
 	r.Delete("/attachments/{aid}", h.Delete)
+}
+
+// Direct accepts the raw file bytes and writes to R2 server-side. Use this
+// path from clients that can't talk to R2 over CORS (browser extensions). The
+// API takes a 50MB body cap; web clients should still prefer the presigned
+// flow so the bytes don't traverse the API.
+//
+//   Headers:
+//     X-Dropdat-Filename:     <UTF-8 filename>
+//     X-Dropdat-Content-Type: <mime>   (optional, defaults to body Content-Type)
+//   Body: raw octet-stream of the file.
+func (h *Handler) Direct(w http.ResponseWriter, r *http.Request) {
+	uid := auth.UserID(r.Context())
+	if uid == "" {
+		httpx.Error(w, http.StatusUnauthorized, "auth required")
+		return
+	}
+	if h.store == nil {
+		httpx.Error(w, http.StatusServiceUnavailable, "attachments storage not configured")
+		return
+	}
+	if !h.canUse(r.Context(), uid) {
+		httpx.Error(w, http.StatusPaymentRequired, "attachments require Premium plan or higher")
+		return
+	}
+	capsuleID, err := uuid.Parse(chi.URLParam(r, "id"))
+	if err != nil {
+		httpx.Error(w, http.StatusBadRequest, "invalid capsule id")
+		return
+	}
+	if _, err := h.q.GetCapsule(r.Context(), dbgen.GetCapsuleParams{ID: capsuleID, UserID: uid}); err != nil {
+		httpx.Error(w, http.StatusNotFound, "capsule not found")
+		return
+	}
+	filename := strings.TrimSpace(r.Header.Get("X-Dropdat-Filename"))
+	if filename == "" {
+		httpx.Error(w, http.StatusBadRequest, "X-Dropdat-Filename header required")
+		return
+	}
+	contentType := r.Header.Get("X-Dropdat-Content-Type")
+	if contentType == "" {
+		contentType = r.Header.Get("Content-Type")
+	}
+	if contentType == "" {
+		contentType = "application/octet-stream"
+	}
+	const maxBytes = 50 * 1024 * 1024
+	r.Body = http.MaxBytesReader(w, r.Body, maxBytes)
+	body, err := io.ReadAll(r.Body)
+	if err != nil {
+		httpx.Error(w, http.StatusRequestEntityTooLarge, "file too large (max 50MB)")
+		return
+	}
+	if len(body) == 0 {
+		httpx.Error(w, http.StatusBadRequest, "empty body")
+		return
+	}
+	attID := uuid.New()
+	key := path.Join(uid, capsuleID.String(), attID.String()+"-"+safeName(filename))
+	if err := h.store.Put(r.Context(), key, contentType, bytes.NewReader(body), int64(len(body))); err != nil {
+		httpx.Error(w, http.StatusBadGateway, "upload to storage failed: "+err.Error())
+		return
+	}
+	row, err := h.q.CreateAttachment(r.Context(), dbgen.CreateAttachmentParams{
+		ID:          attID,
+		CapsuleID:   capsuleID,
+		UserID:      uid,
+		Filename:    filename,
+		ContentType: contentType,
+		SizeBytes:   int64(len(body)),
+		StorageKey:  key,
+	})
+	if err != nil {
+		// Best-effort: try to clean up the object we just wrote.
+		_ = h.store.Delete(r.Context(), key)
+		httpx.Error(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+	httpx.JSON(w, http.StatusCreated, attachmentDTO{
+		ID: row.ID.String(), Filename: row.Filename, ContentType: row.ContentType,
+		SizeBytes: row.SizeBytes, CreatedAt: row.CreatedAt.Time.Format(time.RFC3339),
+	})
 }
 
 type initRequest struct {

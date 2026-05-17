@@ -37,20 +37,30 @@ export const api = {
     request<ServerCapsule[]>("/api/v1/capsules", { token }),
   getMe: (token: string | null) =>
     request<{ userId: string }>("/api/v1/me", { token }),
-  initAttachment: (
+  // Direct upload — server proxies bytes to R2, avoiding chrome-extension://
+  // origin CORS on R2. Returns the created attachment row.
+  directUploadAttachment: async (
     token: string | null,
     capsuleId: string,
-    body: { filename: string; contentType: string; sizeBytes: number },
-  ) =>
-    request<{ id: string; uploadUrl: string; expiresIn: number }>(
-      `/api/v1/capsules/${capsuleId}/attachments`,
-      { method: "POST", body: JSON.stringify(body), token },
-    ),
-  commitAttachment: (token: string | null, capsuleId: string, attachmentId: string) =>
-    request<void>(
-      `/api/v1/capsules/${capsuleId}/attachments/${attachmentId}/commit`,
-      { method: "POST", token },
-    ),
+    blob: Blob,
+    filename: string,
+  ) => {
+    const headers = new Headers();
+    if (token) headers.set("Authorization", `Bearer ${token}`);
+    headers.set("Content-Type", blob.type || "application/octet-stream");
+    headers.set("X-Dropdat-Filename", filename);
+    headers.set("X-Dropdat-Content-Type", blob.type || "application/octet-stream");
+    const res = await fetch(`${API_BASE}/api/v1/capsules/${capsuleId}/attachments/direct`, {
+      method: "POST",
+      headers,
+      body: blob,
+    });
+    if (!res.ok) {
+      const body = await res.text().catch(() => res.statusText);
+      throw new ApiError(res.status, body || res.statusText);
+    }
+    return (await res.json()) as { id: string; filename: string; sizeBytes: number };
+  },
 };
 
 /** Server returns snake_case; convert when needed. */

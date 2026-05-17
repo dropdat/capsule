@@ -47,22 +47,8 @@ export async function uploadPendingAttachments(
           continue; // dead URL — drop, no retry
         }
         const filename = guessFilename(img.url, blob.type, img.alt);
-        const init = await api.initAttachment(token, capsule.id, {
-          filename,
-          contentType: blob.type || "application/octet-stream",
-          sizeBytes: blob.size,
-        });
-        const put = await fetch(init.uploadUrl, {
-          method: "PUT",
-          headers: { "Content-Type": blob.type || "application/octet-stream" },
-          body: blob,
-        });
-        if (!put.ok) {
-          const body = await put.text().catch(() => "");
-          throw new Error(`R2 PUT ${put.status}: ${body.slice(0, 200)}`);
-        }
-        await api.commitAttachment(token, capsule.id, init.id);
-        console.log(`[dropdat] uploaded image ${filename} (${blob.size}B) → capsule ${capsule.id}`);
+        const row = await api.directUploadAttachment(token, capsule.id, blob, filename);
+        console.log(`[dropdat] uploaded image ${row.filename} (${row.sizeBytes}B) → capsule ${capsule.id}`);
         uploaded++;
       } catch (err) {
         if (err instanceof ApiError && err.status === 402) {
@@ -97,16 +83,22 @@ export async function uploadPendingAttachments(
 }
 
 async function fetchImage(url: string): Promise<Blob | null> {
-  try {
-    const res = await fetch(url, { credentials: "include" });
-    if (!res.ok) return null;
-    const blob = await res.blob();
-    if (blob.size === 0) return null;
-    if (blob.size > 50 * 1024 * 1024) return null; // server caps at 50MB
-    return blob;
-  } catch {
-    return null;
+  // Try without credentials first — most chat image URLs are signed and don't
+  // need cookies. Falling back with credentials catches edge cases where the
+  // image is behind a session cookie.
+  for (const mode of ["omit", "include"] as const) {
+    try {
+      const res = await fetch(url, { credentials: mode });
+      if (!res.ok) continue;
+      const blob = await res.blob();
+      if (blob.size === 0) continue;
+      if (blob.size > 50 * 1024 * 1024) return null; // server caps at 50MB
+      return blob;
+    } catch {
+      // try next mode
+    }
   }
+  return null;
 }
 
 function guessFilename(url: string, mime: string, alt?: string): string {
