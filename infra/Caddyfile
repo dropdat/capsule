@@ -10,6 +10,11 @@
     reverse_proxy api:8080
   }
 
+  # Next.js metadata routes (opengraph-image, twitter-image) export as
+  # extension-less binary files; force the correct MIME so social cards work.
+  @ogImage path /opengraph-image /twitter-image
+  header @ogImage Content-Type "image/png"
+
   # Static marketing site (Next.js export). The /dashboard route still lives
   # in the build, but production traffic to it is served via capsule.dropdat.app.
   handle {
