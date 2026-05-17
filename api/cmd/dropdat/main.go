@@ -26,6 +26,7 @@ import (
 	"github.com/yusii/dropdat/api/internal/folder"
 	"github.com/yusii/dropdat/api/internal/httpx"
 	"github.com/yusii/dropdat/api/internal/link"
+	"github.com/yusii/dropdat/api/internal/admin"
 	"github.com/yusii/dropdat/api/internal/attach"
 	"github.com/yusii/dropdat/api/internal/pack"
 	"github.com/yusii/dropdat/api/internal/team"
@@ -176,6 +177,8 @@ func main() {
 	// downgrades — the key is not revoked, just narrowed at request time.
 	verifier.SetAPIKeyVerifier(tierFilteredVerifier{inner: apiKeySvc, tierFor: tierFor})
 
+	adminHandler := admin.NewHandler(queries)
+
 	// Unauthenticated webhook receiver — dodo signs the body, no JWT.
 	billingHandler.MountWebhook(r)
 
@@ -186,6 +189,7 @@ func main() {
 
 		r.Group(func(r chi.Router) {
 			r.Use(verifier.Middleware)
+			r.Use(admin.ActivityMiddleware(queries))
 			r.Use(requireMCPScopeForMCPClient)
 
 			r.Get("/me", func(w http.ResponseWriter, r *http.Request) {
@@ -200,6 +204,7 @@ func main() {
 			teamHandler.Mount(r)
 			packHandler.Mount(r)
 			attachHandler.Mount(r)
+			adminHandler.Mount(r)
 		})
 	})
 

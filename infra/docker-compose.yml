@@ -31,6 +31,7 @@ services:
       - R2_ACCESS_KEY_ID=${R2_ACCESS_KEY_ID:-}
       - R2_SECRET_ACCESS_KEY=${R2_SECRET_ACCESS_KEY:-}
       - R2_BUCKET=${R2_BUCKET:-}
+      - ADMIN_USER_IDS=${ADMIN_USER_IDS:-}
     expose:
       - "8080"
     depends_on:

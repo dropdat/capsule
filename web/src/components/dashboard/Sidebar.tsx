@@ -1,9 +1,13 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useAuth } from "@clerk/react";
 import { useTheme } from "./ThemeProvider";
 import { ProfileMenu } from "./ProfileMenu";
+
+const API_BASE = process.env.NEXT_PUBLIC_API_URL || "https://dropdat.app";
 
 const NAV = [
   { href: "/library", label: "Library", icon: LibraryIcon },
@@ -25,6 +29,31 @@ export function Sidebar({
   onClose?: () => void;
 }) {
   const pathname = usePathname() || "/library";
+  const { getToken } = useAuth();
+  const [isAdmin, setIsAdmin] = useState(false);
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const token = await getToken();
+        const res = await fetch(`${API_BASE}/api/v1/admin/me`, {
+          headers: token ? { Authorization: `Bearer ${token}` } : {},
+        });
+        if (!res.ok) return;
+        const j = (await res.json()) as { admin: boolean };
+        if (!cancelled) setIsAdmin(!!j.admin);
+      } catch {
+        /* ignore — non-admins shouldn't see anything */
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [getToken]);
+
+  const nav = isAdmin
+    ? [...NAV, { href: "/admin", label: "Admin", icon: AdminIcon }]
+    : NAV;
 
   return (
     <>
@@ -71,7 +100,7 @@ export function Sidebar({
         </div>
 
         <nav className="flex-1 px-2 py-4 flex flex-col gap-0.5">
-          {NAV.map(({ href, label, icon: Icon }) => {
+          {nav.map(({ href, label, icon: Icon }) => {
             const active =
               href === "/library" ? pathname === "/library" || pathname === "/" : pathname.startsWith(href);
             return (
@@ -189,6 +218,15 @@ function BillingIcon({ className }: IconProps) {
       <rect x="1.5" y="3.5" width="13" height="9" rx="1.5" />
       <line x1="1.5" y1="6.5" x2="14.5" y2="6.5" />
       <line x1="4" y1="10" x2="7" y2="10" />
+    </svg>
+  );
+}
+
+function AdminIcon({ className }: IconProps) {
+  return (
+    <svg className={className} viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.4">
+      <path d="M8 1.5l5.5 2v4c0 3.5-2.4 6.2-5.5 7C4.9 13.7 2.5 11 2.5 7.5v-4L8 1.5z" />
+      <path d="M5.5 8l2 2 3-4" />
     </svg>
   );
 }
