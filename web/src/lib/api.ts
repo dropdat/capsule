@@ -1,4 +1,5 @@
 "use client";
+import { useCallback } from "react";
 import { useAuth } from "@clerk/react";
 
 const BASE = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8080";
@@ -18,31 +19,34 @@ export class ApiError extends Error {
 export function useApi() {
   const { getToken } = useAuth();
 
-  return async function api<T>(path: string, init: RequestInit = {}): Promise<T> {
-    const token = await getToken();
-    const headers = new Headers(init.headers);
-    if (token) headers.set("Authorization", `Bearer ${token}`);
-    if (init.body && !headers.has("Content-Type")) {
-      headers.set("Content-Type", "application/json");
-    }
-
-    const res = await fetch(`${BASE}${path}`, { ...init, headers });
-    if (!res.ok) {
-      const body = await res.text();
-      // Server returns {"error":"..."} — surface just the message so callers
-      // don't have to render raw JSON.
-      let message = body || res.statusText;
-      try {
-        const parsed = JSON.parse(body);
-        if (parsed && typeof parsed.error === "string") message = parsed.error;
-      } catch {
-        /* not JSON, keep as-is */
+  // MUST be stable across renders — callers put this in useEffect/useCallback
+  // deps. A fresh function each render would cause infinite re-fetch loops.
+  return useCallback(
+    async function api<T>(path: string, init: RequestInit = {}): Promise<T> {
+      const token = await getToken();
+      const headers = new Headers(init.headers);
+      if (token) headers.set("Authorization", `Bearer ${token}`);
+      if (init.body && !headers.has("Content-Type")) {
+        headers.set("Content-Type", "application/json");
       }
-      throw new ApiError(res.status, message);
-    }
-    if (res.status === 204) return undefined as T;
-    return (await res.json()) as T;
-  };
+
+      const res = await fetch(`${BASE}${path}`, { ...init, headers });
+      if (!res.ok) {
+        const body = await res.text();
+        let message = body || res.statusText;
+        try {
+          const parsed = JSON.parse(body);
+          if (parsed && typeof parsed.error === "string") message = parsed.error;
+        } catch {
+          /* not JSON, keep as-is */
+        }
+        throw new ApiError(res.status, message);
+      }
+      if (res.status === 204) return undefined as T;
+      return (await res.json()) as T;
+    },
+    [getToken],
+  );
 }
 
 export type Folder = {

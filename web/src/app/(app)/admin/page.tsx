@@ -75,75 +75,72 @@ export default function AdminPage() {
   const statsFails = useRef(0);
   const usersFails = useRef(0);
 
-  const loadStats = useCallback(
-    async (silent = false) => {
-      try {
-        const s = await api<Stats>("/api/v1/admin/stats");
-        setStats(s);
-        statsFails.current = 0;
-        setError(null);
-      } catch (e) {
-        statsFails.current += 1;
-        if (!silent || statsFails.current >= 2) {
-          setError(e instanceof Error ? e.message : "Stats load failed");
-        }
-      }
-    },
-    [api],
-  );
+  // useApi() returns a fresh function each render. If callbacks/effects
+  // depended on it directly, every render would re-run effects → re-render →
+  // infinite request loop (browser OOMs with ERR_INSUFFICIENT_RESOURCES).
+  // Pin it in a ref so effects can stay keyed on stable values.
+  const apiRef = useRef(api);
+  apiRef.current = api;
 
-  const loadUsers = useCallback(
-    async (silent = false) => {
-      try {
-        const u = await api<UserRow[]>("/api/v1/admin/users?limit=300");
-        setUsers(u ?? []);
-        usersFails.current = 0;
-        setError(null);
-      } catch (e) {
-        usersFails.current += 1;
-        if (!silent || usersFails.current >= 2) {
-          setError(e instanceof Error ? e.message : "Users load failed");
-        }
+  const loadStats = useCallback(async (silent = false) => {
+    try {
+      const s = await apiRef.current<Stats>("/api/v1/admin/stats");
+      setStats(s);
+      statsFails.current = 0;
+      setError(null);
+    } catch (e) {
+      statsFails.current += 1;
+      if (!silent || statsFails.current >= 2) {
+        setError(e instanceof Error ? e.message : "Stats load failed");
       }
-    },
-    [api],
-  );
+    }
+  }, []);
 
-  const openUser = useCallback(
-    async (u: UserRow) => {
-      setSelectedUser(u);
-      setUserCapsules([]);
-      setCapsulesLoading(true);
-      try {
-        const cs = await api<UserCapsule[]>(
-          `/api/v1/admin/users/${encodeURIComponent(u.userId)}/capsules`,
-        );
-        setUserCapsules(cs ?? []);
-      } catch (e) {
-        setError(e instanceof Error ? e.message : "Capsules load failed");
-      } finally {
-        setCapsulesLoading(false);
+  const loadUsers = useCallback(async (silent = false) => {
+    try {
+      const u = await apiRef.current<UserRow[]>("/api/v1/admin/users?limit=300");
+      setUsers(u ?? []);
+      usersFails.current = 0;
+      setError(null);
+    } catch (e) {
+      usersFails.current += 1;
+      if (!silent || usersFails.current >= 2) {
+        setError(e instanceof Error ? e.message : "Users load failed");
       }
-    },
-    [api],
-  );
+    }
+  }, []);
+
+  const openUser = useCallback(async (u: UserRow) => {
+    setSelectedUser(u);
+    setUserCapsules([]);
+    setCapsulesLoading(true);
+    try {
+      const cs = await apiRef.current<UserCapsule[]>(
+        `/api/v1/admin/users/${encodeURIComponent(u.userId)}/capsules`,
+      );
+      setUserCapsules(cs ?? []);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Capsules load failed");
+    } finally {
+      setCapsulesLoading(false);
+    }
+  }, []);
 
   useEffect(() => {
-    api<{ admin: boolean }>("/api/v1/admin/me")
+    apiRef.current<{ admin: boolean }>("/api/v1/admin/me")
       .then((r) => setAllowed(r.admin))
       .catch(() => setAllowed(false));
-  }, [api]);
+  }, []);
 
   useEffect(() => {
-    if (allowed) {
-      loadStats(false);
-      loadUsers(false);
-      const t = setInterval(() => {
-        loadStats(true);
-        loadUsers(true);
-      }, 15000);
-      return () => clearInterval(t);
-    }
+    if (!allowed) return;
+    loadStats(false);
+    loadUsers(false);
+    const t = setInterval(() => {
+      loadStats(true);
+      loadUsers(true);
+    }, 15000);
+    return () => clearInterval(t);
   }, [allowed, loadStats, loadUsers]);
 
   const ban = async (userId: string) => {
