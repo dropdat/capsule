@@ -18,8 +18,12 @@ export async function uploadPendingAttachments(
   getToken: () => Promise<string | null>,
 ): Promise<{ uploaded: number; failed: number }> {
   const token = await getToken();
-  if (!token) return { uploaded: 0, failed: 0 };
+  if (!token) {
+    console.warn("[dropdat] image upload pass skipped — no API key set");
+    return { uploaded: 0, failed: 0 };
+  }
   const queued = await capsuleStore.pendingImageUploads();
+  console.log(`[dropdat] image upload pass — eligible capsules: ${queued.length}`);
   if (queued.length === 0) return { uploaded: 0, failed: 0 };
   console.log(
     `[dropdat] image upload pass: ${queued.length} capsule(s) with pending images`,
