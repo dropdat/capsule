@@ -1,32 +1,22 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import dynamic from "next/dynamic";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 
 import { useApi, type CapsuleGraph } from "@/lib/api";
-
-// react-force-graph-2d pulls in canvas + d3-force; it has to render
-// client-side. SSR off so static export doesn't try to evaluate it.
-const ForceGraph2D = dynamic(
-  () => import("react-force-graph-2d").then((m) => m.default),
-  { ssr: false }
-);
 
 type GraphNode = {
   id: string;
   title: string;
   source: string;
-  degree?: number;
-  x?: number;
-  y?: number;
-  fx?: number;
-  fy?: number;
+  degree: number;
+  angle: number; // radians on the circle
+  x: number;
+  y: number;
 };
 type GraphLink = {
-  source: string | GraphNode;
-  target: string | GraphNode;
+  from: string;
+  to: string;
   value: number;
 };
 
@@ -36,20 +26,20 @@ const SOURCE_COLOR: Record<string, string> = {
   gemini: "#4285f4",
 };
 
+const SOURCE_ORDER = ["chatgpt", "claude", "gemini"];
+
 export default function GraphPage() {
   const api = useApi();
-  const router = useRouter();
-  const fgRef = useRef<unknown>(null); // ForceGraph instance ref
   const containerRef = useRef<HTMLDivElement | null>(null);
   const [graph, setGraph] = useState<CapsuleGraph | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [dims, setDims] = useState({ w: 800, h: 600 });
-  const [hovered, setHovered] = useState<GraphNode | null>(null);
+  const [hovered, setHovered] = useState<string | null>(null);
   const [selected, setSelected] = useState<GraphNode | null>(null);
   const [sourceFilter, setSourceFilter] = useState<string | "all">("all");
   const [search, setSearch] = useState("");
-  // Read the theme's foreground color so canvas labels track dark mode.
   const [theme, setTheme] = useState({ fg: "#0b1015", fgMuted: "rgba(140,140,140,0.6)" });
+
   useEffect(() => {
     const update = () => {
       if (typeof window === "undefined") return;
@@ -81,7 +71,7 @@ export default function GraphPage() {
     const update = () => {
       if (containerRef.current) {
         const r = containerRef.current.getBoundingClientRect();
-        setDims({ w: r.width, h: Math.max(480, window.innerHeight - 240) });
+        setDims({ w: r.width, h: Math.max(520, window.innerHeight - 240) });
       }
     };
     update();
@@ -89,82 +79,79 @@ export default function GraphPage() {
     return () => window.removeEventListener("resize", update);
   }, []);
 
-  // Build d3-shaped data + per-node degree, applying filters.
-  const { data, neighbours } = useMemo(() => {
-    if (!graph) return { data: { nodes: [], links: [] }, neighbours: new Map<string, Set<string>>() };
+  // Place nodes on a circle, grouped by source. Compute neighbours map.
+  const { nodes, links, byId, neighbours, cx, cy, radius } = useMemo(() => {
+    const empty = {
+      nodes: [] as GraphNode[],
+      links: [] as GraphLink[],
+      byId: new Map<string, GraphNode>(),
+      neighbours: new Map<string, Set<string>>(),
+      cx: dims.w / 2,
+      cy: dims.h / 2,
+      radius: 0,
+    };
+    if (!graph) return empty;
+
     const lower = search.trim().toLowerCase();
     const matchNode = (n: { id: string; title: string; source: string }) => {
       if (sourceFilter !== "all" && n.source !== sourceFilter) return false;
       if (lower && !n.title.toLowerCase().includes(lower)) return false;
       return true;
     };
-    const nodeMap = new Map<string, GraphNode>();
-    for (const n of graph.nodes) {
-      if (matchNode(n)) nodeMap.set(n.id, { ...n, degree: 0 });
-    }
+
+    const kept = graph.nodes.filter(matchNode);
+    if (kept.length === 0) return empty;
+
+    // Group by source, then within group by title for stable layout.
+    kept.sort((a, b) => {
+      const sa = SOURCE_ORDER.indexOf(a.source);
+      const sb = SOURCE_ORDER.indexOf(b.source);
+      if (sa !== sb) return (sa < 0 ? 99 : sa) - (sb < 0 ? 99 : sb);
+      return a.title.localeCompare(b.title);
+    });
+
+    const cx = dims.w / 2;
+    const cy = dims.h / 2;
+    const r = Math.max(120, Math.min(dims.w, dims.h) / 2 - 110);
+    const n = kept.length;
+    const built: GraphNode[] = kept.map((node, i) => {
+      const angle = (i / n) * Math.PI * 2 - Math.PI / 2; // start at top
+      return {
+        id: node.id,
+        title: node.title,
+        source: node.source,
+        degree: 0,
+        angle,
+        x: cx + Math.cos(angle) * r,
+        y: cy + Math.sin(angle) * r,
+      };
+    });
+    const byId = new Map(built.map((n) => [n.id, n]));
+
     const links: GraphLink[] = [];
     const neigh = new Map<string, Set<string>>();
     for (const e of graph.edges) {
-      const a = nodeMap.get(e.from);
-      const b = nodeMap.get(e.to);
-      if (!a || !b) continue;
-      a.degree = (a.degree ?? 0) + 1;
-      b.degree = (b.degree ?? 0) + 1;
-      links.push({ source: e.from, target: e.to, value: e.weight });
+      if (!byId.has(e.from) || !byId.has(e.to)) continue;
+      links.push({ from: e.from, to: e.to, value: e.weight });
+      byId.get(e.from)!.degree++;
+      byId.get(e.to)!.degree++;
       if (!neigh.has(e.from)) neigh.set(e.from, new Set());
       if (!neigh.has(e.to)) neigh.set(e.to, new Set());
       neigh.get(e.from)!.add(e.to);
       neigh.get(e.to)!.add(e.from);
     }
-    return { data: { nodes: Array.from(nodeMap.values()), links }, neighbours: neigh };
-  }, [graph, sourceFilter, search]);
+    return { nodes: built, links, byId, neighbours: neigh, cx, cy, radius: r };
+  }, [graph, sourceFilter, search, dims]);
 
-  const isFaded = (nodeId: string) => {
-    if (!hovered) return false;
-    if (hovered.id === nodeId) return false;
-    return !neighbours.get(hovered.id)?.has(nodeId);
+  const isActiveNode = (id: string) => {
+    if (!hovered) return true;
+    if (hovered === id) return true;
+    return neighbours.get(hovered)?.has(id) ?? false;
   };
-
-  const isLinkActive = (l: GraphLink) => {
+  const isActiveLink = (l: GraphLink) => {
     if (!hovered) return false;
-    const s = typeof l.source === "string" ? l.source : l.source.id;
-    const t = typeof l.target === "string" ? l.target : l.target.id;
-    return s === hovered.id || t === hovered.id;
+    return l.from === hovered || l.to === hovered;
   };
-
-  const stop = useCallback(() => {
-    // Pin nodes + halt the animation loop entirely.
-    for (const n of data.nodes as GraphNode[]) {
-      if (n.x != null) n.fx = n.x;
-      if (n.y != null) n.fy = n.y;
-    }
-    const fg = fgRef.current as { pauseAnimation?: () => void } | null;
-    fg?.pauseAnimation?.();
-  }, [data.nodes]);
-
-  // After the ref is set, tune the d3 simulation forces. Keep forces gentle —
-  // strong charge on a small graph causes endless oscillation (the "shake").
-  useEffect(() => {
-    const fg = fgRef.current as
-      | {
-          d3Force: (name: string) => { distance?: (n: number) => unknown; strength?: (n: number) => unknown } | null;
-        }
-      | null;
-    if (!fg) return;
-    const link = fg.d3Force("link");
-    if (link?.distance) link.distance(55);
-    const charge = fg.d3Force("charge");
-    if (charge?.strength) charge.strength(-90);
-  }, [data]);
-
-  // Hard fallback: regardless of cooldown, freeze the layout after a short
-  // window. Some graphs (small node counts, dense clusters) oscillate forever
-  // because forces re-energize each tick — onEngineStop never fires.
-  useEffect(() => {
-    if (!data.nodes.length) return;
-    const t = window.setTimeout(stop, 2500);
-    return () => window.clearTimeout(t);
-  }, [data, stop]);
 
   return (
     <section className="flex flex-col gap-6">
@@ -175,7 +162,7 @@ export default function GraphPage() {
           </Link>
           <h1 className="font-heading text-[22px] sm:text-[26px] font-medium tracking-tight">Capsule graph</h1>
           <p className="text-[13.5px] text-muted-foreground">
-            Each capsule is a node; edges connect similar capsules. Hover to highlight, click to open.
+            Capsules on a ring, grouped by source. Arcs connect similar ones — hover a node to focus.
           </p>
         </div>
         <div className="flex items-center gap-2 flex-wrap">
@@ -215,86 +202,99 @@ export default function GraphPage() {
             <div className="h-full flex items-center justify-center text-[13px] text-muted-foreground">
               Loading graph…
             </div>
-          ) : data.nodes.length === 0 ? (
+          ) : nodes.length === 0 ? (
             <div className="h-full flex items-center justify-center text-[13px] text-muted-foreground px-6 text-center">
               {graph.nodes.length === 0
                 ? "No embedded capsules yet."
                 : "No matches for the current filter."}
             </div>
           ) : (
-            <ForceGraph2D
-              ref={fgRef as never}
-              graphData={data}
-              width={dims.w - 2}
-              height={dims.h - 2}
-              backgroundColor="transparent"
-              nodeRelSize={4}
-              nodeVal={(n: GraphNode) => 1 + Math.min(8, (n.degree ?? 0))}
-              nodeLabel={(n: GraphNode) =>
-                `${n.title}\n${n.source} · ${n.degree ?? 0} link(s)`
-              }
-              linkWidth={(l: GraphLink) =>
-                isLinkActive(l) ? 2.4 : Math.max(0.5, l.value * 1.8)
-              }
-              linkColor={(l: GraphLink) =>
-                isLinkActive(l) ? "rgba(5,98,239,0.8)" : "rgba(120,120,120,0.18)"
-              }
-              nodeCanvasObjectMode={() => "after"}
-              nodeCanvasObject={(node, ctx, globalScale) => {
-                const n = node as GraphNode;
-                const r = 4 + Math.min(8, (n.degree ?? 0)) * 0.6;
-                const color = SOURCE_COLOR[n.source] ?? "#6c7080";
-                const faded = isFaded(n.id);
-                const sel = selected?.id === n.id;
+            <svg
+              width={dims.w}
+              height={dims.h}
+              onClick={() => setSelected(null)}
+              style={{ display: "block" }}
+            >
+              {/* edges: quadratic Bezier through the centre for a chord look */}
+              <g>
+                {links.map((l, i) => {
+                  const a = byId.get(l.from)!;
+                  const b = byId.get(l.to)!;
+                  const active = isActiveLink(l);
+                  const dimmed = hovered && !active;
+                  // Curve toward centre — tighter for nodes closer together.
+                  const mx = cx + (a.x + b.x - 2 * cx) * 0.15;
+                  const my = cy + (a.y + b.y - 2 * cy) * 0.15;
+                  return (
+                    <path
+                      key={i}
+                      d={`M ${a.x} ${a.y} Q ${mx} ${my} ${b.x} ${b.y}`}
+                      fill="none"
+                      stroke={active ? "#0562ef" : "rgba(120,120,120,0.35)"}
+                      strokeOpacity={dimmed ? 0.08 : active ? 0.9 : Math.min(0.6, 0.2 + l.value * 0.6)}
+                      strokeWidth={active ? 1.8 : Math.max(0.5, l.value * 1.4)}
+                    />
+                  );
+                })}
+              </g>
 
-                // node disc
-                ctx.beginPath();
-                ctx.arc(n.x!, n.y!, r, 0, 2 * Math.PI);
-                ctx.fillStyle = faded ? color + "33" : color;
-                ctx.fill();
-                if (sel || hovered?.id === n.id) {
-                  ctx.lineWidth = 1.5 / globalScale;
-                  ctx.strokeStyle = "#0562ef";
-                  ctx.stroke();
-                }
-
-                // label
-                if (globalScale > 0.6 || sel || hovered?.id === n.id) {
-                  const label = n.title.length > 30 ? n.title.slice(0, 30) + "…" : n.title;
-                  const fontSize = Math.max(8, 11 / globalScale);
-                  ctx.font = `${fontSize}px ui-sans-serif, system-ui, sans-serif`;
-                  ctx.textAlign = "center";
-                  ctx.textBaseline = "top";
-                  ctx.fillStyle = faded ? theme.fgMuted : theme.fg;
-                  ctx.fillText(label, n.x!, n.y! + r + 2);
-                }
-              }}
-              warmupTicks={80}
-              cooldownTicks={30}
-              cooldownTime={1500}
-              d3AlphaMin={0.12}
-              d3AlphaDecay={0.1}
-              d3VelocityDecay={0.85}
-              enableNodeDrag={true}
-              onEngineStop={stop}
-              onNodeDragEnd={(n) => {
-                const node = n as GraphNode;
-                node.fx = node.x;
-                node.fy = node.y;
-              }}
-              onNodeHover={(n) => setHovered((n as GraphNode) ?? null)}
-              onNodeClick={(n) => {
-                const node = n as GraphNode;
-                setSelected(node);
-                // double-click navigates
-              }}
-              onBackgroundClick={() => setSelected(null)}
-            />
+              {/* nodes + labels */}
+              <g>
+                {nodes.map((n) => {
+                  const r = 4 + Math.min(8, n.degree) * 0.6;
+                  const color = SOURCE_COLOR[n.source] ?? "#6c7080";
+                  const active = isActiveNode(n.id);
+                  const sel = selected?.id === n.id;
+                  const labelR = radius + 14;
+                  const lx = cx + Math.cos(n.angle) * labelR;
+                  const ly = cy + Math.sin(n.angle) * labelR;
+                  const deg = (n.angle * 180) / Math.PI;
+                  const flip = deg > 90 || deg < -90;
+                  const rotate = flip ? deg + 180 : deg;
+                  const anchor = flip ? "end" : "start";
+                  const label = n.title.length > 28 ? n.title.slice(0, 28) + "…" : n.title;
+                  return (
+                    <g
+                      key={n.id}
+                      style={{ cursor: "pointer" }}
+                      onMouseEnter={() => setHovered(n.id)}
+                      onMouseLeave={() => setHovered(null)}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setSelected(n);
+                      }}
+                    >
+                      <circle
+                        cx={n.x}
+                        cy={n.y}
+                        r={r}
+                        fill={color}
+                        opacity={active ? 1 : 0.25}
+                        stroke={sel || hovered === n.id ? "#0562ef" : "none"}
+                        strokeWidth={1.5}
+                      />
+                      <text
+                        x={lx}
+                        y={ly}
+                        transform={`rotate(${rotate} ${lx} ${ly})`}
+                        textAnchor={anchor}
+                        dominantBaseline="middle"
+                        fontSize={11}
+                        fill={active ? theme.fg : theme.fgMuted}
+                        style={{ pointerEvents: "none", fontFamily: "ui-sans-serif, system-ui, sans-serif" }}
+                      >
+                        {label}
+                      </text>
+                    </g>
+                  );
+                })}
+              </g>
+            </svg>
           )}
 
-          {graph && (
+          {graph && nodes.length > 0 && (
             <div className="absolute bottom-3 left-3 flex items-center gap-3 text-[11px] text-muted-foreground bg-card/80 backdrop-blur px-3 py-1.5 rounded-md border border-border">
-              <span>{data.nodes.length} nodes · {data.links.length} edges</span>
+              <span>{nodes.length} nodes · {links.length} edges</span>
             </div>
           )}
         </div>
@@ -314,7 +314,7 @@ export default function GraphPage() {
                 />
                 <span className="capitalize">{selected.source}</span>
                 <span>·</span>
-                <span>{selected.degree ?? 0} link(s)</span>
+                <span>{selected.degree} link(s)</span>
               </div>
               <Link
                 href={`/capsule?id=${selected.id}`}
@@ -327,7 +327,7 @@ export default function GraphPage() {
                   <h3 className="text-[11px] uppercase tracking-wide text-muted-foreground">Connected to</h3>
                   <ul className="flex flex-col gap-1">
                     {Array.from(neighbours.get(selected.id)!).slice(0, 8).map((nid) => {
-                      const n = (data.nodes as GraphNode[]).find((x) => x.id === nid);
+                      const n = byId.get(nid);
                       if (!n) return null;
                       return (
                         <li key={nid}>
@@ -348,7 +348,7 @@ export default function GraphPage() {
             <>
               <h2 className="font-heading text-[14px] font-medium">Pick a node</h2>
               <p className="text-[12.5px] text-muted-foreground">
-                Hover to highlight a capsule and its neighbours. Click to see details + jump in.
+                Hover to focus on a capsule and its neighbours. Click to see details + jump in.
               </p>
               <div className="flex flex-col gap-1.5 mt-2">
                 <h3 className="text-[11px] uppercase tracking-wide text-muted-foreground">Legend</h3>
@@ -361,7 +361,7 @@ export default function GraphPage() {
               </div>
               {graph && (
                 <div className="text-[11.5px] text-muted-foreground mt-2">
-                  Node size scales with neighbour count. Edge thickness scales with similarity.
+                  Node size scales with neighbour count. Arc thickness scales with similarity.
                 </div>
               )}
             </>
