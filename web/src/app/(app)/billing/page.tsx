@@ -14,6 +14,8 @@ type Plan = {
   name: string;
   price: string;
   cadence: string;
+  annualPrice?: string;
+  annualCadence?: string;
   tagline: string;
   features: Feature[];
   cta: "current" | "subscribe" | "contact";
@@ -47,6 +49,8 @@ const PLANS: Plan[] = [
     name: "Pro",
     price: "$3",
     cadence: "/month",
+    annualPrice: "$30",
+    annualCadence: "/year",
     tagline: "Advanced features for solo power users.",
     features: [
       { label: "15 total capsules", on: true },
@@ -68,6 +72,8 @@ const PLANS: Plan[] = [
     name: "Premium",
     price: "$5",
     cadence: "/month",
+    annualPrice: "$50",
+    annualCadence: "/year",
     tagline: "MCP, attachments, dynamic context — built for serious knowledge workers.",
     features: [
       { label: "50 total capsules", on: true },
@@ -89,6 +95,8 @@ const PLANS: Plan[] = [
     name: "Ultimate",
     price: "$10",
     cadence: "/month",
+    annualPrice: "$100",
+    annualCadence: "/year",
     tagline: "Maximum collaboration and white-label.",
     features: [
       { label: "Unlimited capsules", on: true },
@@ -393,8 +401,12 @@ export default function BillingPage() {
               <div className="flex flex-col gap-1">
                 <h3 className="font-heading text-[16px] font-medium">{p.name}</h3>
                 <div className="flex items-baseline gap-1">
-                  <span className="font-heading text-[28px] font-medium">{p.price}</span>
-                  <span className="text-[12px] text-muted-foreground">{p.cadence}</span>
+                  <span className="font-heading text-[28px] font-medium">
+                    {interval === "annual" && p.annualPrice ? p.annualPrice : p.price}
+                  </span>
+                  <span className="text-[12px] text-muted-foreground">
+                    {interval === "annual" && p.annualCadence ? p.annualCadence : p.cadence}
+                  </span>
                 </div>
                 <p className="text-[12.5px] text-muted-foreground">{p.tagline}</p>
               </div>
