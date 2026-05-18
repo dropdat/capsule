@@ -62,7 +62,6 @@ const PLANS: Plan[] = [
       { label: "Share capsules publicly", on: false },
     ],
     cta: "subscribe",
-    highlight: true,
   },
   {
     id: "premium",
@@ -105,6 +104,7 @@ const PLANS: Plan[] = [
       { label: "Share capsules publicly", on: true },
     ],
     cta: "subscribe",
+    highlight: true,
   },
 ];
 
