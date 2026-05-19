@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { useAuth } from "@clerk/react";
+import { useConsoleLocale } from "@/i18n/consoleLocale";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || "https://dropdat.app";
 
@@ -22,20 +23,26 @@ type Subscription = {
   scopes: string[];
 };
 
-const SCOPE_LABEL: Record<string, string> = {
-  "capsules:read": "Read capsules",
-  "capsules:write": "Write capsules",
-  mcp: "MCP server access",
-  attachments: "Attachments",
-  dynamic_context: "Dynamic context",
-  versioning: "Versioning",
-  teams: "Teams",
-  "teams:create": "Create teams",
-  share: "Public sharing",
+const SCOPE_KEY: Record<string, keyof ReturnType<typeof useConsoleLocale>["dict"]["console"]["apiKeys"]["scopeLabels"]> = {
+  "capsules:read": "capsulesRead",
+  "capsules:write": "capsulesWrite",
+  mcp: "mcp",
+  attachments: "attachments",
+  dynamic_context: "dynamicContext",
+  versioning: "versioning",
+  teams: "teams",
+  "teams:create": "teamsCreate",
+  share: "share",
 };
 
 export default function APIKeysPage() {
   const { getToken } = useAuth();
+  const { dict } = useConsoleLocale();
+  const t = dict.console.apiKeys;
+  const scopeLabel = (s: string) => {
+    const k = SCOPE_KEY[s];
+    return k ? t.scopeLabels[k] : s;
+  };
   const [keys, setKeys] = useState<APIKey[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -118,7 +125,7 @@ export default function APIKeysPage() {
   };
 
   const revoke = async (id: string) => {
-    if (!confirm("Revoke this key? Any extension using it will be signed out.")) return;
+    if (!confirm(t.revokeConfirm)) return;
     setError(null);
     try {
       const res = await authedFetch(`/api/v1/api_keys/${id}`, { method: "DELETE" });
@@ -136,16 +143,15 @@ export default function APIKeysPage() {
   return (
     <div className="flex flex-col gap-10">
       <header className="flex flex-col gap-2">
-        <h1 className="font-heading text-[22px] sm:text-[26px] font-medium tracking-tight">API Keys</h1>
+        <h1 className="font-heading text-[22px] sm:text-[26px] font-medium tracking-tight">{t.pageTitle}</h1>
         <p className="text-[13.5px] text-muted-foreground max-w-[640px] leading-relaxed">
-          Generate a personal key to sign the dropdat browser extension into your account.
-          Keys are shown once at creation — store them somewhere safe.
+          {t.pageSub}
         </p>
       </header>
 
       <section className="rounded-lg border border-border bg-card overflow-hidden">
         <div className="flex items-center justify-between border-b border-border px-5 py-3">
-          <h2 className="font-heading text-[14px] font-medium">Create new key</h2>
+          <h2 className="font-heading text-[14px] font-medium">{t.createNewKey}</h2>
           <span className="text-[11px] uppercase tracking-wider text-muted-foreground">
             dk_live_…
           </span>
@@ -154,7 +160,7 @@ export default function APIKeysPage() {
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
             <input
               type="text"
-              placeholder="Name (e.g. My laptop)"
+              placeholder={t.namePlaceholder}
               value={name}
               onChange={(e) => setName(e.target.value)}
               className="flex-1 rounded-md border border-input bg-background px-3 py-2 text-[13.5px] outline-none transition-colors focus:border-primary"
@@ -164,14 +170,14 @@ export default function APIKeysPage() {
               disabled={creating || selectedScopes.size === 0}
               className="rounded-md bg-primary px-4 py-2 text-[13.5px] font-medium text-primary-foreground transition-opacity hover:opacity-90 disabled:opacity-50"
             >
-              {creating ? "Creating…" : "Generate key"}
+              {creating ? t.creating : t.generateKey}
             </button>
           </div>
 
           <div className="flex flex-col gap-2">
             <div className="flex items-center justify-between">
               <p className="text-[11.5px] uppercase tracking-wide text-muted-foreground">
-                Scopes — only the ones your current plan allows are listed
+                {t.scopesHelp}
               </p>
               {allowedScopes.length > 0 && (
                 <button
@@ -183,13 +189,13 @@ export default function APIKeysPage() {
                   }
                   className="text-[11.5px] text-muted-foreground hover:text-foreground"
                 >
-                  {selectedScopes.size === allowedScopes.length ? "Clear all" : "Select all"}
+                  {selectedScopes.size === allowedScopes.length ? t.clearAll : t.selectAll}
                 </button>
               )}
             </div>
             {allowedScopes.length === 0 ? (
               <p className="text-[12.5px] text-muted-foreground">
-                Loading available scopes… (If this persists, your plan grants no API scopes.)
+                {t.loadingScopes}
               </p>
             ) : (
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-1.5">
@@ -200,7 +206,7 @@ export default function APIKeysPage() {
                       checked={selectedScopes.has(s)}
                       onChange={() => toggleScope(s)}
                     />
-                    <span>{SCOPE_LABEL[s] ?? s}</span>
+                    <span>{scopeLabel(s)}</span>
                   </label>
                 ))}
               </div>
@@ -211,7 +217,7 @@ export default function APIKeysPage() {
         {justCreated && (
           <div className="mx-5 mb-5 rounded-md border border-primary/30 bg-accent-soft p-4">
             <p className="text-[13px] font-medium">
-              Copy this key now — you won&rsquo;t be able to see it again.
+              {t.copyNow}
             </p>
             <div className="mt-3 flex items-center gap-2">
               <code className="flex-1 break-all rounded-md border border-input bg-background px-3 py-2 font-mono text-[12px]">
@@ -221,14 +227,14 @@ export default function APIKeysPage() {
                 onClick={() => copy(justCreated.token)}
                 className="rounded-md border border-border bg-background px-3 py-2 text-[12px] font-medium transition-colors hover:bg-muted"
               >
-                Copy
+                {t.copy}
               </button>
             </div>
             <button
               onClick={() => setJustCreated(null)}
               className="mt-3 text-[12px] text-muted-foreground transition-colors hover:text-foreground"
             >
-              I&rsquo;ve saved it, dismiss →
+              {t.savedDismiss}
             </button>
           </div>
         )}
@@ -242,21 +248,21 @@ export default function APIKeysPage() {
 
       <section className="flex flex-col gap-3">
         <div className="flex items-baseline justify-between">
-          <h2 className="font-heading text-[14px] font-medium">Your keys</h2>
+          <h2 className="font-heading text-[14px] font-medium">{t.yourKeys}</h2>
           <span className="text-[12px] text-muted-foreground">
-            {loading ? "…" : `${live.length} active`}
+            {loading ? "…" : `${live.length} ${t.active}`}
           </span>
         </div>
 
         {loading ? (
           <div className="rounded-lg border border-border bg-card px-5 py-8 text-[13px] text-muted-foreground">
-            Loading…
+            {t.loading}
           </div>
         ) : live.length === 0 ? (
           <div className="rounded-lg border border-dashed border-border bg-card/50 px-5 py-10 text-center">
-            <p className="text-[13.5px] text-muted-foreground">No keys yet.</p>
+            <p className="text-[13.5px] text-muted-foreground">{t.noKeysTitle}</p>
             <p className="mt-1 text-[12px] text-muted-foreground/70">
-              Generate one above to sign into the extension.
+              {t.noKeysBody}
             </p>
           </div>
         ) : (
@@ -264,11 +270,11 @@ export default function APIKeysPage() {
             <table className="w-full min-w-[520px] text-[13px]">
               <thead className="text-left text-[11.5px] uppercase tracking-wider text-muted-foreground">
                 <tr className="border-b border-border">
-                  <th className="px-5 py-3 font-medium">Name</th>
-                  <th className="px-5 py-3 font-medium">Prefix</th>
-                  <th className="px-5 py-3 font-medium">Scopes</th>
-                  <th className="px-5 py-3 font-medium">Created</th>
-                  <th className="px-5 py-3 font-medium">Last used</th>
+                  <th className="px-5 py-3 font-medium">{t.colName}</th>
+                  <th className="px-5 py-3 font-medium">{t.colPrefix}</th>
+                  <th className="px-5 py-3 font-medium">{t.colScopes}</th>
+                  <th className="px-5 py-3 font-medium">{t.colCreated}</th>
+                  <th className="px-5 py-3 font-medium">{t.colLastUsed}</th>
                   <th className="px-5 py-3"></th>
                 </tr>
               </thead>
@@ -284,7 +290,7 @@ export default function APIKeysPage() {
                     </td>
                     <td className="px-5 py-3 text-[11.5px] text-muted-foreground">
                       {k.scopes && k.scopes.length > 0
-                        ? k.scopes.map((s) => SCOPE_LABEL[s] ?? s).join(", ")
+                        ? k.scopes.map((s) => scopeLabel(s)).join(", ")
                         : "—"}
                     </td>
                     <td className="px-5 py-3 text-muted-foreground">
@@ -298,7 +304,7 @@ export default function APIKeysPage() {
                         onClick={() => revoke(k.id)}
                         className="text-[12px] text-destructive transition-opacity hover:opacity-80"
                       >
-                        Revoke
+                        {t.revoke}
                       </button>
                     </td>
                   </tr>

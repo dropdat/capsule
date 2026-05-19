@@ -126,6 +126,44 @@ export type Dict = {
       sectionTitles: Record<string, string>;
       sectionSummaries: Record<string, string>;
     };
+    apiKeys: {
+      pageTitle: string;
+      pageSub: string;
+      createNewKey: string;
+      namePlaceholder: string;
+      generateKey: string;
+      creating: string;
+      scopesHelp: string;
+      clearAll: string;
+      selectAll: string;
+      loadingScopes: string;
+      copyNow: string;
+      copy: string;
+      savedDismiss: string;
+      yourKeys: string;
+      active: string;
+      loading: string;
+      noKeysTitle: string;
+      noKeysBody: string;
+      colName: string;
+      colPrefix: string;
+      colScopes: string;
+      colCreated: string;
+      colLastUsed: string;
+      revoke: string;
+      revokeConfirm: string;
+      scopeLabels: {
+        capsulesRead: string;
+        capsulesWrite: string;
+        mcp: string;
+        attachments: string;
+        dynamicContext: string;
+        versioning: string;
+        teams: string;
+        teamsCreate: string;
+        share: string;
+      };
+    };
     billing: {
       pageTitle: string;
       pageSub: string;
@@ -372,6 +410,44 @@ const en: Dict = {
         mcp: "Recall capsules from any MCP-capable agent (Claude Code, Cursor, Cline, Claude Desktop).",
         "api-keys": "Programmatic access tokens scoped to your plan.",
         billing: "Manage your subscription and per-tier limits.",
+      },
+    },
+    apiKeys: {
+      pageTitle: "API Keys",
+      pageSub: "Generate a personal key to sign the dropdat browser extension into your account. Keys are shown once at creation — store them somewhere safe.",
+      createNewKey: "Create new key",
+      namePlaceholder: "Name (e.g. My laptop)",
+      generateKey: "Generate key",
+      creating: "Creating…",
+      scopesHelp: "Scopes — only the ones your current plan allows are listed",
+      clearAll: "Clear all",
+      selectAll: "Select all",
+      loadingScopes: "Loading available scopes… (If this persists, your plan grants no API scopes.)",
+      copyNow: "Copy this key now — you won't be able to see it again.",
+      copy: "Copy",
+      savedDismiss: "I've saved it, dismiss →",
+      yourKeys: "Your keys",
+      active: "active",
+      loading: "Loading…",
+      noKeysTitle: "No keys yet.",
+      noKeysBody: "Generate one above to sign into the extension.",
+      colName: "Name",
+      colPrefix: "Prefix",
+      colScopes: "Scopes",
+      colCreated: "Created",
+      colLastUsed: "Last used",
+      revoke: "Revoke",
+      revokeConfirm: "Revoke this key? Any extension using it will be signed out.",
+      scopeLabels: {
+        capsulesRead: "Read capsules",
+        capsulesWrite: "Write capsules",
+        mcp: "MCP server access",
+        attachments: "Attachments",
+        dynamicContext: "Dynamic context",
+        versioning: "Versioning",
+        teams: "Teams",
+        teamsCreate: "Create teams",
+        share: "Public sharing",
       },
     },
     billing: {
@@ -622,6 +698,44 @@ const ja: Dict = {
         billing: "サブスクリプションとプランごとの制限を管理。",
       },
     },
+    apiKeys: {
+      pageTitle: "APIキー",
+      pageSub: "dropdatブラウザ拡張機能をあなたのアカウントにサインインさせるための個人キーを生成します。キーは作成時に一度だけ表示されます — 安全な場所に保管してください。",
+      createNewKey: "新しいキーを作成",
+      namePlaceholder: "名前（例：私のノートPC）",
+      generateKey: "キーを生成",
+      creating: "作成中…",
+      scopesHelp: "スコープ — 現在のプランで許可されているもののみ表示",
+      clearAll: "すべてクリア",
+      selectAll: "すべて選択",
+      loadingScopes: "利用可能なスコープを読み込み中…（解決しない場合、プランにAPIスコープが付与されていません）",
+      copyNow: "今すぐこのキーをコピー — 再表示はできません。",
+      copy: "コピー",
+      savedDismiss: "保存しました、閉じる →",
+      yourKeys: "あなたのキー",
+      active: "アクティブ",
+      loading: "読み込み中…",
+      noKeysTitle: "まだキーがありません。",
+      noKeysBody: "上で1つ生成して拡張機能にサインインしてください。",
+      colName: "名前",
+      colPrefix: "プレフィックス",
+      colScopes: "スコープ",
+      colCreated: "作成日",
+      colLastUsed: "最終使用",
+      revoke: "失効",
+      revokeConfirm: "このキーを失効しますか？このキーを使用中の拡張機能はサインアウトします。",
+      scopeLabels: {
+        capsulesRead: "カプセル読み取り",
+        capsulesWrite: "カプセル書き込み",
+        mcp: "MCPサーバーアクセス",
+        attachments: "添付ファイル",
+        dynamicContext: "ダイナミックコンテキスト",
+        versioning: "バージョン管理",
+        teams: "チーム",
+        teamsCreate: "チーム作成",
+        share: "公開共有",
+      },
+    },
     billing: {
       pageTitle: "請求",
       pageSub: "あなたの働き方に合うプランを選択。いつでもキャンセル・変更可能。",
@@ -868,6 +982,44 @@ const de: Dict = {
         mcp: "Rufe Capsules von jedem MCP-fähigen Agenten ab (Claude Code, Cursor, Cline, Claude Desktop).",
         "api-keys": "Programmatische Zugriffstoken mit Scopes gemäß deinem Plan.",
         billing: "Verwalte dein Abonnement und die Limits pro Stufe.",
+      },
+    },
+    apiKeys: {
+      pageTitle: "API-Schlüssel",
+      pageSub: "Erstelle einen persönlichen Schlüssel, um die dropdat-Browsererweiterung mit deinem Konto zu verbinden. Schlüssel werden nur einmal bei der Erstellung angezeigt — bewahre sie sicher auf.",
+      createNewKey: "Neuen Schlüssel erstellen",
+      namePlaceholder: "Name (z. B. Mein Laptop)",
+      generateKey: "Schlüssel generieren",
+      creating: "Erstelle…",
+      scopesHelp: "Scopes — es werden nur die deines aktuellen Plans angezeigt",
+      clearAll: "Alle löschen",
+      selectAll: "Alle auswählen",
+      loadingScopes: "Verfügbare Scopes werden geladen… (Falls dies anhält, gewährt dein Plan keine API-Scopes.)",
+      copyNow: "Kopiere diesen Schlüssel jetzt — du wirst ihn nicht erneut sehen können.",
+      copy: "Kopieren",
+      savedDismiss: "Gespeichert, schließen →",
+      yourKeys: "Deine Schlüssel",
+      active: "aktiv",
+      loading: "Lade…",
+      noKeysTitle: "Noch keine Schlüssel.",
+      noKeysBody: "Erstelle oben einen, um dich in der Erweiterung anzumelden.",
+      colName: "Name",
+      colPrefix: "Präfix",
+      colScopes: "Scopes",
+      colCreated: "Erstellt",
+      colLastUsed: "Zuletzt verwendet",
+      revoke: "Widerrufen",
+      revokeConfirm: "Diesen Schlüssel widerrufen? Jede Erweiterung, die ihn nutzt, wird abgemeldet.",
+      scopeLabels: {
+        capsulesRead: "Capsules lesen",
+        capsulesWrite: "Capsules schreiben",
+        mcp: "MCP-Server-Zugang",
+        attachments: "Anhänge",
+        dynamicContext: "Dynamischer Kontext",
+        versioning: "Versionierung",
+        teams: "Teams",
+        teamsCreate: "Teams erstellen",
+        share: "Öffentliches Teilen",
       },
     },
     billing: {
@@ -1118,6 +1270,44 @@ const fr: Dict = {
         billing: "Gérez votre abonnement et les limites par palier.",
       },
     },
+    apiKeys: {
+      pageTitle: "Clés API",
+      pageSub: "Générez une clé personnelle pour connecter l'extension navigateur dropdat à votre compte. Les clés s'affichent une seule fois à la création — conservez-les en lieu sûr.",
+      createNewKey: "Créer une nouvelle clé",
+      namePlaceholder: "Nom (p.ex. Mon ordinateur portable)",
+      generateKey: "Générer la clé",
+      creating: "Création…",
+      scopesHelp: "Scopes — seuls ceux autorisés par votre plan sont listés",
+      clearAll: "Tout effacer",
+      selectAll: "Tout sélectionner",
+      loadingScopes: "Chargement des scopes disponibles… (Si cela persiste, votre plan n'accorde aucun scope API.)",
+      copyNow: "Copiez cette clé maintenant — vous ne pourrez pas la revoir.",
+      copy: "Copier",
+      savedDismiss: "Enregistrée, fermer →",
+      yourKeys: "Vos clés",
+      active: "actives",
+      loading: "Chargement…",
+      noKeysTitle: "Aucune clé pour l'instant.",
+      noKeysBody: "Générez-en une ci-dessus pour vous connecter à l'extension.",
+      colName: "Nom",
+      colPrefix: "Préfixe",
+      colScopes: "Scopes",
+      colCreated: "Créée",
+      colLastUsed: "Dernière utilisation",
+      revoke: "Révoquer",
+      revokeConfirm: "Révoquer cette clé ? Toute extension l'utilisant sera déconnectée.",
+      scopeLabels: {
+        capsulesRead: "Lire les capsules",
+        capsulesWrite: "Écrire des capsules",
+        mcp: "Accès au serveur MCP",
+        attachments: "Pièces jointes",
+        dynamicContext: "Contexte dynamique",
+        versioning: "Versionnage",
+        teams: "Équipes",
+        teamsCreate: "Créer des équipes",
+        share: "Partage public",
+      },
+    },
     billing: {
       pageTitle: "Facturation",
       pageSub: "Choisissez le plan qui correspond à votre façon de travailler. Annulez ou modifiez à tout moment.",
@@ -1364,6 +1554,44 @@ const es: Dict = {
         mcp: "Recupera cápsulas desde cualquier agente compatible con MCP (Claude Code, Cursor, Cline, Claude Desktop).",
         "api-keys": "Tokens de acceso programático con scopes según tu plan.",
         billing: "Gestiona tu suscripción y los límites por nivel.",
+      },
+    },
+    apiKeys: {
+      pageTitle: "Claves API",
+      pageSub: "Genera una clave personal para conectar la extensión de navegador dropdat con tu cuenta. Las claves se muestran solo una vez al crearlas — guárdalas en lugar seguro.",
+      createNewKey: "Crear nueva clave",
+      namePlaceholder: "Nombre (p.ej. Mi portátil)",
+      generateKey: "Generar clave",
+      creating: "Creando…",
+      scopesHelp: "Scopes — solo se listan los permitidos por tu plan actual",
+      clearAll: "Limpiar todo",
+      selectAll: "Seleccionar todo",
+      loadingScopes: "Cargando scopes disponibles… (Si persiste, tu plan no otorga scopes de API.)",
+      copyNow: "Copia esta clave ahora — no podrás verla de nuevo.",
+      copy: "Copiar",
+      savedDismiss: "Guardada, cerrar →",
+      yourKeys: "Tus claves",
+      active: "activas",
+      loading: "Cargando…",
+      noKeysTitle: "Aún no hay claves.",
+      noKeysBody: "Genera una arriba para iniciar sesión en la extensión.",
+      colName: "Nombre",
+      colPrefix: "Prefijo",
+      colScopes: "Scopes",
+      colCreated: "Creada",
+      colLastUsed: "Último uso",
+      revoke: "Revocar",
+      revokeConfirm: "¿Revocar esta clave? Cualquier extensión que la use cerrará sesión.",
+      scopeLabels: {
+        capsulesRead: "Leer cápsulas",
+        capsulesWrite: "Escribir cápsulas",
+        mcp: "Acceso al servidor MCP",
+        attachments: "Adjuntos",
+        dynamicContext: "Contexto dinámico",
+        versioning: "Versionado",
+        teams: "Equipos",
+        teamsCreate: "Crear equipos",
+        share: "Compartir públicamente",
       },
     },
     billing: {

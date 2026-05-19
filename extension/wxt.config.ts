@@ -3,8 +3,9 @@ import { defineConfig } from "wxt";
 export default defineConfig({
   modules: ["@wxt-dev/module-react"],
   manifest: {
-    name: "dropdat",
-    description: "Capture any AI chat as a portable capsule. Drop it anywhere.",
+    name: "__MSG_extName__",
+    description: "__MSG_extDescription__",
+    default_locale: "en",
     version: "0.4.1",
     ...(process.env.EXT_KEY ? { key: process.env.EXT_KEY } : {}),
     permissions: ["storage", "activeTab", "contextMenus", "notifications"],
@@ -37,7 +38,7 @@ export default defineConfig({
       "https://*.googleusercontent.com/*",
     ],
     action: {
-      default_title: "dropdat — capsule library",
+      default_title: "__MSG_actionTitle__",
     },
     // Firefox requires an extension id under browser_specific_settings.gecko
     // for AMO submission and signed updates. Falls back to a dev id locally

@@ -9,6 +9,7 @@ import {
   setPreferredFolderId,
 } from "../../lib/folders";
 import type { Capsule } from "../../lib/types";
+import { t } from "../../lib/i18n";
 
 const sourceLabel: Record<Capsule["source"], string> = {
   chatgpt: "ChatGPT",
@@ -50,7 +51,7 @@ export function App() {
 
   const triggerSync = async () => {
     setSyncing(true);
-    setStatus("Syncing…");
+    setStatus(t("syncing"));
     try {
       const res = await chrome.runtime.sendMessage({ type: "REQUEST_SYNC" });
       setStatus(
@@ -104,7 +105,7 @@ export function App() {
   if (!authChecked) {
     return (
       <div className="app">
-        <div className="empty">Loading…</div>
+        <div className="empty">{t("loading")}</div>
       </div>
     );
   }
@@ -122,10 +123,10 @@ export function App() {
         </div>
         <div style={{ display: "flex", gap: 6 }}>
           <button className="btn secondary" onClick={triggerSync} disabled={syncing}>
-            {syncing ? "Syncing…" : "Sync"}
+            {syncing ? t("syncing") : t("sync")}
           </button>
-          <button className="btn secondary" onClick={signOut} title="Remove API key">
-            Sign out
+          <button className="btn secondary" onClick={signOut} title={t("signOutTitle")}>
+            {t("signOut")}
           </button>
         </div>
       </header>
@@ -135,13 +136,13 @@ export function App() {
           className={`tab ${tab === "capsules" ? "active" : ""}`}
           onClick={() => setTab("capsules")}
         >
-          Capsules
+          {t("tabCapsules")}
         </button>
         <button
           className={`tab ${tab === "links" ? "active" : ""}`}
           onClick={() => setTab("links")}
         >
-          Links
+          {t("tabLinks")}
         </button>
       </div>
 
@@ -149,11 +150,11 @@ export function App() {
         <div className="list">
           {capsules.length === 0 && (
             <div className="empty">
-              No capsules yet.
+              {t("noCapsulesLine1")}
               <br />
-              Open ChatGPT, Claude or Gemini and click the
+              {t("noCapsulesLine2")}
               <br />
-              <strong>● capsule</strong> button to capture a chat.
+              <strong>{t("capsuleButtonName")}</strong> {t("noCapsulesLine3")}
             </div>
           )}
           {capsules.map((c) => (
@@ -163,14 +164,14 @@ export function App() {
               draggable
               onDragStart={(e) => onDragStart(e, c)}
               onClick={() => dropToActiveTab(c)}
-              title="Click to drop into the active chat — or drag onto the composer"
+              title={t("capsuleClickTitle")}
               style={{ cursor: "pointer" }}
             >
               <div className="meta">
                 <span>{sourceLabel[c.source]}</span>
                 <span>
                   v{c.version}
-                  {c.pendingSync ? " · pending" : ""}
+                  {c.pendingSync ? t("pendingSuffix") : ""}
                 </span>
               </div>
               <div className="title">{c.title}</div>
@@ -185,9 +186,9 @@ export function App() {
         <span>
           {tab === "capsules"
             ? pendingCount > 0
-              ? `${pendingCount} pending`
-              : `${capsules.length} capsules`
-            : "saved links"}
+              ? t("pendingCount", String(pendingCount))
+              : t("capsulesCount", String(capsules.length))
+            : t("savedLinks")}
         </span>
         <a
           href={`${DASHBOARD_URL}/library`}
@@ -195,7 +196,7 @@ export function App() {
           rel="noreferrer"
           style={{ color: "var(--primary)", textDecoration: "none" }}
         >
-          Open dashboard →
+          {t("openDashboard")}
         </a>
       </footer>
       {status && (
@@ -264,7 +265,7 @@ function LinksPane({ onStatus }: { onStatus: (s: string) => void }) {
   };
 
   const onCreate = async () => {
-    const name = window.prompt("New folder name?");
+    const name = window.prompt(t("newFolderPrompt"));
     if (!name) return;
     setBusy(true);
     const res = await chrome.runtime.sendMessage({ type: "CREATE_FOLDER", name });
@@ -303,13 +304,13 @@ function LinksPane({ onStatus }: { onStatus: (s: string) => void }) {
   return (
     <>
       <div className="folder-bar">
-        <span style={{ color: "var(--muted)" }}>Folder</span>
+        <span style={{ color: "var(--muted)" }}>{t("folder")}</span>
         <select value={activeFolderId} onChange={(e) => onPickFolder(e.target.value)}>
-          <option value="">All</option>
+          <option value="">{t("allFolders")}</option>
           {folders.map((f) => (
             <option key={f.id} value={f.id}>
               {f.name}
-              {f.isDefault ? " (default)" : ""}
+              {f.isDefault ? t("defaultSuffix") : ""}
             </option>
           ))}
         </select>
@@ -317,15 +318,15 @@ function LinksPane({ onStatus }: { onStatus: (s: string) => void }) {
           +
         </button>
         <button className="btn" onClick={onSaveCurrentTab} disabled={busy}>
-          Save tab
+          {t("saveTab")}
         </button>
       </div>
 
       <div className="list">
-        {loading && <div className="empty">Loading…</div>}
+        {loading && <div className="empty">{t("loading")}</div>}
         {!loading && links.length === 0 && (
           <div className="empty">
-            No saved links yet.
+            {t("noLinks")}
             <br />
             Right-click any page or link → <strong>dropdat</strong> → Save.
           </div>
@@ -361,7 +362,7 @@ function SignInScreen({ onSignedIn }: { onSignedIn: () => void }) {
   const submit = async () => {
     const trimmed = key.trim();
     if (!trimmed) {
-      setError("Paste an API key to continue.");
+      setError(t("signInPasteError"));
       return;
     }
     setBusy(true);
@@ -371,7 +372,7 @@ function SignInScreen({ onSignedIn }: { onSignedIn: () => void }) {
       await setApiKey(trimmed);
       onSignedIn();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Invalid API key");
+      setError(err instanceof Error ? err.message : t("signInInvalid"));
     } finally {
       setBusy(false);
     }
@@ -388,14 +389,13 @@ function SignInScreen({ onSignedIn }: { onSignedIn: () => void }) {
 
       <div style={{ padding: "12px 4px", display: "flex", flexDirection: "column", gap: 12 }}>
         <p style={{ fontSize: 13, color: "var(--muted)", margin: 0, lineHeight: 1.5 }}>
-          Sign in by pasting an API key from your dropdat dashboard. The key is stored locally in
-          this browser only.
+          {t("signInDesc")}
         </p>
 
         <input
           type="password"
           autoFocus
-          placeholder="dk_live_…"
+          placeholder={t("signInPlaceholder")}
           value={key}
           onChange={(e) => setKey(e.target.value)}
           onKeyDown={(e) => {
@@ -413,7 +413,7 @@ function SignInScreen({ onSignedIn }: { onSignedIn: () => void }) {
         />
 
         <button className="btn" onClick={submit} disabled={busy}>
-          {busy ? "Verifying…" : "Sign in"}
+          {busy ? t("verifying") : t("signInBtn")}
         </button>
 
         {error && (
@@ -426,7 +426,7 @@ function SignInScreen({ onSignedIn }: { onSignedIn: () => void }) {
           rel="noreferrer"
           style={{ fontSize: 12, color: "var(--primary)", textDecoration: "none" }}
         >
-          Generate an API key →
+          {t("generateApiKey")}
         </a>
       </div>
     </div>

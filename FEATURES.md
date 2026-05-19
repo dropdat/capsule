@@ -66,6 +66,8 @@ Living index of shipped features. Updated each session when new features land.
 
 ## Browser Extension (WXT + React, Chrome / Firefox MV3)
 
+- Localized into English, Japanese, German, French and Spanish — Chrome picks the locale from the browser UI language via `_locales/<lang>/messages.json`; popup chrome (sign-in, sync, tabs, empty states, footer) and store-listing name/description follow the same i18n table.
+
 - One-click capture of AI chat sessions as portable capsules
 - Provider content scripts:
   - ChatGPT
