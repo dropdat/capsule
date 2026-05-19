@@ -21,6 +21,12 @@ export function LocaleSwitcher({ locale, label }: { locale: Locale; label: strin
     const next = e.target.value as Locale;
     const base = stripLocale(pathname || "/");
     const target = next === DEFAULT_LOCALE ? base : `/${next}${base === "/" ? "" : base}`;
+    try {
+      // Pin the choice so AutoLocaleRedirect respects it on future visits.
+      window.localStorage.setItem("dropdat:locale:auto", next);
+    } catch {
+      // ignore
+    }
     startTransition(() => router.push(target));
   }
 
