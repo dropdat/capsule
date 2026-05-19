@@ -107,6 +107,8 @@ export type Dict = {
       signOut: string;
       language: string;
       capsulesUnlimited: string;
+      requestFeature: string;
+      featureSubject: string;
     };
   };
 };
@@ -242,6 +244,8 @@ const en: Dict = {
       signOut: "Sign out",
       language: "Language",
       capsulesUnlimited: "capsules (unlimited)",
+      requestFeature: "Request a feature",
+      featureSubject: "Feature request",
     },
   },
 };
@@ -377,6 +381,8 @@ const ja: Dict = {
       signOut: "サインアウト",
       language: "言語",
       capsulesUnlimited: "カプセル（無制限）",
+      requestFeature: "機能をリクエスト",
+      featureSubject: "機能リクエスト",
     },
   },
 };
@@ -512,6 +518,8 @@ const de: Dict = {
       signOut: "Abmelden",
       language: "Sprache",
       capsulesUnlimited: "Capsules (unbegrenzt)",
+      requestFeature: "Funktion anfragen",
+      featureSubject: "Funktionsanfrage",
     },
   },
 };
@@ -647,6 +655,8 @@ const fr: Dict = {
       signOut: "Déconnexion",
       language: "Langue",
       capsulesUnlimited: "capsules (illimité)",
+      requestFeature: "Demander une fonctionnalité",
+      featureSubject: "Demande de fonctionnalité",
     },
   },
 };
@@ -782,6 +792,8 @@ const es: Dict = {
       signOut: "Cerrar sesión",
       language: "Idioma",
       capsulesUnlimited: "cápsulas (ilimitado)",
+      requestFeature: "Solicitar función",
+      featureSubject: "Solicitud de función",
     },
   },
 };

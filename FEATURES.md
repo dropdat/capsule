@@ -25,7 +25,8 @@ Living index of shipped features. Updated each session when new features land.
   - **Per-pack graph** — chord/arc view of capsules inside one pack, edges are pairwise cosine neighbours
   - **Help** — in-app feature directory: every dashboard feature with step-by-step usage and plan badges, jump links into the relevant page
   - **Settings** — account settings
-- Profile menu (sidebar) — shows current plan, status, capsule usage, manage-billing portal link, and "invoices emailed automatically" hint
+- Profile menu (sidebar) — shows current plan, status, capsule usage, manage-billing portal link, "invoices emailed automatically" hint, in-menu language picker, and a "Request a feature" link that opens a prefilled mailto to support
+- Marketing footer "Request a feature" link (mailto)
 - Capsule public sharing — Ultimate-tier toggle on any capsule generates a read-only `dropdat.app/s/<token>` URL; lower tiers get an in-app upgrade dialog
 - Sidebar pinned (no longer scrolls with content)
 - Folder organization for capsules

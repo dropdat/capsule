@@ -35,6 +35,7 @@ export function Footer({ dict, locale = DEFAULT_LOCALE }: { dict?: Dict; locale?
         { label: t.useLinks.coding, href: "/use-cases/coding-agent-memory" },
         { label: t.useLinks.support, href: "/support" },
         { label: t.useLinks.contact, href: "mailto:support@dropdat.app" },
+        { label: d.console.profile.requestFeature, href: `mailto:support@dropdat.app?subject=${encodeURIComponent(d.console.profile.featureSubject)}` },
       ],
     },
     {

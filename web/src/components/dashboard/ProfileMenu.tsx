@@ -162,6 +162,15 @@ export function ProfileMenu() {
             >
               {t.settings}
             </Link>
+            <a
+              href={`mailto:support@dropdat.app?subject=${encodeURIComponent(t.featureSubject)}&body=${encodeURIComponent(
+                "What would you like to see?\n\n\n---\nUser: " + (email ?? "")
+              )}`}
+              onClick={() => setOpen(false)}
+              className="block px-4 py-2 text-[13px] hover:bg-muted"
+            >
+              {t.requestFeature}
+            </a>
             <SignOutButton>
               <button
                 type="button"
