@@ -108,6 +108,7 @@ Living index of shipped features. Updated each session when new features land.
 - Postgres 16 via Docker Compose
 - Static export of Next.js served by Caddy
 - `/api/*` proxied to Go service on :8080
+- IndexNow auto-ping — `npm run indexnow` reads the production sitemap and pushes all URLs to Bing / Yandex / Naver / Seznam; key file served at `/<key>.txt`
 
 ## Auth & Security
 

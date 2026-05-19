@@ -106,3 +106,18 @@ jobs:
           ssh "$USER@$HOST" 'cd /opt/dropdat/infra && docker compose up -d --build'
           ssh "$USER@$HOST" 'docker image prune -f'
           ssh "$USER@$HOST" 'cd /opt/dropdat/infra && docker compose ps'
+
+      - name: Wait for sitemap to be live
+        run: |
+          for i in 1 2 3 4 5 6 7 8 9 10; do
+            if curl -fsS -o /dev/null https://dropdat.app/sitemap.xml; then
+              echo "sitemap up"; break
+            fi
+            echo "waiting for sitemap... ($i)"; sleep 6
+          done
+
+      - name: IndexNow ping (Bing / Yandex / Naver / Seznam)
+        working-directory: web
+        env:
+          INDEXNOW_KEY: ${{ secrets.INDEXNOW_KEY }}
+        run: node scripts/indexnow.mjs || echo "IndexNow ping failed (non-fatal)"
