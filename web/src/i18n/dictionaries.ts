@@ -110,6 +110,89 @@ export type Dict = {
       requestFeature: string;
       featureSubject: string;
     };
+    help: {
+      pageTitle: string;
+      pageSub: string;
+      contents: string;
+      stillStuck: string;
+      stillStuckBody: string;
+      publicFaq: string;
+      support: string;
+      planLabels: {
+        proAndAbove: string;
+        premiumAndAbove: string;
+        ultimateOnly: string;
+      };
+      sectionTitles: Record<string, string>;
+      sectionSummaries: Record<string, string>;
+    };
+    billing: {
+      pageTitle: string;
+      pageSub: string;
+      currentPlan: string;
+      refresh: string;
+      syncing: string;
+      cancelling: string;
+      cancelPlan: string;
+      tier: string;
+      status: string;
+      usage: string;
+      capsulesUsed: string;
+      capsulesOf: string;
+      unlimited: string;
+      billingLabel: string;
+      monthly: string;
+      annual: string;
+      mostPopular: string;
+      currentPlanBadge: string;
+      upgradeTo: string;
+      subscribe: string;
+      redirecting: string;
+      contactSales: string;
+      enterpriseName: string;
+      enterpriseTagline: string;
+      inactive: string;
+      featureLabels: {
+        capsules5: string;
+        capsules15: string;
+        capsules50: string;
+        capsulesUnlimited: string;
+        mobile: string;
+        versioning: string;
+        mcp: string;
+        attachments: string;
+        imageCapture: string;
+        dynamicContext: string;
+        contextPacks: string;
+        teams: string;
+        graphs: string;
+        publicShare: string;
+      };
+      plans: {
+        basic: { tagline: string };
+        pro: { tagline: string };
+        premium: { tagline: string };
+        ultimate: { tagline: string };
+      };
+      modal: {
+        pendingTitle: string;
+        pendingBody: string;
+        okBtn: string;
+        successTitle: string;
+        successBodyPrefix: string;
+        successBodySuffix: string;
+        gotIt: string;
+        cancelledTitle: string;
+        cancelledBody: string;
+        errorTitle: string;
+        close: string;
+        refreshNow: string;
+        cancelTitle: string;
+        cancelBody: string;
+        keepPlan: string;
+        yesCancel: string;
+      };
+    };
   };
 };
 
@@ -246,6 +329,117 @@ const en: Dict = {
       capsulesUnlimited: "capsules (unlimited)",
       requestFeature: "Request a feature",
       featureSubject: "Feature request",
+    },
+    help: {
+      pageTitle: "Help & features",
+      pageSub: "Every dropdat feature in one place — what it does, how to use it, and which plan it lives on. Jump to any section below.",
+      contents: "Contents",
+      stillStuck: "Still stuck?",
+      stillStuckBody: "Check the public FAQ for higher-level questions, or open a support ticket.",
+      publicFaq: "Public FAQ",
+      support: "Support",
+      planLabels: {
+        proAndAbove: "Pro and above",
+        premiumAndAbove: "Premium and above",
+        ultimateOnly: "Ultimate only",
+      },
+      sectionTitles: {
+        library: "Library",
+        capture: "Capture (Chrome extension)",
+        drop: "Drop into another AI",
+        versioning: "Versioning",
+        mobile: "Mobile capture",
+        links: "Links",
+        packs: "Context packs",
+        graphs: "Similarity graphs",
+        teams: "Teams",
+        share: "Public capsule sharing",
+        mcp: "MCP server",
+        "api-keys": "API keys",
+        billing: "Billing & plans",
+      },
+      sectionSummaries: {
+        library: "Every capsule you've captured, searchable by title and content.",
+        capture: "Save any AI chat into a capsule with one click.",
+        drop: "Paste a capsule into any AI to resume the conversation there.",
+        versioning: "Fork or edit a capsule and keep full lineage.",
+        mobile: "Save anything from your phone — share-sheet on Android, Shortcut on iOS.",
+        links: "Stash URLs alongside your capsules — same library, different shape.",
+        packs: "Bundle related capsules into one drop-in markdown block.",
+        graphs: "Visualise how your capsules and packs relate.",
+        teams: "Share a capsule library with a small group.",
+        share: "Generate a read-only public link for a single capsule.",
+        mcp: "Recall capsules from any MCP-capable agent (Claude Code, Cursor, Cline, Claude Desktop).",
+        "api-keys": "Programmatic access tokens scoped to your plan.",
+        billing: "Manage your subscription and per-tier limits.",
+      },
+    },
+    billing: {
+      pageTitle: "Billing",
+      pageSub: "Pick the plan that fits how you work. Cancel or change any time.",
+      currentPlan: "Current plan",
+      refresh: "Refresh",
+      syncing: "Syncing…",
+      cancelling: "Cancelling…",
+      cancelPlan: "Cancel plan",
+      tier: "Tier",
+      status: "Status",
+      usage: "Usage",
+      capsulesUsed: "capsules used",
+      capsulesOf: "of",
+      unlimited: "unlimited",
+      billingLabel: "Billing",
+      monthly: "Monthly",
+      annual: "Annual",
+      mostPopular: "Most popular",
+      currentPlanBadge: "Current plan",
+      upgradeTo: "Upgrade to",
+      subscribe: "Subscribe",
+      redirecting: "Redirecting…",
+      contactSales: "Contact sales",
+      enterpriseName: "Enterprise",
+      enterpriseTagline: "Custom capsule limits, white-labeling, on-premise, dedicated support, SLA.",
+      inactive: "inactive",
+      featureLabels: {
+        capsules5: "5 total capsules",
+        capsules15: "15 total capsules",
+        capsules50: "50 total capsules",
+        capsulesUnlimited: "Unlimited capsules",
+        mobile: "Mobile capture (PWA share-target)",
+        versioning: "Versioning",
+        mcp: "MCP server access",
+        attachments: "File attachments (R2)",
+        imageCapture: "Image capture from chats",
+        dynamicContext: "Dynamic context bundles",
+        contextPacks: "Context packs",
+        teams: "Create & join teams",
+        graphs: "Similarity graphs",
+        publicShare: "Share capsules publicly",
+      },
+      plans: {
+        basic: { tagline: "Essential capsule management for casual users." },
+        pro: { tagline: "Advanced features for solo power users." },
+        premium: { tagline: "MCP, attachments, dynamic context — built for serious knowledge workers." },
+        ultimate: { tagline: "Maximum collaboration and white-label." },
+      },
+      modal: {
+        pendingTitle: "Confirming your payment…",
+        pendingBody: "Hang tight — we're syncing with the payment processor. This usually takes a few seconds.",
+        okBtn: "OK",
+        successTitle: "You're upgraded 🎉",
+        successBodyPrefix: "Welcome to ",
+        successBodySuffix: ". Your subscription is active and the new limits apply right away. An invoice has been emailed to you.",
+        gotIt: "Got it",
+        cancelledTitle: "Subscription cancelled",
+        cancelledBody: "Your plan won't renew. You keep access until the end of the current billing period.",
+        errorTitle: "Something went wrong",
+        close: "Close",
+        refreshNow: "Refresh now",
+        cancelTitle: "Cancel subscription?",
+        cancelBody: "Recurring payments will stop. You'll keep your current plan until the end of the billing period, then drop to Basic.",
+        keepPlan: "Keep plan",
+        yesCancel: "Yes, cancel",
+      },
     },
   },
 };
@@ -384,6 +578,117 @@ const ja: Dict = {
       requestFeature: "機能をリクエスト",
       featureSubject: "機能リクエスト",
     },
+    help: {
+      pageTitle: "ヘルプと機能",
+      pageSub: "dropdatのすべての機能を一覧に — 何ができるか、使い方、対応プラン。下のセクションへジャンプ。",
+      contents: "目次",
+      stillStuck: "まだ困っていますか？",
+      stillStuckBody: "より一般的な質問はパブリックFAQをご確認ください。サポートチケットも開けます。",
+      publicFaq: "パブリックFAQ",
+      support: "サポート",
+      planLabels: {
+        proAndAbove: "Pro以上",
+        premiumAndAbove: "Premium以上",
+        ultimateOnly: "Ultimateのみ",
+      },
+      sectionTitles: {
+        library: "ライブラリ",
+        capture: "キャプチャ（Chrome拡張機能）",
+        drop: "別のAIにドロップ",
+        versioning: "バージョン管理",
+        mobile: "モバイルキャプチャ",
+        links: "リンク",
+        packs: "コンテキストパック",
+        graphs: "類似度グラフ",
+        teams: "チーム",
+        share: "カプセルの公開共有",
+        mcp: "MCPサーバー",
+        "api-keys": "APIキー",
+        billing: "請求とプラン",
+      },
+      sectionSummaries: {
+        library: "キャプチャしたすべてのカプセルを、タイトルと内容で検索できます。",
+        capture: "AIとの会話をワンクリックでカプセルに保存。",
+        drop: "カプセルを任意のAIに貼り付けて会話を再開。",
+        versioning: "カプセルをフォークまたは編集し、完全な系譜を保持。",
+        mobile: "Androidではシェアシート、iOSではショートカットでスマホから保存。",
+        links: "URLをカプセルと一緒に保存 — 同じライブラリ、別の形式。",
+        packs: "関連カプセルを1つのMarkdownブロックにまとめる。",
+        graphs: "カプセルとパックの関連性を可視化。",
+        teams: "小規模グループでカプセルライブラリを共有。",
+        share: "1つのカプセルに対して読み取り専用の公開リンクを生成。",
+        mcp: "MCP対応エージェント（Claude Code、Cursor、Cline、Claude Desktop）からカプセルを呼び出し。",
+        "api-keys": "プランに応じたスコープのプログラム的アクセストークン。",
+        billing: "サブスクリプションとプランごとの制限を管理。",
+      },
+    },
+    billing: {
+      pageTitle: "請求",
+      pageSub: "あなたの働き方に合うプランを選択。いつでもキャンセル・変更可能。",
+      currentPlan: "現在のプラン",
+      refresh: "更新",
+      syncing: "同期中…",
+      cancelling: "キャンセル中…",
+      cancelPlan: "プランをキャンセル",
+      tier: "ティア",
+      status: "ステータス",
+      usage: "使用量",
+      capsulesUsed: "カプセル使用",
+      capsulesOf: "/",
+      unlimited: "無制限",
+      billingLabel: "請求",
+      monthly: "月額",
+      annual: "年額",
+      mostPopular: "人気No.1",
+      currentPlanBadge: "現在のプラン",
+      upgradeTo: "アップグレード：",
+      subscribe: "サブスクライブ",
+      redirecting: "リダイレクト中…",
+      contactSales: "営業へお問い合わせ",
+      enterpriseName: "Enterprise",
+      enterpriseTagline: "カスタムカプセル制限、ホワイトラベル、オンプレミス、専任サポート、SLA。",
+      inactive: "非アクティブ",
+      featureLabels: {
+        capsules5: "カプセル5個まで",
+        capsules15: "カプセル15個まで",
+        capsules50: "カプセル50個まで",
+        capsulesUnlimited: "無制限カプセル",
+        mobile: "モバイルキャプチャ（PWAシェアターゲット）",
+        versioning: "バージョン管理",
+        mcp: "MCPサーバーアクセス",
+        attachments: "ファイル添付（R2）",
+        imageCapture: "チャットからの画像キャプチャ",
+        dynamicContext: "ダイナミックコンテキストバンドル",
+        contextPacks: "コンテキストパック",
+        teams: "チーム作成・参加",
+        graphs: "類似度グラフ",
+        publicShare: "カプセルの公開共有",
+      },
+      plans: {
+        basic: { tagline: "カジュアルユーザー向けの必須カプセル管理。" },
+        pro: { tagline: "個人パワーユーザー向けの高度な機能。" },
+        premium: { tagline: "MCP、添付、ダイナミックコンテキスト — 本格的なナレッジワーカー向け。" },
+        ultimate: { tagline: "最大限のコラボレーションとホワイトラベル。" },
+      },
+      modal: {
+        pendingTitle: "支払いを確認中…",
+        pendingBody: "少々お待ちください — 決済プロセッサーと同期中です。通常数秒かかります。",
+        okBtn: "OK",
+        successTitle: "アップグレード完了 🎉",
+        successBodyPrefix: "ようこそ ",
+        successBodySuffix: " へ。サブスクリプションはアクティブで、新しい制限がすぐに適用されます。請求書をメールでお送りしました。",
+        gotIt: "了解",
+        cancelledTitle: "サブスクリプションをキャンセルしました",
+        cancelledBody: "プランは更新されません。現在の請求期間の終わりまでアクセスは継続します。",
+        errorTitle: "問題が発生しました",
+        close: "閉じる",
+        refreshNow: "今すぐ更新",
+        cancelTitle: "サブスクリプションをキャンセルしますか？",
+        cancelBody: "定期支払いは停止します。請求期間終了までは現在のプランを保持し、その後Basicに移行します。",
+        keepPlan: "プランを維持",
+        yesCancel: "はい、キャンセル",
+      },
+    },
   },
 };
 
@@ -520,6 +825,117 @@ const de: Dict = {
       capsulesUnlimited: "Capsules (unbegrenzt)",
       requestFeature: "Funktion anfragen",
       featureSubject: "Funktionsanfrage",
+    },
+    help: {
+      pageTitle: "Hilfe & Funktionen",
+      pageSub: "Jede dropdat-Funktion auf einen Blick — was sie macht, wie man sie nutzt und zu welchem Plan sie gehört. Springe zu einem Abschnitt unten.",
+      contents: "Inhalt",
+      stillStuck: "Brauchst du Hilfe?",
+      stillStuckBody: "Schau in das öffentliche FAQ für allgemeine Fragen oder öffne ein Support-Ticket.",
+      publicFaq: "Öffentliches FAQ",
+      support: "Support",
+      planLabels: {
+        proAndAbove: "Pro und höher",
+        premiumAndAbove: "Premium und höher",
+        ultimateOnly: "Nur Ultimate",
+      },
+      sectionTitles: {
+        library: "Bibliothek",
+        capture: "Erfassen (Chrome-Erweiterung)",
+        drop: "In eine andere KI einfügen",
+        versioning: "Versionierung",
+        mobile: "Mobile Erfassung",
+        links: "Links",
+        packs: "Kontext-Packs",
+        graphs: "Ähnlichkeitsgraphen",
+        teams: "Teams",
+        share: "Öffentliche Capsule-Freigabe",
+        mcp: "MCP-Server",
+        "api-keys": "API-Schlüssel",
+        billing: "Abrechnung & Pläne",
+      },
+      sectionSummaries: {
+        library: "Jede erfasste Capsule, durchsuchbar nach Titel und Inhalt.",
+        capture: "Speichere jeden KI-Chat mit einem Klick als Capsule.",
+        drop: "Füge eine Capsule in eine beliebige KI ein, um das Gespräch dort fortzusetzen.",
+        versioning: "Forke oder bearbeite eine Capsule und behalte die vollständige Abstammung.",
+        mobile: "Speichere alles vom Telefon — Share-Sheet auf Android, Shortcut auf iOS.",
+        links: "Verwahre URLs neben deinen Capsules — gleiche Bibliothek, andere Form.",
+        packs: "Bündle verwandte Capsules in einen einfügbaren Markdown-Block.",
+        graphs: "Visualisiere, wie deine Capsules und Packs zusammenhängen.",
+        teams: "Teile eine Capsule-Bibliothek mit einer kleinen Gruppe.",
+        share: "Generiere einen schreibgeschützten öffentlichen Link für eine einzelne Capsule.",
+        mcp: "Rufe Capsules von jedem MCP-fähigen Agenten ab (Claude Code, Cursor, Cline, Claude Desktop).",
+        "api-keys": "Programmatische Zugriffstoken mit Scopes gemäß deinem Plan.",
+        billing: "Verwalte dein Abonnement und die Limits pro Stufe.",
+      },
+    },
+    billing: {
+      pageTitle: "Abrechnung",
+      pageSub: "Wähle den Plan, der zu deiner Arbeitsweise passt. Jederzeit kündbar oder änderbar.",
+      currentPlan: "Aktueller Plan",
+      refresh: "Aktualisieren",
+      syncing: "Synchronisiere…",
+      cancelling: "Kündige…",
+      cancelPlan: "Plan kündigen",
+      tier: "Stufe",
+      status: "Status",
+      usage: "Nutzung",
+      capsulesUsed: "Capsules genutzt",
+      capsulesOf: "von",
+      unlimited: "unbegrenzt",
+      billingLabel: "Abrechnung",
+      monthly: "Monatlich",
+      annual: "Jährlich",
+      mostPopular: "Am beliebtesten",
+      currentPlanBadge: "Aktueller Plan",
+      upgradeTo: "Upgrade auf",
+      subscribe: "Abonnieren",
+      redirecting: "Weiterleitung…",
+      contactSales: "Vertrieb kontaktieren",
+      enterpriseName: "Enterprise",
+      enterpriseTagline: "Individuelle Capsule-Limits, White-Labeling, On-Premise, dedizierter Support, SLA.",
+      inactive: "inaktiv",
+      featureLabels: {
+        capsules5: "5 Capsules insgesamt",
+        capsules15: "15 Capsules insgesamt",
+        capsules50: "50 Capsules insgesamt",
+        capsulesUnlimited: "Unbegrenzte Capsules",
+        mobile: "Mobile Erfassung (PWA Share-Target)",
+        versioning: "Versionierung",
+        mcp: "MCP-Server-Zugang",
+        attachments: "Dateianhänge (R2)",
+        imageCapture: "Bilderfassung aus Chats",
+        dynamicContext: "Dynamische Kontext-Bündel",
+        contextPacks: "Kontext-Packs",
+        teams: "Teams erstellen & beitreten",
+        graphs: "Ähnlichkeitsgraphen",
+        publicShare: "Capsules öffentlich teilen",
+      },
+      plans: {
+        basic: { tagline: "Wesentliche Capsule-Verwaltung für Gelegenheitsnutzer." },
+        pro: { tagline: "Erweiterte Funktionen für Solo-Power-User." },
+        premium: { tagline: "MCP, Anhänge, dynamischer Kontext — für ernsthafte Knowledge-Worker." },
+        ultimate: { tagline: "Maximale Zusammenarbeit und White-Label." },
+      },
+      modal: {
+        pendingTitle: "Bestätige deine Zahlung…",
+        pendingBody: "Einen Moment — wir synchronisieren mit dem Zahlungsdienstleister. Das dauert üblicherweise ein paar Sekunden.",
+        okBtn: "OK",
+        successTitle: "Upgrade erfolgreich 🎉",
+        successBodyPrefix: "Willkommen bei ",
+        successBodySuffix: ". Dein Abonnement ist aktiv und die neuen Limits gelten sofort. Eine Rechnung wurde dir per E-Mail gesendet.",
+        gotIt: "Verstanden",
+        cancelledTitle: "Abonnement gekündigt",
+        cancelledBody: "Dein Plan wird nicht verlängert. Du behältst Zugriff bis zum Ende des aktuellen Abrechnungszeitraums.",
+        errorTitle: "Etwas ist schiefgelaufen",
+        close: "Schließen",
+        refreshNow: "Jetzt aktualisieren",
+        cancelTitle: "Abonnement kündigen?",
+        cancelBody: "Wiederkehrende Zahlungen werden gestoppt. Du behältst deinen Plan bis zum Ende des Abrechnungszeitraums und wechselst dann zu Basic.",
+        keepPlan: "Plan behalten",
+        yesCancel: "Ja, kündigen",
+      },
     },
   },
 };
@@ -658,6 +1074,117 @@ const fr: Dict = {
       requestFeature: "Demander une fonctionnalité",
       featureSubject: "Demande de fonctionnalité",
     },
+    help: {
+      pageTitle: "Aide et fonctionnalités",
+      pageSub: "Toutes les fonctionnalités dropdat en un seul endroit — ce qu'elles font, comment les utiliser et le plan auquel elles appartiennent. Sautez à une section ci-dessous.",
+      contents: "Sommaire",
+      stillStuck: "Toujours bloqué ?",
+      stillStuckBody: "Consultez la FAQ publique pour des questions générales, ou ouvrez un ticket de support.",
+      publicFaq: "FAQ publique",
+      support: "Support",
+      planLabels: {
+        proAndAbove: "Pro et plus",
+        premiumAndAbove: "Premium et plus",
+        ultimateOnly: "Ultimate uniquement",
+      },
+      sectionTitles: {
+        library: "Bibliothèque",
+        capture: "Capture (extension Chrome)",
+        drop: "Déposer dans une autre IA",
+        versioning: "Versionnage",
+        mobile: "Capture mobile",
+        links: "Liens",
+        packs: "Packs de contexte",
+        graphs: "Graphes de similarité",
+        teams: "Équipes",
+        share: "Partage public de capsules",
+        mcp: "Serveur MCP",
+        "api-keys": "Clés API",
+        billing: "Facturation et plans",
+      },
+      sectionSummaries: {
+        library: "Toutes les capsules capturées, recherchables par titre et contenu.",
+        capture: "Sauvegardez n'importe quelle conversation IA en capsule en un clic.",
+        drop: "Collez une capsule dans n'importe quelle IA pour y reprendre la conversation.",
+        versioning: "Forkez ou éditez une capsule en conservant toute la lignée.",
+        mobile: "Sauvegardez depuis votre téléphone — share-sheet sur Android, Shortcut sur iOS.",
+        links: "Stockez des URL aux côtés de vos capsules — même bibliothèque, format différent.",
+        packs: "Regroupez des capsules liées en un bloc markdown prêt à coller.",
+        graphs: "Visualisez les liens entre vos capsules et vos packs.",
+        teams: "Partagez une bibliothèque de capsules avec un petit groupe.",
+        share: "Générez un lien public en lecture seule pour une capsule.",
+        mcp: "Rappellez des capsules depuis n'importe quel agent MCP (Claude Code, Cursor, Cline, Claude Desktop).",
+        "api-keys": "Jetons d'accès programmatique scopés selon votre plan.",
+        billing: "Gérez votre abonnement et les limites par palier.",
+      },
+    },
+    billing: {
+      pageTitle: "Facturation",
+      pageSub: "Choisissez le plan qui correspond à votre façon de travailler. Annulez ou modifiez à tout moment.",
+      currentPlan: "Plan actuel",
+      refresh: "Rafraîchir",
+      syncing: "Synchronisation…",
+      cancelling: "Annulation…",
+      cancelPlan: "Annuler le plan",
+      tier: "Palier",
+      status: "Statut",
+      usage: "Utilisation",
+      capsulesUsed: "capsules utilisées",
+      capsulesOf: "sur",
+      unlimited: "illimité",
+      billingLabel: "Facturation",
+      monthly: "Mensuel",
+      annual: "Annuel",
+      mostPopular: "Le plus populaire",
+      currentPlanBadge: "Plan actuel",
+      upgradeTo: "Passer à",
+      subscribe: "S'abonner",
+      redirecting: "Redirection…",
+      contactSales: "Contacter les ventes",
+      enterpriseName: "Enterprise",
+      enterpriseTagline: "Limites de capsules personnalisées, white-label, on-premise, support dédié, SLA.",
+      inactive: "inactif",
+      featureLabels: {
+        capsules5: "5 capsules au total",
+        capsules15: "15 capsules au total",
+        capsules50: "50 capsules au total",
+        capsulesUnlimited: "Capsules illimitées",
+        mobile: "Capture mobile (PWA share-target)",
+        versioning: "Versionnage",
+        mcp: "Accès au serveur MCP",
+        attachments: "Pièces jointes (R2)",
+        imageCapture: "Capture d'images depuis les chats",
+        dynamicContext: "Bundles de contexte dynamique",
+        contextPacks: "Packs de contexte",
+        teams: "Créer et rejoindre des équipes",
+        graphs: "Graphes de similarité",
+        publicShare: "Partager les capsules publiquement",
+      },
+      plans: {
+        basic: { tagline: "Gestion essentielle de capsules pour utilisateurs occasionnels." },
+        pro: { tagline: "Fonctionnalités avancées pour power-users solo." },
+        premium: { tagline: "MCP, pièces jointes, contexte dynamique — pour les knowledge workers sérieux." },
+        ultimate: { tagline: "Collaboration maximale et white-label." },
+      },
+      modal: {
+        pendingTitle: "Confirmation de votre paiement…",
+        pendingBody: "Patience — nous synchronisons avec le processeur de paiement. Cela prend généralement quelques secondes.",
+        okBtn: "OK",
+        successTitle: "Mise à niveau effectuée 🎉",
+        successBodyPrefix: "Bienvenue à ",
+        successBodySuffix: ". Votre abonnement est actif et les nouvelles limites s'appliquent immédiatement. Une facture vous a été envoyée par e-mail.",
+        gotIt: "Compris",
+        cancelledTitle: "Abonnement annulé",
+        cancelledBody: "Votre plan ne sera pas renouvelé. Vous conservez l'accès jusqu'à la fin de la période de facturation actuelle.",
+        errorTitle: "Une erreur est survenue",
+        close: "Fermer",
+        refreshNow: "Rafraîchir maintenant",
+        cancelTitle: "Annuler l'abonnement ?",
+        cancelBody: "Les paiements récurrents s'arrêteront. Vous conservez votre plan jusqu'à la fin de la période de facturation, puis vous repassez à Basic.",
+        keepPlan: "Garder le plan",
+        yesCancel: "Oui, annuler",
+      },
+    },
   },
 };
 
@@ -794,6 +1321,117 @@ const es: Dict = {
       capsulesUnlimited: "cápsulas (ilimitado)",
       requestFeature: "Solicitar función",
       featureSubject: "Solicitud de función",
+    },
+    help: {
+      pageTitle: "Ayuda y funciones",
+      pageSub: "Todas las funciones de dropdat en un solo lugar — qué hacen, cómo usarlas y en qué plan están. Salta a cualquier sección abajo.",
+      contents: "Contenido",
+      stillStuck: "¿Sigues atascado?",
+      stillStuckBody: "Consulta la FAQ pública para preguntas generales, o abre un ticket de soporte.",
+      publicFaq: "FAQ pública",
+      support: "Soporte",
+      planLabels: {
+        proAndAbove: "Pro y superior",
+        premiumAndAbove: "Premium y superior",
+        ultimateOnly: "Solo Ultimate",
+      },
+      sectionTitles: {
+        library: "Biblioteca",
+        capture: "Captura (extensión Chrome)",
+        drop: "Soltar en otra IA",
+        versioning: "Versionado",
+        mobile: "Captura móvil",
+        links: "Enlaces",
+        packs: "Packs de contexto",
+        graphs: "Gráficos de similitud",
+        teams: "Equipos",
+        share: "Compartir cápsulas públicamente",
+        mcp: "Servidor MCP",
+        "api-keys": "Claves API",
+        billing: "Facturación y planes",
+      },
+      sectionSummaries: {
+        library: "Cada cápsula capturada, buscable por título y contenido.",
+        capture: "Guarda cualquier chat de IA como cápsula con un clic.",
+        drop: "Pega una cápsula en cualquier IA para retomar la conversación allí.",
+        versioning: "Bifurca o edita una cápsula y mantén el linaje completo.",
+        mobile: "Guarda desde el móvil — share-sheet en Android, Shortcut en iOS.",
+        links: "Guarda URLs junto a tus cápsulas — misma biblioteca, distinta forma.",
+        packs: "Agrupa cápsulas relacionadas en un bloque markdown listo para pegar.",
+        graphs: "Visualiza cómo se relacionan tus cápsulas y packs.",
+        teams: "Comparte una biblioteca de cápsulas con un grupo pequeño.",
+        share: "Genera un enlace público de solo lectura para una cápsula.",
+        mcp: "Recupera cápsulas desde cualquier agente compatible con MCP (Claude Code, Cursor, Cline, Claude Desktop).",
+        "api-keys": "Tokens de acceso programático con scopes según tu plan.",
+        billing: "Gestiona tu suscripción y los límites por nivel.",
+      },
+    },
+    billing: {
+      pageTitle: "Facturación",
+      pageSub: "Elige el plan que se ajusta a tu forma de trabajar. Cancela o cambia cuando quieras.",
+      currentPlan: "Plan actual",
+      refresh: "Actualizar",
+      syncing: "Sincronizando…",
+      cancelling: "Cancelando…",
+      cancelPlan: "Cancelar plan",
+      tier: "Nivel",
+      status: "Estado",
+      usage: "Uso",
+      capsulesUsed: "cápsulas usadas",
+      capsulesOf: "de",
+      unlimited: "ilimitado",
+      billingLabel: "Facturación",
+      monthly: "Mensual",
+      annual: "Anual",
+      mostPopular: "Más popular",
+      currentPlanBadge: "Plan actual",
+      upgradeTo: "Pasar a",
+      subscribe: "Suscribirse",
+      redirecting: "Redirigiendo…",
+      contactSales: "Contactar ventas",
+      enterpriseName: "Enterprise",
+      enterpriseTagline: "Límites de cápsulas personalizados, white-label, on-premise, soporte dedicado, SLA.",
+      inactive: "inactivo",
+      featureLabels: {
+        capsules5: "5 cápsulas en total",
+        capsules15: "15 cápsulas en total",
+        capsules50: "50 cápsulas en total",
+        capsulesUnlimited: "Cápsulas ilimitadas",
+        mobile: "Captura móvil (PWA share-target)",
+        versioning: "Versionado",
+        mcp: "Acceso al servidor MCP",
+        attachments: "Adjuntos (R2)",
+        imageCapture: "Captura de imágenes desde chats",
+        dynamicContext: "Bundles de contexto dinámico",
+        contextPacks: "Packs de contexto",
+        teams: "Crear y unirse a equipos",
+        graphs: "Gráficos de similitud",
+        publicShare: "Compartir cápsulas públicamente",
+      },
+      plans: {
+        basic: { tagline: "Gestión esencial de cápsulas para usuarios casuales." },
+        pro: { tagline: "Funciones avanzadas para power-users en solitario." },
+        premium: { tagline: "MCP, adjuntos, contexto dinámico — para knowledge workers serios." },
+        ultimate: { tagline: "Máxima colaboración y white-label." },
+      },
+      modal: {
+        pendingTitle: "Confirmando tu pago…",
+        pendingBody: "Un momento — estamos sincronizando con el procesador de pago. Normalmente tarda unos segundos.",
+        okBtn: "OK",
+        successTitle: "¡Subido de plan! 🎉",
+        successBodyPrefix: "Bienvenido a ",
+        successBodySuffix: ". Tu suscripción está activa y los nuevos límites se aplican al instante. Te hemos enviado la factura por correo.",
+        gotIt: "Entendido",
+        cancelledTitle: "Suscripción cancelada",
+        cancelledBody: "Tu plan no se renovará. Mantienes el acceso hasta el final del periodo de facturación actual.",
+        errorTitle: "Algo salió mal",
+        close: "Cerrar",
+        refreshNow: "Actualizar ahora",
+        cancelTitle: "¿Cancelar suscripción?",
+        cancelBody: "Los pagos recurrentes se detendrán. Mantienes tu plan hasta el final del periodo de facturación y luego pasas a Basic.",
+        keepPlan: "Mantener plan",
+        yesCancel: "Sí, cancelar",
+      },
     },
   },
 };

@@ -4,10 +4,27 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { useAuth, useUser } from "@clerk/react";
 
 import type { Subscription, Tier } from "@/lib/api";
+import { useConsoleLocale } from "@/i18n/consoleLocale";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || "https://dropdat.app";
 
-type Feature = { label: string; on: boolean };
+type FeatureKey =
+  | "capsules5"
+  | "capsules15"
+  | "capsules50"
+  | "capsulesUnlimited"
+  | "mobile"
+  | "versioning"
+  | "mcp"
+  | "attachments"
+  | "imageCapture"
+  | "dynamicContext"
+  | "contextPacks"
+  | "teams"
+  | "graphs"
+  | "publicShare";
+
+type Feature = { key: FeatureKey; on: boolean };
 
 type Plan = {
   id: Tier;
@@ -16,7 +33,7 @@ type Plan = {
   cadence: string;
   annualPrice?: string;
   annualCadence?: string;
-  tagline: string;
+  taglineKey: "basic" | "pro" | "premium" | "ultimate";
   features: Feature[];
   cta: "current" | "subscribe" | "contact";
   highlight?: boolean;
@@ -27,20 +44,20 @@ const PLANS: Plan[] = [
     id: "basic",
     name: "Basic",
     price: "$0",
-    cadence: "/month",
-    tagline: "Essential capsule management for casual users.",
+    cadence: "/mo",
+    taglineKey: "basic",
     features: [
-      { label: "5 total capsules", on: true },
-      { label: "Mobile capture (PWA share-target)", on: true },
-      { label: "Versioning", on: false },
-      { label: "MCP server access", on: false },
-      { label: "File attachments (R2)", on: false },
-      { label: "Image capture from chats", on: false },
-      { label: "Dynamic context bundles", on: false },
-      { label: "Context packs", on: false },
-      { label: "Create & join teams", on: false },
-      { label: "Similarity graphs", on: false },
-      { label: "Share capsules publicly", on: false },
+      { key: "capsules5", on: true },
+      { key: "mobile", on: true },
+      { key: "versioning", on: false },
+      { key: "mcp", on: false },
+      { key: "attachments", on: false },
+      { key: "imageCapture", on: false },
+      { key: "dynamicContext", on: false },
+      { key: "contextPacks", on: false },
+      { key: "teams", on: false },
+      { key: "graphs", on: false },
+      { key: "publicShare", on: false },
     ],
     cta: "current",
   },
@@ -48,22 +65,22 @@ const PLANS: Plan[] = [
     id: "pro",
     name: "Pro",
     price: "$3",
-    cadence: "/month",
+    cadence: "/mo",
     annualPrice: "$30",
-    annualCadence: "/year",
-    tagline: "Advanced features for solo power users.",
+    annualCadence: "/yr",
+    taglineKey: "pro",
     features: [
-      { label: "15 total capsules", on: true },
-      { label: "Mobile capture (PWA share-target)", on: true },
-      { label: "Versioning", on: true },
-      { label: "Create & join teams", on: true },
-      { label: "MCP server access", on: false },
-      { label: "File attachments (R2)", on: false },
-      { label: "Image capture from chats", on: false },
-      { label: "Dynamic context bundles", on: false },
-      { label: "Context packs", on: false },
-      { label: "Similarity graphs", on: false },
-      { label: "Share capsules publicly", on: false },
+      { key: "capsules15", on: true },
+      { key: "mobile", on: true },
+      { key: "versioning", on: true },
+      { key: "teams", on: true },
+      { key: "mcp", on: false },
+      { key: "attachments", on: false },
+      { key: "imageCapture", on: false },
+      { key: "dynamicContext", on: false },
+      { key: "contextPacks", on: false },
+      { key: "graphs", on: false },
+      { key: "publicShare", on: false },
     ],
     cta: "subscribe",
   },
@@ -71,22 +88,22 @@ const PLANS: Plan[] = [
     id: "premium",
     name: "Premium",
     price: "$5",
-    cadence: "/month",
+    cadence: "/mo",
     annualPrice: "$50",
-    annualCadence: "/year",
-    tagline: "MCP, attachments, dynamic context — built for serious knowledge workers.",
+    annualCadence: "/yr",
+    taglineKey: "premium",
     features: [
-      { label: "50 total capsules", on: true },
-      { label: "Mobile capture (PWA share-target)", on: true },
-      { label: "Versioning", on: true },
-      { label: "Create & join teams", on: true },
-      { label: "MCP server access", on: true },
-      { label: "File attachments (R2)", on: true },
-      { label: "Image capture from chats", on: true },
-      { label: "Dynamic context bundles", on: true },
-      { label: "Context packs", on: true },
-      { label: "Similarity graphs", on: false },
-      { label: "Share capsules publicly", on: false },
+      { key: "capsules50", on: true },
+      { key: "mobile", on: true },
+      { key: "versioning", on: true },
+      { key: "teams", on: true },
+      { key: "mcp", on: true },
+      { key: "attachments", on: true },
+      { key: "imageCapture", on: true },
+      { key: "dynamicContext", on: true },
+      { key: "contextPacks", on: true },
+      { key: "graphs", on: false },
+      { key: "publicShare", on: false },
     ],
     cta: "subscribe",
   },
@@ -94,22 +111,22 @@ const PLANS: Plan[] = [
     id: "ultimate",
     name: "Ultimate",
     price: "$10",
-    cadence: "/month",
+    cadence: "/mo",
     annualPrice: "$100",
-    annualCadence: "/year",
-    tagline: "Maximum collaboration and white-label.",
+    annualCadence: "/yr",
+    taglineKey: "ultimate",
     features: [
-      { label: "Unlimited capsules", on: true },
-      { label: "Mobile capture (PWA share-target)", on: true },
-      { label: "Versioning", on: true },
-      { label: "Create & join teams", on: true },
-      { label: "MCP server access", on: true },
-      { label: "File attachments (R2)", on: true },
-      { label: "Image capture from chats", on: true },
-      { label: "Dynamic context bundles", on: true },
-      { label: "Context packs", on: true },
-      { label: "Similarity graphs", on: true },
-      { label: "Share capsules publicly", on: true },
+      { key: "capsulesUnlimited", on: true },
+      { key: "mobile", on: true },
+      { key: "versioning", on: true },
+      { key: "teams", on: true },
+      { key: "mcp", on: true },
+      { key: "attachments", on: true },
+      { key: "imageCapture", on: true },
+      { key: "dynamicContext", on: true },
+      { key: "contextPacks", on: true },
+      { key: "graphs", on: true },
+      { key: "publicShare", on: true },
     ],
     cta: "subscribe",
     highlight: true,
@@ -142,6 +159,8 @@ type StatusModal =
 export default function BillingPage() {
   const { getToken } = useAuth();
   const { user } = useUser();
+  const { dict } = useConsoleLocale();
+  const t = dict.console.billing;
   const [sub, setSub] = useState<Subscription | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -181,9 +200,6 @@ export default function BillingPage() {
     refresh();
   }, [refresh]);
 
-  // Handle redirects back from the dodopayments hosted checkout. The URL
-  // looks like /billing?status=completed&subscription_id=sub_… on success
-  // (we set the return URL) or status=failed on cancel.
   useEffect(() => {
     if (typeof window === "undefined") return;
     const url = new URL(window.location.href);
@@ -191,7 +207,6 @@ export default function BillingPage() {
     const subscriptionId = url.searchParams.get("subscription_id");
     if (!status) return;
 
-    // Strip the query params so a refresh doesn't re-trigger this branch.
     const clean = window.location.pathname;
     window.history.replaceState({}, "", clean);
 
@@ -303,16 +318,16 @@ export default function BillingPage() {
 
   const usage = useMemo(() => {
     if (!sub) return null;
-    if (sub.capsule_limit < 0) return `${sub.capsules_used} capsules used (unlimited)`;
-    return `${sub.capsules_used} of ${sub.capsule_limit} capsules used`;
-  }, [sub]);
+    if (sub.capsule_limit < 0) return `${sub.capsules_used} ${t.capsulesUsed} (${t.unlimited})`;
+    return `${sub.capsules_used} ${t.capsulesOf} ${sub.capsule_limit} ${t.capsulesUsed}`;
+  }, [sub, t]);
 
   return (
     <section className="flex flex-col gap-8">
       <header className="flex flex-col gap-2">
-        <h1 className="font-heading text-[22px] sm:text-[26px] font-medium tracking-tight">Billing</h1>
+        <h1 className="font-heading text-[22px] sm:text-[26px] font-medium tracking-tight">{t.pageTitle}</h1>
         <p className="text-[13.5px] text-muted-foreground">
-          Pick the plan that fits how you work. Cancel or change any time.
+          {t.pageSub}
         </p>
       </header>
 
@@ -324,7 +339,7 @@ export default function BillingPage() {
 
       <div className="rounded-lg border border-border bg-card overflow-hidden">
         <div className="border-b border-border px-5 py-3 flex items-center justify-between">
-          <h2 className="font-heading text-[14px] font-medium">Current plan</h2>
+          <h2 className="font-heading text-[14px] font-medium">{t.currentPlan}</h2>
           <div className="flex items-center gap-3">
             <button
               type="button"
@@ -332,7 +347,7 @@ export default function BillingPage() {
               disabled={busy === "resync"}
               className="text-[12.5px] underline text-muted-foreground hover:text-foreground disabled:opacity-50"
             >
-              {busy === "resync" ? "Syncing…" : "Refresh"}
+              {busy === "resync" ? t.syncing : t.refresh}
             </button>
             {sub?.has_customer && sub.tier !== "basic" && sub.status !== "cancelled" && (
               <button
@@ -341,43 +356,43 @@ export default function BillingPage() {
                 disabled={busy === "cancel"}
                 className="text-[12.5px] underline text-destructive hover:opacity-80 disabled:opacity-50"
               >
-                {busy === "cancel" ? "Cancelling…" : "Cancel plan"}
+                {busy === "cancel" ? t.cancelling : t.cancelPlan}
               </button>
             )}
           </div>
         </div>
         <div className="px-5 py-5 grid grid-cols-1 sm:grid-cols-3 gap-y-3 text-[13.5px]">
           <div>
-            <div className="text-muted-foreground text-[12px] uppercase tracking-wide">Tier</div>
+            <div className="text-muted-foreground text-[12px] uppercase tracking-wide">{t.tier}</div>
             <div className="font-medium capitalize">{loading ? "…" : currentTier}</div>
           </div>
           <div>
-            <div className="text-muted-foreground text-[12px] uppercase tracking-wide">Status</div>
-            <div className="font-medium capitalize">{loading ? "…" : sub?.status ?? "inactive"}</div>
+            <div className="text-muted-foreground text-[12px] uppercase tracking-wide">{t.status}</div>
+            <div className="font-medium capitalize">{loading ? "…" : sub?.status ?? t.inactive}</div>
           </div>
           <div>
-            <div className="text-muted-foreground text-[12px] uppercase tracking-wide">Usage</div>
+            <div className="text-muted-foreground text-[12px] uppercase tracking-wide">{t.usage}</div>
             <div className="font-medium">{loading ? "…" : usage}</div>
           </div>
         </div>
       </div>
 
       <div className="flex items-center gap-3">
-        <span className="text-[12.5px] text-muted-foreground">Billing</span>
+        <span className="text-[12.5px] text-muted-foreground">{t.billingLabel}</span>
         <div className="inline-flex rounded-md border border-border overflow-hidden text-[12.5px]">
           <button
             type="button"
             onClick={() => setInterval("monthly")}
             className={`px-3 py-1 ${interval === "monthly" ? "bg-primary text-primary-foreground" : "bg-card"}`}
           >
-            Monthly
+            {t.monthly}
           </button>
           <button
             type="button"
             onClick={() => setInterval("annual")}
             className={`px-3 py-1 border-l border-border ${interval === "annual" ? "bg-primary text-primary-foreground" : "bg-card"}`}
           >
-            Annual
+            {t.annual}
           </button>
         </div>
       </div>
@@ -395,7 +410,7 @@ export default function BillingPage() {
             >
               {p.highlight && (
                 <span className="absolute -top-2 left-5 rounded-full bg-primary text-primary-foreground text-[11px] px-2 py-[2px]">
-                  Most popular
+                  {t.mostPopular}
                 </span>
               )}
               <div className="flex flex-col gap-1">
@@ -408,18 +423,18 @@ export default function BillingPage() {
                     {interval === "annual" && p.annualCadence ? p.annualCadence : p.cadence}
                   </span>
                 </div>
-                <p className="text-[12.5px] text-muted-foreground">{p.tagline}</p>
+                <p className="text-[12.5px] text-muted-foreground">{t.plans[p.taglineKey].tagline}</p>
               </div>
               <ul className="flex flex-col gap-1.5 text-[13px]">
                 {p.features.map((f) => (
-                  <li key={f.label} className="flex items-start gap-2">
+                  <li key={f.key} className="flex items-start gap-2">
                     {f.on ? (
                       <CheckIcon className="mt-[3px] h-3.5 w-3.5 text-emerald-500 shrink-0" />
                     ) : (
                       <CrossIcon className="mt-[3px] h-3.5 w-3.5 text-muted-foreground/60 shrink-0" />
                     )}
                     <span className={f.on ? "" : "text-muted-foreground line-through decoration-muted-foreground/40"}>
-                      {f.label}
+                      {t.featureLabels[f.key]}
                     </span>
                   </li>
                 ))}
@@ -431,7 +446,7 @@ export default function BillingPage() {
                     disabled
                     className="w-full rounded-md border border-border bg-card text-[13px] py-2 text-muted-foreground"
                   >
-                    Current plan
+                    {t.currentPlanBadge}
                   </button>
                 ) : canSubscribe ? (
                   <button
@@ -440,7 +455,7 @@ export default function BillingPage() {
                     disabled={busy === p.id}
                     className="w-full rounded-md bg-primary text-primary-foreground text-[13px] py-2 font-medium hover:opacity-90 disabled:opacity-50"
                   >
-                    {busy === p.id ? "Redirecting…" : `Upgrade to ${p.name}`}
+                    {busy === p.id ? t.redirecting : `${t.upgradeTo} ${p.name}`}
                   </button>
                 ) : (
                   <button
@@ -449,7 +464,7 @@ export default function BillingPage() {
                     disabled={busy === p.id}
                     className="w-full rounded-md border border-border text-[13px] py-2 hover:bg-muted disabled:opacity-50"
                   >
-                    Subscribe
+                    {t.subscribe}
                   </button>
                 )}
               </div>
@@ -460,16 +475,16 @@ export default function BillingPage() {
         <div className="rounded-lg border border-dashed border-border bg-card p-5 flex flex-col gap-4 xl:col-span-4">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
             <div>
-              <h3 className="font-heading text-[16px] font-medium">Enterprise</h3>
+              <h3 className="font-heading text-[16px] font-medium">{t.enterpriseName}</h3>
               <p className="text-[12.5px] text-muted-foreground">
-                Custom capsule limits, white-labeling, on-premise, dedicated support, SLA.
+                {t.enterpriseTagline}
               </p>
             </div>
             <a
               href="mailto:hello@dropdat.app?subject=Enterprise%20inquiry"
               className="rounded-md bg-foreground text-background text-[13px] py-2 px-4 font-medium"
             >
-              Contact sales
+              {t.contactSales}
             </a>
           </div>
         </div>
@@ -479,32 +494,32 @@ export default function BillingPage() {
         <Modal onClose={() => setStatusModal(null)}>
           {statusModal.kind === "pending" && (
             <ModalBody
-              title="Confirming your payment…"
-              body="Hang tight — we're syncing with the payment processor. This usually takes a few seconds."
-              actions={[{ label: "OK", onClick: () => setStatusModal(null), primary: true }]}
+              title={t.modal.pendingTitle}
+              body={t.modal.pendingBody}
+              actions={[{ label: t.modal.okBtn, onClick: () => setStatusModal(null), primary: true }]}
             />
           )}
           {statusModal.kind === "success" && (
             <ModalBody
-              title="You're upgraded 🎉"
-              body={`Welcome to ${(statusModal.tier ?? "your new").toString().replace(/^./, (c) => c.toUpperCase())}. Your subscription is active and the new limits apply right away. An invoice has been emailed to you.`}
-              actions={[{ label: "Got it", onClick: () => setStatusModal(null), primary: true }]}
+              title={t.modal.successTitle}
+              body={`${t.modal.successBodyPrefix}${(statusModal.tier ?? "your new").toString().replace(/^./, (c) => c.toUpperCase())}${t.modal.successBodySuffix}`}
+              actions={[{ label: t.modal.gotIt, onClick: () => setStatusModal(null), primary: true }]}
             />
           )}
           {statusModal.kind === "cancelled" && (
             <ModalBody
-              title="Subscription cancelled"
-              body="Your plan won't renew. You keep access until the end of the current billing period."
-              actions={[{ label: "OK", onClick: () => setStatusModal(null), primary: true }]}
+              title={t.modal.cancelledTitle}
+              body={t.modal.cancelledBody}
+              actions={[{ label: t.modal.okBtn, onClick: () => setStatusModal(null), primary: true }]}
             />
           )}
           {statusModal.kind === "error" && (
             <ModalBody
-              title="Something went wrong"
+              title={t.modal.errorTitle}
               body={statusModal.message}
               actions={[
-                { label: "Close", onClick: () => setStatusModal(null) },
-                { label: "Refresh now", onClick: refreshFromDodo, primary: true },
+                { label: t.modal.close, onClick: () => setStatusModal(null) },
+                { label: t.modal.refreshNow, onClick: refreshFromDodo, primary: true },
               ]}
             />
           )}
@@ -514,12 +529,12 @@ export default function BillingPage() {
       {confirmCancel && (
         <Modal onClose={() => setConfirmCancel(false)}>
           <ModalBody
-            title="Cancel subscription?"
-            body="Recurring payments will stop. You'll keep your current plan until the end of the billing period, then drop to Basic."
+            title={t.modal.cancelTitle}
+            body={t.modal.cancelBody}
             actions={[
-              { label: "Keep plan", onClick: () => setConfirmCancel(false) },
+              { label: t.modal.keepPlan, onClick: () => setConfirmCancel(false) },
               {
-                label: busy === "cancel" ? "Cancelling…" : "Yes, cancel",
+                label: busy === "cancel" ? t.cancelling : t.modal.yesCancel,
                 onClick: cancelSubscription,
                 primary: true,
                 destructive: true,
