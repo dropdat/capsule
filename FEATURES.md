@@ -5,6 +5,8 @@ Living index of shipped features. Updated each session when new features land.
 ## Web (Next.js dashboard + marketing)
 
 - Marketing landing page
+- Localized marketing landing pages — `/ja` (日本語), `/de` (Deutsch), `/fr` (Français), `/es` (Español) with per-locale metadata, `hreflang` alternates, locale switcher in nav + footer, and `<html lang>` updated client-side
+- Site-wide JSON-LD (`Organization` + `WebSite` with sitelinks SearchAction + `SoftwareApplication`) emitted via `SiteJsonLd` on every page
 - `/mcp` feature page — MCP server + semantic recall walkthrough,
   install steps, supported clients
 - `/blog` — long-form posts with JSON-LD Article schema, related-post graph, in sitemap

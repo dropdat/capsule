@@ -3,8 +3,8 @@ import { MarketingHome } from "@/components/MarketingHome";
 import { getDict } from "@/i18n/dictionaries";
 import { localeMetadata } from "@/i18n/metadata";
 
-export const metadata: Metadata = localeMetadata("en", "/");
+export const metadata: Metadata = localeMetadata("ja", "/");
 
-export default function Home() {
-  return <MarketingHome dict={getDict("en")} locale="en" />;
+export default function HomeJa() {
+  return <MarketingHome dict={getDict("ja")} locale="ja" />;
 }

@@ -6,6 +6,7 @@ import {
   CopilotMark,
   GrokMark,
 } from "./brands";
+import { type Dict } from "@/i18n/dictionaries";
 
 const platforms = [
   { name: "ChatGPT", Icon: ChatGPTMark, tint: "#10a37f" },
@@ -16,15 +17,16 @@ const platforms = [
   { name: "Grok", Icon: GrokMark, tint: "#0b1015" },
 ];
 
-export function Platforms() {
+export function Platforms({ dict }: { dict: Dict }) {
+  const t = dict.platforms;
   return (
     <section id="platforms" className="w-full max-w-[1200px] px-5 sm:px-6 py-16 sm:py-24">
       <div className="text-center mb-12">
         <span className="text-primary text-[13px] font-medium uppercase tracking-[0.18em]">
-          Supported AIs
+          {t.eyebrow}
         </span>
         <h2 className="mt-4 font-heading text-[36px] max-md:text-[26px] font-medium tracking-[-0.04em] leading-[120%] max-w-[760px] mx-auto">
-          Works everywhere your conversations live.
+          {t.h2}
         </h2>
       </div>
 
@@ -46,9 +48,9 @@ export function Platforms() {
       </div>
 
       <p className="mt-6 text-center text-[13px] text-muted-foreground">
-        More platforms added every month — request one on{" "}
-        <a href="https://github.com" className="text-primary underline-offset-4 hover:underline">
-          GitHub
+        {t.foot}{" "}
+        <a href="https://github.com/dropdat/mcp" className="text-primary underline-offset-4 hover:underline">
+          {t.footLink}
         </a>
         .
       </p>

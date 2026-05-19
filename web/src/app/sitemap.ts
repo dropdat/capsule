@@ -1,6 +1,7 @@
 import type { MetadataRoute } from "next";
 import { getAllProgrammaticItems } from "@/lib/seo/programmaticData";
 import { POSTS } from "@/lib/blog/posts";
+import { LOCALES, LOCALE_BCP47, DEFAULT_LOCALE, localePath } from "@/i18n/config";
 
 export const dynamic = "force-static";
 
@@ -10,8 +11,9 @@ const staticRoutes: Array<{
   path: string;
   changeFrequency: MetadataRoute.Sitemap[number]["changeFrequency"];
   priority: number;
+  localized?: boolean;
 }> = [
-  { path: "", changeFrequency: "weekly", priority: 1.0 },
+  { path: "", changeFrequency: "weekly", priority: 1.0, localized: true },
   { path: "/mcp", changeFrequency: "weekly", priority: 0.95 },
   { path: "/mcp/claude-code", changeFrequency: "weekly", priority: 0.9 },
   { path: "/mcp/cursor", changeFrequency: "weekly", priority: 0.9 },
@@ -27,16 +29,40 @@ const staticRoutes: Array<{
   { path: "/terms", changeFrequency: "yearly", priority: 0.3 },
 ];
 
+function localizedAlternates(path: string): Record<string, string> {
+  const out: Record<string, string> = {};
+  for (const l of LOCALES) {
+    out[LOCALE_BCP47[l]] = `${SITE}${localePath(l, path || "/")}`;
+  }
+  out["x-default"] = `${SITE}${localePath(DEFAULT_LOCALE, path || "/")}`;
+  return out;
+}
+
 export default function sitemap(): MetadataRoute.Sitemap {
   const now = new Date();
   const items = getAllProgrammaticItems();
 
-  const staticEntries: MetadataRoute.Sitemap = staticRoutes.map((r) => ({
-    url: `${SITE}${r.path}`,
-    lastModified: now,
-    changeFrequency: r.changeFrequency,
-    priority: r.priority,
-  }));
+  const staticEntries: MetadataRoute.Sitemap = [];
+  for (const r of staticRoutes) {
+    if (r.localized) {
+      for (const l of LOCALES) {
+        staticEntries.push({
+          url: `${SITE}${localePath(l, r.path || "/")}`,
+          lastModified: now,
+          changeFrequency: r.changeFrequency,
+          priority: l === DEFAULT_LOCALE ? r.priority : Math.max(0.5, r.priority - 0.1),
+          alternates: { languages: localizedAlternates(r.path) },
+        });
+      }
+    } else {
+      staticEntries.push({
+        url: `${SITE}${r.path}`,
+        lastModified: now,
+        changeFrequency: r.changeFrequency,
+        priority: r.priority,
+      });
+    }
+  }
 
   const programmaticEntries: MetadataRoute.Sitemap = items.map((it) => ({
     url: `${SITE}/seo/${it.slug}`,

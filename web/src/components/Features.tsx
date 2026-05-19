@@ -1,51 +1,28 @@
 import { CapsuleIcon, ChromeIcon, LibraryIcon, BoltIcon, LayersIcon, CheckIcon } from "./icons";
+import { type Dict } from "@/i18n/dictionaries";
 
-const features = [
-  {
-    icon: CapsuleIcon,
-    title: "Cross-AI memory",
-    body: "One capsule format works across every major chat AI. No vendor lock-in, no copy-paste tax.",
-  },
-  {
-    icon: ChromeIcon,
-    title: "Browser extension",
-    body: "Lightweight Chrome extension injects a capsule button right inside chatgpt.com, claude.ai and more.",
-  },
-  {
-    icon: LibraryIcon,
-    title: "Capsule library",
-    body: "All your captured chats in one searchable library. Tag, summarise, organise — never lose a thread again.",
-  },
-  {
-    icon: BoltIcon,
-    title: "Instant resume",
-    body: "Drop a capsule into a fresh chat and continue exactly where you left off. Context, code, references — all there.",
-  },
-  {
-    icon: LayersIcon,
-    title: "Local-first",
-    body: "Capsules live in your browser by default. Sync across devices only if you want — encrypted end to end.",
-  },
-  {
-    icon: CheckIcon,
-    title: "Open format",
-    body: "Capsules are plain JSON. Export, version-control, share with a teammate — your data, your rules.",
-  },
-];
-
-export function Features() {
+export function Features({ dict }: { dict: Dict }) {
+  const t = dict.features;
+  const features = [
+    { icon: CapsuleIcon, title: t.f1Title, body: t.f1Body },
+    { icon: ChromeIcon, title: t.f2Title, body: t.f2Body },
+    { icon: LibraryIcon, title: t.f3Title, body: t.f3Body },
+    { icon: BoltIcon, title: t.f4Title, body: t.f4Body },
+    { icon: LayersIcon, title: t.f5Title, body: t.f5Body },
+    { icon: CheckIcon, title: t.f6Title, body: t.f6Body },
+  ];
   return (
     <section id="features" className="w-full max-w-[1200px] px-5 sm:px-6 py-16 sm:py-24">
       <div className="text-center mb-14">
         <span className="inline-flex items-center gap-2 text-primary text-[13px] font-medium uppercase tracking-[0.18em]">
           <LayersIcon className="w-3.5 h-3.5" />
-          Features
+          {t.eyebrow}
         </span>
         <h2 className="mt-4 font-heading text-[40px] max-md:text-[28px] font-medium tracking-[-0.04em] leading-[120%] text-foreground max-w-[820px] mx-auto">
-          Built for the way you actually use AI.
+          {t.h2}
         </h2>
         <p className="mt-4 text-[16px] text-muted-foreground max-w-[640px] mx-auto">
-          Every feature exists to remove one friction point in cross-AI workflows.
+          {t.sub}
         </p>
       </div>
 

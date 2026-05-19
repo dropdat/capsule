@@ -1,5 +1,6 @@
 import { ArrowRightIcon } from "./icons";
 import { AsciiGlyph } from "./AsciiGlyph";
+import { type Dict } from "@/i18n/dictionaries";
 
 const glyphs = [
   { w: 170, h: 80, digit: "9", top: "30px",  left: "40px"   },
@@ -10,7 +11,8 @@ const glyphs = [
   { w: 180, h: 85, digit: "9", top: "240px", right: "140px", flip: true },
 ];
 
-export function AgentSection() {
+export function AgentSection({ dict }: { dict: Dict }) {
+  const t = dict.agent;
   return (
     <section className="w-full max-w-[1200px] relative flex items-center justify-center px-5 sm:px-6 overflow-hidden" style={{ minHeight: 480 }}>
       {glyphs.map((g, i) => (
@@ -26,13 +28,13 @@ export function AgentSection() {
 
       <div className="relative z-10 flex flex-col items-center gap-7 text-center py-20">
         <h2 className="font-heading text-[clamp(2rem,5vw,4rem)] font-medium tracking-[-0.03em] leading-[1.05] max-w-[1100px]">
-          Your AI needs its <span className="text-primary">dropdat.</span>
+          {t.h2Pre} <span className="text-primary">{t.h2Brand}</span>
         </h2>
         <a
           href="#download"
           className="inline-flex items-center gap-2 bg-primary text-primary-foreground border border-border px-6 py-3 text-[15px] font-medium hover:opacity-95 transition-opacity"
         >
-          Read the docs
+          {t.cta}
           <ArrowRightIcon className="w-4 h-4" />
         </a>
       </div>

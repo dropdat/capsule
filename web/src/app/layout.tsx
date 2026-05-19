@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { DM_Sans, Space_Grotesk, DM_Mono } from "next/font/google";
 import { ClerkClientProvider } from "@/components/ClerkClientProvider";
 import { FlowingLines } from "@/components/FlowingLines";
+import { SiteJsonLd } from "@/components/seo/SiteJsonLd";
 import "./globals.css";
 
 const dmSans = DM_Sans({
@@ -53,11 +54,23 @@ export const metadata: Metadata = {
   category: "developer tools",
   icons: { icon: "/seo/favicon.svg" },
   manifest: "/manifest.webmanifest",
-  alternates: { canonical: "/" },
+  alternates: {
+    canonical: "/",
+    languages: {
+      "en-US": "/",
+      "ja-JP": "/ja",
+      "de-DE": "/de",
+      "fr-FR": "/fr",
+      "es-ES": "/es",
+      "x-default": "/",
+    },
+  },
   openGraph: {
     type: "website",
     siteName: "dropdat",
     url: "https://dropdat.app",
+    locale: "en_US",
+    alternateLocale: ["ja_JP", "de_DE", "fr_FR", "es_ES"],
     title: "dropdat — Cross-AI memory: capture, capsule, drop anywhere",
     description:
       "One-click capture of any ChatGPT, Claude, or Gemini chat. Drop the capsule into a different AI and resume instantly. Free MCP server for Claude Code, Cursor, Cline.",
@@ -90,6 +103,7 @@ export default function RootLayout({
       <body className="min-h-full flex flex-col bg-background text-foreground">
         <div className="ambient-wash" aria-hidden />
         <FlowingLines />
+        <SiteJsonLd />
         <ClerkClientProvider>{children}</ClerkClientProvider>
       </body>
     </html>
