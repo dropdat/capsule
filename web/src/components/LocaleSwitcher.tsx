@@ -31,10 +31,16 @@ export function LocaleSwitcher({ locale, label }: { locale: Locale; label: strin
         value={locale}
         onChange={onChange}
         disabled={isPending}
-        className="bg-transparent border border-border px-2 py-1 text-[12px] focus:outline-none focus:ring-1 focus:ring-primary cursor-pointer"
+        className="bg-card text-foreground border border-border px-2 py-1 text-[12px] focus:outline-none focus:ring-1 focus:ring-primary cursor-pointer"
       >
         {LOCALES.map((l) => (
-          <option key={l} value={l}>{LOCALE_LABELS[l]}</option>
+          <option
+            key={l}
+            value={l}
+            style={{ background: "var(--card)", color: "var(--foreground)" }}
+          >
+            {LOCALE_LABELS[l]}
+          </option>
         ))}
       </select>
     </label>
