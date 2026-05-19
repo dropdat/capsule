@@ -6,7 +6,7 @@ export default defineConfig({
     name: "__MSG_extName__",
     description: "__MSG_extDescription__",
     default_locale: "en",
-    version: "0.4.1",
+    version: "0.5.0",
     ...(process.env.EXT_KEY ? { key: process.env.EXT_KEY } : {}),
     permissions: ["storage", "activeTab", "contextMenus", "notifications"],
     host_permissions: [
