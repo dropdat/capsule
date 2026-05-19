@@ -3,6 +3,7 @@ import { useState } from "react";
 import { Show, RedirectToSignIn } from "@clerk/react";
 import { ThemeProvider } from "@/components/dashboard/ThemeProvider";
 import { Sidebar } from "@/components/dashboard/Sidebar";
+import { ConsoleLocaleProvider } from "@/i18n/consoleLocale";
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
   const [open, setOpen] = useState(false);
@@ -14,15 +15,17 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
       </Show>
       <Show when="signed-in">
         <ThemeProvider>
-          <div className="relative z-[2] min-h-screen md:pl-[240px]">
-            <Sidebar open={open} onClose={() => setOpen(false)} />
-            <main className="min-w-0 overflow-x-hidden">
-              <MobileTopBar onOpen={() => setOpen(true)} />
-              <div className="mx-auto w-full max-w-[1200px] px-4 sm:px-6 lg:px-8 py-6 sm:py-10">
-                {children}
-              </div>
-            </main>
-          </div>
+          <ConsoleLocaleProvider>
+            <div className="relative z-[2] min-h-screen md:pl-[240px]">
+              <Sidebar open={open} onClose={() => setOpen(false)} />
+              <main className="min-w-0 overflow-x-hidden">
+                <MobileTopBar onOpen={() => setOpen(true)} />
+                <div className="mx-auto w-full max-w-[1200px] px-4 sm:px-6 lg:px-8 py-6 sm:py-10">
+                  {children}
+                </div>
+              </main>
+            </div>
+          </ConsoleLocaleProvider>
         </ThemeProvider>
       </Show>
     </>

@@ -5,6 +5,8 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { SignOutButton, useAuth, useUser } from "@clerk/react";
 
 import type { Subscription } from "@/lib/api";
+import { useConsoleLocale } from "@/i18n/consoleLocale";
+import { LOCALES, LOCALE_LABELS, type Locale } from "@/i18n/config";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || "https://dropdat.app";
 
@@ -19,6 +21,8 @@ const TIER_LABEL: Record<string, string> = {
 export function ProfileMenu() {
   const { user } = useUser();
   const { getToken } = useAuth();
+  const { locale, setLocale, dict } = useConsoleLocale();
+  const t = dict.console.profile;
   const [open, setOpen] = useState(false);
   const [sub, setSub] = useState<Subscription | null>(null);
   const ref = useRef<HTMLDivElement>(null);
@@ -61,8 +65,8 @@ export function ProfileMenu() {
   const tierLabel = sub ? TIER_LABEL[sub.tier] ?? sub.tier : "—";
   const usage = sub
     ? sub.capsule_limit < 0
-      ? `${sub.capsules_used} capsules (unlimited)`
-      : `${sub.capsules_used} / ${sub.capsule_limit} capsules`
+      ? `${sub.capsules_used} ${t.capsulesUnlimited}`
+      : `${sub.capsules_used} / ${sub.capsule_limit}`
     : null;
 
   return (
@@ -70,7 +74,7 @@ export function ProfileMenu() {
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}
-        aria-label="Open profile menu"
+        aria-label={t.openMenu}
         className="flex h-8 w-8 items-center justify-center rounded-full bg-primary text-primary-foreground text-[12px] font-medium hover:opacity-90"
       >
         {user?.imageUrl ? (
@@ -87,31 +91,45 @@ export function ProfileMenu() {
           className="absolute bottom-12 left-0 z-[60] w-[260px] rounded-lg border border-border bg-card shadow-lg overflow-hidden"
         >
           <div className="px-4 py-3 border-b border-border">
-            <div className="text-[13px] font-medium truncate">{user?.fullName ?? email ?? "Account"}</div>
+            <div className="text-[13px] font-medium truncate">{user?.fullName ?? email ?? t.account}</div>
             {email && <div className="text-[12px] text-muted-foreground truncate">{email}</div>}
           </div>
 
           <div className="px-4 py-3 border-b border-border flex flex-col gap-1">
             <div className="flex items-center justify-between gap-2">
-              <span className="text-[11.5px] uppercase tracking-wide text-muted-foreground">Plan</span>
+              <span className="text-[11.5px] uppercase tracking-wide text-muted-foreground">{t.plan}</span>
               <span className="text-[12.5px] font-medium">{tierLabel}</span>
             </div>
             {sub && (
               <div className="flex items-center justify-between gap-2">
-                <span className="text-[11.5px] uppercase tracking-wide text-muted-foreground">Usage</span>
+                <span className="text-[11.5px] uppercase tracking-wide text-muted-foreground">{t.usage}</span>
                 <span className="text-[12px]">{usage}</span>
               </div>
             )}
             {sub?.status && (
               <div className="flex items-center justify-between gap-2">
-                <span className="text-[11.5px] uppercase tracking-wide text-muted-foreground">Status</span>
+                <span className="text-[11.5px] uppercase tracking-wide text-muted-foreground">{t.status}</span>
                 <span className="text-[12px] capitalize">{sub.status}</span>
               </div>
             )}
           </div>
 
+          <div className="px-4 py-2 border-b border-border flex items-center justify-between gap-2">
+            <span className="text-[11.5px] uppercase tracking-wide text-muted-foreground">{t.language}</span>
+            <select
+              value={locale}
+              onChange={(e) => setLocale(e.target.value as Locale)}
+              className="bg-transparent border border-border px-1.5 py-0.5 text-[12px] focus:outline-none focus:ring-1 focus:ring-primary cursor-pointer"
+              aria-label={t.language}
+            >
+              {LOCALES.map((l) => (
+                <option key={l} value={l}>{LOCALE_LABELS[l]}</option>
+              ))}
+            </select>
+          </div>
+
           <div className="px-4 py-2 text-[11.5px] text-muted-foreground border-b border-border">
-            Invoices and receipts are emailed automatically.
+            {t.invoicesNote}
           </div>
 
           <nav className="py-1.5">
@@ -120,7 +138,7 @@ export function ProfileMenu() {
               onClick={() => setOpen(false)}
               className="block px-4 py-2 text-[13px] hover:bg-muted"
             >
-              Plans & billing
+              {t.plansBilling}
             </Link>
             {sub?.has_customer && sub.tier !== "basic" && sub.status !== "cancelled" && (
               <Link
@@ -128,7 +146,7 @@ export function ProfileMenu() {
                 onClick={() => setOpen(false)}
                 className="block px-4 py-2 text-[13px] hover:bg-muted text-destructive"
               >
-                Cancel plan
+                {t.cancelPlan}
               </Link>
             )}
             <Link
@@ -136,14 +154,14 @@ export function ProfileMenu() {
               onClick={() => setOpen(false)}
               className="block px-4 py-2 text-[13px] hover:bg-muted"
             >
-              Settings
+              {t.settings}
             </Link>
             <SignOutButton>
               <button
                 type="button"
                 className="block w-full text-left px-4 py-2 text-[13px] hover:bg-muted text-destructive"
               >
-                Sign out
+                {t.signOut}
               </button>
             </SignOutButton>
           </nav>

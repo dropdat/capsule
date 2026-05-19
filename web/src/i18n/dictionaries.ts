@@ -78,6 +78,37 @@ export type Dict = {
     legalLinks: { privacy: string; terms: string };
     language: string;
   };
+  console: {
+    sidebar: {
+      library: string;
+      graph: string;
+      links: string;
+      packs: string;
+      teams: string;
+      apiKeys: string;
+      billing: string;
+      help: string;
+      settings: string;
+      admin: string;
+      closeMenu: string;
+      themeLight: string;
+      themeDark: string;
+    };
+    profile: {
+      openMenu: string;
+      account: string;
+      plan: string;
+      usage: string;
+      status: string;
+      invoicesNote: string;
+      plansBilling: string;
+      cancelPlan: string;
+      settings: string;
+      signOut: string;
+      language: string;
+      capsulesUnlimited: string;
+    };
+  };
 };
 
 const en: Dict = {
@@ -181,6 +212,37 @@ const en: Dict = {
     },
     legalLinks: { privacy: "Privacy", terms: "Terms" },
     language: "Language",
+  },
+  console: {
+    sidebar: {
+      library: "Library",
+      graph: "Graph",
+      links: "Links",
+      packs: "Packs",
+      teams: "Teams",
+      apiKeys: "API Keys",
+      billing: "Billing",
+      help: "Help",
+      settings: "Settings",
+      admin: "Admin",
+      closeMenu: "Close menu",
+      themeLight: "Switch to light",
+      themeDark: "Switch to dark",
+    },
+    profile: {
+      openMenu: "Open profile menu",
+      account: "Account",
+      plan: "Plan",
+      usage: "Usage",
+      status: "Status",
+      invoicesNote: "Invoices and receipts are emailed automatically.",
+      plansBilling: "Plans & billing",
+      cancelPlan: "Cancel plan",
+      settings: "Settings",
+      signOut: "Sign out",
+      language: "Language",
+      capsulesUnlimited: "capsules (unlimited)",
+    },
   },
 };
 
@@ -286,6 +348,37 @@ const ja: Dict = {
     legalLinks: { privacy: "プライバシー", terms: "利用規約" },
     language: "言語",
   },
+  console: {
+    sidebar: {
+      library: "ライブラリ",
+      graph: "グラフ",
+      links: "リンク",
+      packs: "パック",
+      teams: "チーム",
+      apiKeys: "APIキー",
+      billing: "請求",
+      help: "ヘルプ",
+      settings: "設定",
+      admin: "管理",
+      closeMenu: "メニューを閉じる",
+      themeLight: "ライトに切り替え",
+      themeDark: "ダークに切り替え",
+    },
+    profile: {
+      openMenu: "プロフィールメニューを開く",
+      account: "アカウント",
+      plan: "プラン",
+      usage: "使用量",
+      status: "ステータス",
+      invoicesNote: "請求書と領収書は自動的にメールで送信されます。",
+      plansBilling: "プランと請求",
+      cancelPlan: "プランをキャンセル",
+      settings: "設定",
+      signOut: "サインアウト",
+      language: "言語",
+      capsulesUnlimited: "カプセル（無制限）",
+    },
+  },
 };
 
 const de: Dict = {
@@ -389,6 +482,37 @@ const de: Dict = {
     },
     legalLinks: { privacy: "Datenschutz", terms: "AGB" },
     language: "Sprache",
+  },
+  console: {
+    sidebar: {
+      library: "Bibliothek",
+      graph: "Graph",
+      links: "Links",
+      packs: "Packs",
+      teams: "Teams",
+      apiKeys: "API-Schlüssel",
+      billing: "Abrechnung",
+      help: "Hilfe",
+      settings: "Einstellungen",
+      admin: "Admin",
+      closeMenu: "Menü schließen",
+      themeLight: "Zum Hellmodus wechseln",
+      themeDark: "Zum Dunkelmodus wechseln",
+    },
+    profile: {
+      openMenu: "Profilmenü öffnen",
+      account: "Konto",
+      plan: "Plan",
+      usage: "Nutzung",
+      status: "Status",
+      invoicesNote: "Rechnungen und Belege werden automatisch per E-Mail versendet.",
+      plansBilling: "Pläne & Abrechnung",
+      cancelPlan: "Plan kündigen",
+      settings: "Einstellungen",
+      signOut: "Abmelden",
+      language: "Sprache",
+      capsulesUnlimited: "Capsules (unbegrenzt)",
+    },
   },
 };
 
@@ -494,6 +618,37 @@ const fr: Dict = {
     legalLinks: { privacy: "Confidentialité", terms: "Conditions" },
     language: "Langue",
   },
+  console: {
+    sidebar: {
+      library: "Bibliothèque",
+      graph: "Graphe",
+      links: "Liens",
+      packs: "Packs",
+      teams: "Équipes",
+      apiKeys: "Clés API",
+      billing: "Facturation",
+      help: "Aide",
+      settings: "Paramètres",
+      admin: "Admin",
+      closeMenu: "Fermer le menu",
+      themeLight: "Passer au clair",
+      themeDark: "Passer au sombre",
+    },
+    profile: {
+      openMenu: "Ouvrir le menu profil",
+      account: "Compte",
+      plan: "Plan",
+      usage: "Utilisation",
+      status: "Statut",
+      invoicesNote: "Les factures et reçus sont envoyés automatiquement par e-mail.",
+      plansBilling: "Plans & facturation",
+      cancelPlan: "Annuler le plan",
+      settings: "Paramètres",
+      signOut: "Déconnexion",
+      language: "Langue",
+      capsulesUnlimited: "capsules (illimité)",
+    },
+  },
 };
 
 const es: Dict = {
@@ -597,6 +752,37 @@ const es: Dict = {
     },
     legalLinks: { privacy: "Privacidad", terms: "Términos" },
     language: "Idioma",
+  },
+  console: {
+    sidebar: {
+      library: "Biblioteca",
+      graph: "Gráfico",
+      links: "Enlaces",
+      packs: "Packs",
+      teams: "Equipos",
+      apiKeys: "Claves API",
+      billing: "Facturación",
+      help: "Ayuda",
+      settings: "Ajustes",
+      admin: "Admin",
+      closeMenu: "Cerrar menú",
+      themeLight: "Cambiar a claro",
+      themeDark: "Cambiar a oscuro",
+    },
+    profile: {
+      openMenu: "Abrir menú de perfil",
+      account: "Cuenta",
+      plan: "Plan",
+      usage: "Uso",
+      status: "Estado",
+      invoicesNote: "Las facturas y recibos se envían automáticamente por correo.",
+      plansBilling: "Planes y facturación",
+      cancelPlan: "Cancelar plan",
+      settings: "Ajustes",
+      signOut: "Cerrar sesión",
+      language: "Idioma",
+      capsulesUnlimited: "cápsulas (ilimitado)",
+    },
   },
 };
 

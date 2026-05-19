@@ -6,20 +6,9 @@ import { usePathname } from "next/navigation";
 import { useAuth } from "@clerk/react";
 import { useTheme } from "./ThemeProvider";
 import { ProfileMenu } from "./ProfileMenu";
+import { useConsoleLocale } from "@/i18n/consoleLocale";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || "https://dropdat.app";
-
-const NAV = [
-  { href: "/library", label: "Library", icon: LibraryIcon },
-  { href: "/library/graph", label: "Graph", icon: GraphIcon },
-  { href: "/links", label: "Links", icon: LinkIcon },
-  { href: "/packs", label: "Packs", icon: PacksIcon },
-  { href: "/teams", label: "Teams", icon: TeamsIcon },
-  { href: "/api-keys", label: "API Keys", icon: KeyIcon },
-  { href: "/billing", label: "Billing", icon: BillingIcon },
-  { href: "/help", label: "Help", icon: HelpIcon },
-  { href: "/settings", label: "Settings", icon: SettingsIcon },
-];
 
 export function Sidebar({
   open = false,
@@ -31,6 +20,19 @@ export function Sidebar({
   const pathname = usePathname() || "/library";
   const { getToken } = useAuth();
   const [isAdmin, setIsAdmin] = useState(false);
+  const { dict } = useConsoleLocale();
+  const s = dict.console.sidebar;
+  const NAV = [
+    { href: "/library", label: s.library, icon: LibraryIcon },
+    { href: "/library/graph", label: s.graph, icon: GraphIcon },
+    { href: "/links", label: s.links, icon: LinkIcon },
+    { href: "/packs", label: s.packs, icon: PacksIcon },
+    { href: "/teams", label: s.teams, icon: TeamsIcon },
+    { href: "/api-keys", label: s.apiKeys, icon: KeyIcon },
+    { href: "/billing", label: s.billing, icon: BillingIcon },
+    { href: "/help", label: s.help, icon: HelpIcon },
+    { href: "/settings", label: s.settings, icon: SettingsIcon },
+  ];
   useEffect(() => {
     let cancelled = false;
     (async () => {
@@ -52,7 +54,7 @@ export function Sidebar({
   }, [getToken]);
 
   const nav = isAdmin
-    ? [...NAV, { href: "/admin", label: "Admin", icon: AdminIcon }]
+    ? [...NAV, { href: "/admin", label: s.admin, icon: AdminIcon }]
     : NAV;
 
   return (
@@ -88,7 +90,7 @@ export function Sidebar({
           </a>
           <button
             onClick={onClose}
-            aria-label="Close menu"
+            aria-label={s.closeMenu}
             className="md:hidden flex h-8 w-8 items-center justify-center rounded-md"
             style={{ color: "var(--sidebar-muted)" }}
           >
@@ -132,13 +134,14 @@ export function Sidebar({
 
 function ThemeToggle() {
   const { theme, toggle } = useTheme();
+  const { dict } = useConsoleLocale();
   return (
     <button
       onClick={toggle}
-      aria-label="Toggle theme"
+      aria-label={dict.console.sidebar.themeLight}
       className="flex h-8 w-8 items-center justify-center transition-colors"
       style={{ color: "var(--sidebar-muted)" }}
-      title={theme === "dark" ? "Switch to light" : "Switch to dark"}
+      title={theme === "dark" ? dict.console.sidebar.themeLight : dict.console.sidebar.themeDark}
     >
       {theme === "dark" ? <SunIcon className="h-4 w-4" /> : <MoonIcon className="h-4 w-4" />}
     </button>
