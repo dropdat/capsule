@@ -29,6 +29,26 @@
   }
 }
 
+# DMT backend shares this EC2. Its api+postgres run from /opt/dmt and the
+# dmt-api container joins this Caddy's docker network, so we can reach it by
+# container name. DNS: dmt.dropdat.app A record -> this server's IP.
+dmt.{$DOMAIN:dropdat.app} {
+  encode gzip zstd
+  reverse_proxy dmt-api:8000
+
+  header {
+    Strict-Transport-Security "max-age=31536000; includeSubDomains"
+    X-Content-Type-Options "nosniff"
+    Referrer-Policy "no-referrer"
+    -Server
+  }
+
+  log {
+    output stdout
+    format console
+  }
+}
+
 capsule.{$DOMAIN:dropdat.app} {
   encode gzip zstd
 
