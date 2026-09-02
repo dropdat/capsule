@@ -18,6 +18,36 @@ type Project = {
 };
 
 const PROJECTS: Record<string, Project> = {
+  rahulgo: {
+    name: "Rahul Goswami",
+    title: "Platform Engineering & Reliability",
+    role: "Software Development Intern (Full-time)",
+    duration: "June 15, 2026 – July 25, 2026",
+    certificateDate: "July 25, 2026",
+    technologies: "Software Development, Testing, QA",
+    topics: "Feature Development, Testing, Reliability",
+    summary: (
+      <>
+        <p>
+          Rahul joined dropdat as a Software Development Intern, beginning June 15, 2026
+          and ending July 25, 2026. Over the course of this full-time internship, based
+          out of our Noida office, Sector 62, they worked closely with our engineering
+          team, taking ownership of assigned tasks and consistently delivering
+          high-quality work.
+        </p>
+        <p>
+          During this period, Rahul demonstrated strong technical ability, a collaborative
+          attitude, and a genuine eagerness to learn. Their contributions to
+          <strong>feature development, testing, and platform reliability</strong> were a
+          valuable addition to the team.
+        </p>
+        <p>
+          We wish Rahul continued success in all future endeavours. Should you require
+          any further information, please contact us at support@dropdat.app.
+        </p>
+      </>
+    ),
+  },
   abhinaysingh: {
     name: "Abhinay Singh",
     title: "Platform Data Analysis",
