@@ -20,12 +20,12 @@ type Project = {
 const PROJECTS: Record<string, Project> = {
   rahulgo: {
     name: "Rahul Goswami",
-    title: "Platform Engineering & Reliability",
+    title: "RAG Platform Engineering",
     role: "Software Development Intern (Full-time)",
     duration: "June 15, 2026 – July 25, 2026",
     certificateDate: "July 25, 2026",
-    technologies: "Software Development, Testing, QA",
-    topics: "Feature Development, Testing, Reliability",
+    technologies: "RAG Concepts, Software Development, Testing",
+    topics: "Retrieval, Feature Development, Reliability",
     summary: (
       <>
         <p>
@@ -40,6 +40,11 @@ const PROJECTS: Record<string, Project> = {
           attitude, and a genuine eagerness to learn. Their contributions to
           <strong>feature development, testing, and platform reliability</strong> were a
           valuable addition to the team.
+        </p>
+        <p>
+          Rahul also explored how <strong>retrieval-augmented generation (RAG)</strong>
+          patterns could support dropdat&apos;s cross-AI memory workflows—connecting useful
+          context to AI interactions while keeping retrieval dependable in the product.
         </p>
         <p>
           We wish Rahul continued success in all future endeavours. Should you require
