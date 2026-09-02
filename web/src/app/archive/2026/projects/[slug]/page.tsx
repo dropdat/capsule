@@ -1,6 +1,9 @@
 import type { Metadata } from "next";
+import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { Footer } from "@/components/Footer";
+import { Nav } from "@/components/Nav";
 
 type Project = {
   name: string;
@@ -107,19 +110,13 @@ export async function generateMetadata({
   };
 }
 
-const particles = [
-  [7, 14, 3], [16, 34, 2], [28, 9, 2], [39, 48, 4], [47, 18, 2],
-  [57, 62, 3], [66, 28, 2], [76, 51, 4], [87, 17, 3], [94, 37, 2],
-  [10, 73, 2], [24, 88, 4], [35, 69, 2], [49, 92, 3], [61, 79, 2],
-  [72, 86, 3], [82, 68, 2], [91, 91, 4],
-] as const;
-
-
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
-    <div>
-      <dt className="mb-2 text-[13px] text-white/42">{label}</dt>
-      <dd className="text-[15px] font-medium leading-6 text-white/90">{children}</dd>
+    <div className="min-h-[116px] border-b border-border p-5 sm:p-6 lg:border-b-0 lg:border-r last:border-r-0">
+      <dt className="mb-3 font-mono text-[11px] uppercase tracking-[0.15em] text-muted-foreground">
+        {label}
+      </dt>
+      <dd className="text-[15px] font-medium leading-6 text-foreground">{children}</dd>
     </div>
   );
 }
@@ -140,70 +137,134 @@ export default async function ProjectPage({ params }: { params: Promise<Params> 
   };
 
   return (
-    <main data-archive className="relative z-10 min-h-screen overflow-hidden bg-[#0b0c0d] text-[#f2f2f0]">
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(schema) }}
-      />
+    <>
+      <Nav />
+      <main className="relative z-[2] min-h-screen">
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(schema) }}
+        />
 
-      <div aria-hidden className="pointer-events-none absolute inset-0 opacity-60">
-        {particles.map(([left, top, size], index) => (
-          <span
-            key={index}
-            className="absolute rounded-full bg-[#f26822] shadow-[0_0_12px_rgba(242,104,34,0.35)]"
-            style={{ left: left + "%", top: top + "%", width: size, height: size }}
-          />
-        ))}
-      </div>
-      <div
-        aria-hidden
-        className="pointer-events-none absolute inset-x-0 top-0 h-[420px] bg-[radial-gradient(ellipse_at_top,rgba(242,104,34,0.045),transparent_60%)]"
-      />
+        <article className="mx-auto w-full max-w-[1200px] px-5 pb-20 pt-28 sm:px-6 sm:pb-24 sm:pt-36">
+          <nav
+            aria-label="Breadcrumb"
+            className="mb-8 flex items-center gap-2 font-mono text-[12px] text-muted-foreground"
+          >
+            <Link href="/" className="transition-colors hover:text-foreground">
+              dropdat
+            </Link>
+            <span aria-hidden>/</span>
+            <span>archive</span>
+            <span aria-hidden>/</span>
+            <span className="text-foreground">2026</span>
+          </nav>
 
-      <article className="relative mx-auto w-full max-w-[1080px] px-5 py-16 sm:px-8 sm:py-24 lg:px-10 lg:py-28">
-        <nav aria-label="Breadcrumb" className="mb-10 flex items-center gap-2 text-[13px] text-white/52">
-          <Link href="/" className="underline decoration-white/30 underline-offset-4 transition-colors hover:text-white">
-            2026 Program
-          </Link>
-          <span className="text-white/25">|</span>
-          <Link href="/" className="underline decoration-white/30 underline-offset-4 transition-colors hover:text-white">
-            dropdat
-          </Link>
-        </nav>
+          <header className="box-corners relative grid border border-border bg-card lg:grid-cols-[1.55fr_0.65fr]">
+            <span className="corner-bl" />
+            <span className="corner-br" />
 
-        <header className="mb-9">
-          <p className="mb-1 text-[13px] text-white/42">Contributor</p>
-          <p className="text-[22px] font-medium tracking-[-0.01em] text-white">{project.name}</p>
-          <h1 className="mt-8 max-w-[900px] font-mono text-[34px] font-medium leading-[1.12] tracking-[-0.035em] text-white sm:text-[45px] lg:text-[52px]">
-            {project.title}
-          </h1>
-        </header>
+            <div className="flex min-h-[390px] flex-col justify-between p-6 sm:p-10 lg:p-12">
+              <div>
+                <span className="inline-flex items-center gap-2 border border-border bg-accent-soft px-3 py-1.5 font-mono text-[11px] uppercase tracking-[0.14em] text-foreground/75">
+                  <span className="h-1.5 w-1.5 rounded-full bg-primary" />
+                  2026 internship archive
+                </span>
 
-        <div className="mb-10 h-px bg-white/10" />
+                <p className="mt-12 text-[13px] text-muted-foreground">Contributor</p>
+                <p className="mt-1 font-heading text-[22px] font-medium">{project.name}</p>
+              </div>
 
-        <dl className="mb-12 grid grid-cols-1 gap-x-10 gap-y-8 sm:grid-cols-2 lg:grid-cols-4">
-          <Field label="Mentor">Arman Singh</Field>
-          <Field label="Organization">dropdat</Field>
-          <Field label="Technologies">{project.technologies}</Field>
-          <Field label="Topics">{project.topics}</Field>
-        </dl>
+              <h1 className="mt-10 max-w-[780px] font-heading text-[38px] font-medium leading-[1.05] tracking-[-0.045em] text-foreground sm:text-[50px] lg:text-[62px]">
+                {project.title}
+              </h1>
+            </div>
 
-        <dl className="mb-12 grid grid-cols-1 gap-x-10 gap-y-8 sm:grid-cols-2">
-          <Field label="Role">{project.role}</Field>
-          <Field label="Duration">{project.duration}</Field>
-        </dl>
+            <div className="relative min-h-[250px] overflow-hidden border-t border-border bg-accent-soft p-7 lg:min-h-full lg:border-l lg:border-t-0">
+              <div
+                aria-hidden
+                className="absolute inset-0 opacity-50 [background-image:linear-gradient(to_right,var(--border)_1px,transparent_1px),linear-gradient(to_bottom,var(--border)_1px,transparent_1px)] [background-size:40px_40px]"
+              />
+              <div className="relative flex h-full min-h-[196px] flex-col justify-between border border-border bg-card/90 p-5">
+                <div className="flex items-start justify-between gap-5">
+                  <Image src="/brand/logo.svg" alt="" width={32} height={32} />
+                  <span className="font-mono text-[10px] tracking-[0.16em] text-muted-foreground">
+                    DD / 2026
+                  </span>
+                </div>
+                <div>
+                  <div className="mb-4 flex items-center gap-2">
+                    <span className="relative flex h-3 w-3 items-center justify-center">
+                      <span className="absolute h-3 w-3 animate-ping rounded-full bg-primary/25" />
+                      <span className="relative h-1.5 w-1.5 rounded-full bg-primary" />
+                    </span>
+                    <span className="font-mono text-[10px] uppercase tracking-[0.16em] text-primary">
+                      Verified record
+                    </span>
+                  </div>
+                  <p className="font-heading text-[20px] font-medium leading-tight">
+                    Work that moved
+                    <br />
+                    the platform forward.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </header>
 
-        <div className="max-w-[780px] space-y-5 text-[15px] leading-[1.72] text-white/55 [&_strong]:font-semibold [&_strong]:text-white/90 sm:text-[16px]">
-          {project.summary}
-        </div>
+          <dl className="box-corners relative mt-10 grid border border-border bg-card sm:grid-cols-2 lg:grid-cols-4">
+            <span className="corner-bl" />
+            <span className="corner-br" />
+            <Field label="Mentor">Arman Singh</Field>
+            <Field label="Organization">dropdat</Field>
+            <Field label="Technologies">{project.technologies}</Field>
+            <Field label="Topics">{project.topics}</Field>
+          </dl>
 
-        <footer className="mt-14 flex flex-col gap-3 border-t border-white/10 pt-6 text-[12px] text-white/35 sm:flex-row sm:items-center sm:justify-between">
-          <span>Record issued {project.certificateDate}</span>
-          <a className="transition-colors hover:text-white/70" href="mailto:support@dropdat.app">
-            Verification inquiries · support@dropdat.app
-          </a>
-        </footer>
-      </article>
-    </main>
+          <section className="mt-10 grid gap-10 border-t border-border pt-10 lg:grid-cols-[0.7fr_1.3fr] lg:gap-16">
+            <div>
+              <p className="font-mono text-[11px] uppercase tracking-[0.16em] text-primary">
+                Project record
+              </p>
+              <h2 className="mt-3 font-heading text-[28px] font-medium tracking-[-0.025em]">
+                Contribution,
+                <br />
+                documented.
+              </h2>
+
+              <dl className="mt-8 space-y-6 border-l-2 border-primary pl-5">
+                <div>
+                  <dt className="text-[12px] text-muted-foreground">Role</dt>
+                  <dd className="mt-1 text-[14px] font-medium leading-5">{project.role}</dd>
+                </div>
+                <div>
+                  <dt className="text-[12px] text-muted-foreground">Duration</dt>
+                  <dd className="mt-1 text-[14px] font-medium">{project.duration}</dd>
+                </div>
+                <div>
+                  <dt className="text-[12px] text-muted-foreground">Record issued</dt>
+                  <dd className="mt-1 text-[14px] font-medium">{project.certificateDate}</dd>
+                </div>
+              </dl>
+            </div>
+
+            <div className="space-y-6 text-[15px] leading-[1.75] text-foreground/75 [&_strong]:font-semibold [&_strong]:text-foreground sm:text-[16px]">
+              {project.summary}
+              <div className="mt-10 border border-border bg-card p-5 sm:flex sm:items-center sm:justify-between sm:gap-6">
+                <p className="font-heading text-[15px] font-medium text-foreground">
+                  Need to verify this record?
+                </p>
+                <a
+                  className="mt-2 inline-block font-mono text-[12px] text-primary underline decoration-primary/30 underline-offset-4 hover:decoration-primary sm:mt-0"
+                  href="mailto:support@dropdat.app"
+                >
+                  support@dropdat.app
+                </a>
+              </div>
+            </div>
+          </section>
+        </article>
+      </main>
+      <Footer />
+    </>
   );
 }
