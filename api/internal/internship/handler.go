@@ -5,6 +5,7 @@ import (
 	"io"
 	"mime"
 	"net/http"
+	"net/mail"
 	"path/filepath"
 	"strings"
 	"time"
@@ -47,14 +48,20 @@ func (h *Handler) Apply(w http.ResponseWriter, r *http.Request) {
 	}
 
 	name := strings.TrimSpace(r.FormValue("name"))
+	email := strings.TrimSpace(r.FormValue("email"))
 	college := strings.TrimSpace(r.FormValue("college"))
 	branch := strings.TrimSpace(r.FormValue("branch"))
 	cgpa := strings.TrimSpace(r.FormValue("cgpa"))
-	if name == "" || college == "" || branch == "" || cgpa == "" {
-		httpx.Error(w, http.StatusBadRequest, "name, college, branch, and CGPA are required")
+	if name == "" || email == "" || college == "" || branch == "" || cgpa == "" {
+		httpx.Error(w, http.StatusBadRequest, "name, email, college, branch, and CGPA are required")
 		return
 	}
-	for label, value := range map[string]string{"name": name, "college": college, "branch": branch, "cgpa": cgpa} {
+	parsedEmail, err := mail.ParseAddress(email)
+	if err != nil || parsedEmail.Address != email {
+		httpx.Error(w, http.StatusBadRequest, "enter a valid email address")
+		return
+	}
+	for label, value := range map[string]string{"name": name, "email": email, "college": college, "branch": branch, "cgpa": cgpa} {
 		if len([]rune(value)) > 200 {
 			httpx.Error(w, http.StatusBadRequest, label+" is too long")
 			return
@@ -99,7 +106,7 @@ func (h *Handler) Apply(w http.ResponseWriter, r *http.Request) {
 	}
 
 	row, err := h.q.CreateInternshipApplication(r.Context(), dbgen.CreateInternshipApplicationParams{
-		Name: name, College: college, Branch: branch, Cgpa: cgpa,
+		Name: name, Email: email, College: college, Branch: branch, Cgpa: cgpa,
 		ResumeFilename: filename, ResumeContentType: contentType, ResumeBytes: body,
 		UnpaidAcknowledged: true,
 	})
@@ -115,6 +122,7 @@ func (h *Handler) Apply(w http.ResponseWriter, r *http.Request) {
 type applicationDTO struct {
 	ID                 string `json:"id"`
 	Name               string `json:"name"`
+	Email              string `json:"email"`
 	College            string `json:"college"`
 	Branch             string `json:"branch"`
 	CGPA               string `json:"cgpa"`
@@ -134,7 +142,7 @@ func (h *Handler) List(w http.ResponseWriter, r *http.Request) {
 	out := make([]applicationDTO, 0, len(rows))
 	for _, row := range rows {
 		out = append(out, applicationDTO{
-			ID: row.ID.String(), Name: row.Name, College: row.College, Branch: row.Branch,
+			ID: row.ID.String(), Name: row.Name, Email: row.Email, College: row.College, Branch: row.Branch,
 			CGPA: row.Cgpa, ResumeFilename: row.ResumeFilename,
 			ResumeContentType: row.ResumeContentType, ResumeSize: row.ResumeSize,
 			UnpaidAcknowledged: row.UnpaidAcknowledged,

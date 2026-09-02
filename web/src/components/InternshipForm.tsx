@@ -56,6 +56,7 @@ export function InternshipForm() {
         <span className="corner-br" />
         <div className="grid gap-5 sm:grid-cols-2">
           <Input label="Full name" name="name" placeholder="Your name" />
+          <Input label="Email address" name="email" type="email" placeholder="you@example.com" />
           <Input label="College / university" name="college" placeholder="College name" />
           <Input label="Branch / specialization" name="branch" placeholder="e.g. CSE" />
           <Input label="CGPA" name="cgpa" placeholder="e.g. 8.4" />
@@ -100,13 +101,14 @@ export function InternshipForm() {
   );
 }
 
-function Input({ label, name, placeholder }: { label: string; name: string; placeholder: string }) {
+function Input({ label, name, type = "text", placeholder }: { label: string; name: string; type?: string; placeholder: string }) {
   return (
     <label className="block text-[13px] text-muted-foreground">
       {label}
       <input
         required
         name={name}
+        type={type}
         placeholder={placeholder}
         className="mt-2 block w-full border border-border bg-background px-3 py-3 text-[14px] text-foreground outline-none placeholder:text-muted-foreground/60 focus:border-primary focus:ring-1 focus:ring-primary"
       />

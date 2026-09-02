@@ -45,6 +45,7 @@ type UserCapsule = {
 type InternshipApplication = {
   id: string;
   name: string;
+  email: string;
   college: string;
   branch: string;
   cgpa: string;
@@ -294,10 +295,11 @@ export default function AdminPage() {
           <button onClick={() => loadApplications()} className="text-[12px] text-primary hover:opacity-80">Refresh</button>
         </div>
         <div className="overflow-x-auto">
-          <table className="w-full min-w-[920px] text-[12.5px]">
+          <table className="w-full min-w-[1040px] text-[12.5px]">
             <thead className="text-left text-[11px] uppercase tracking-wider text-muted-foreground">
               <tr className="border-b border-border">
                 <th className="px-5 py-2.5 font-medium">Applicant</th>
+                <th className="px-5 py-2.5 font-medium">Email</th>
                 <th className="px-5 py-2.5 font-medium">College</th>
                 <th className="px-5 py-2.5 font-medium">Branch</th>
                 <th className="px-5 py-2.5 font-medium">CGPA</th>
@@ -310,6 +312,7 @@ export default function AdminPage() {
               {applications.map((application) => (
                 <tr key={application.id} className="border-t border-border/60 hover:bg-accent-soft/40">
                   <td className="px-5 py-3 font-medium">{application.name}</td>
+                  <td className="px-5 py-3">{application.email}</td>
                   <td className="px-5 py-3">{application.college}</td>
                   <td className="px-5 py-3">{application.branch}</td>
                   <td className="px-5 py-3">{application.cgpa}</td>
@@ -327,7 +330,7 @@ export default function AdminPage() {
                 </tr>
               ))}
               {applications.length === 0 && (
-                <tr><td colSpan={7} className="px-5 py-8 text-center text-muted-foreground">No applications yet.</td></tr>
+                <tr><td colSpan={8} className="px-5 py-8 text-center text-muted-foreground">No applications yet.</td></tr>
               )}
             </tbody>
           </table>
