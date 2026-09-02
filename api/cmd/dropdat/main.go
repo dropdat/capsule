@@ -16,7 +16,9 @@ import (
 	"github.com/go-chi/cors"
 	"github.com/jackc/pgx/v5/pgxpool"
 
+	"github.com/yusii/dropdat/api/internal/admin"
 	"github.com/yusii/dropdat/api/internal/apikey"
+	"github.com/yusii/dropdat/api/internal/attach"
 	"github.com/yusii/dropdat/api/internal/auth"
 	"github.com/yusii/dropdat/api/internal/billing"
 	"github.com/yusii/dropdat/api/internal/capsule"
@@ -25,9 +27,8 @@ import (
 	"github.com/yusii/dropdat/api/internal/embed"
 	"github.com/yusii/dropdat/api/internal/folder"
 	"github.com/yusii/dropdat/api/internal/httpx"
+	"github.com/yusii/dropdat/api/internal/internship"
 	"github.com/yusii/dropdat/api/internal/link"
-	"github.com/yusii/dropdat/api/internal/admin"
-	"github.com/yusii/dropdat/api/internal/attach"
 	"github.com/yusii/dropdat/api/internal/pack"
 	"github.com/yusii/dropdat/api/internal/team"
 )
@@ -178,6 +179,7 @@ func main() {
 	verifier.SetAPIKeyVerifier(tierFilteredVerifier{inner: apiKeySvc, tierFor: tierFor})
 
 	adminHandler := admin.NewHandler(queries, clerkClient)
+	internshipHandler := internship.NewHandler(queries, adminHandler.IsAdmin)
 
 	// Unauthenticated webhook receiver — dodo signs the body, no JWT.
 	billingHandler.MountWebhook(r)
@@ -186,6 +188,7 @@ func main() {
 		// Public share-link reads — mounted before the auth middleware so
 		// they bypass JWT verification.
 		capsuleHandler.MountPublic(r)
+		internshipHandler.MountPublic(r)
 
 		r.Group(func(r chi.Router) {
 			r.Use(verifier.Middleware)
@@ -205,6 +208,7 @@ func main() {
 			packHandler.Mount(r)
 			attachHandler.Mount(r)
 			adminHandler.Mount(r)
+			internshipHandler.MountAdmin(r)
 		})
 	})
 

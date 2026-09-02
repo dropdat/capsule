@@ -25,6 +25,7 @@ const staticRoutes: Array<{
   { path: "/blog", changeFrequency: "weekly", priority: 0.85 },
   { path: "/faq", changeFrequency: "monthly", priority: 0.8 },
   { path: "/support", changeFrequency: "monthly", priority: 0.5 },
+  { path: "/internship", changeFrequency: "monthly", priority: 0.6, localized: true },
   { path: "/privacy", changeFrequency: "yearly", priority: 0.3 },
   { path: "/terms", changeFrequency: "yearly", priority: 0.3 },
   { path: "/archive/2026/projects/rahulgo", changeFrequency: "yearly", priority: 0.5, localized: true },

@@ -16,6 +16,7 @@ export function Footer({ dict, locale = DEFAULT_LOCALE }: { dict?: Dict; locale?
         { label: t.productLinks.blog, href: "/blog" },
         { label: t.productLinks.faq, href: "/faq" },
         { label: t.productLinks.download, href: "https://chromewebstore.google.com/detail/pfcnjelpgccnkagaekhdcddpfacighho" },
+        { label: "Internships", href: "/internship" },
       ],
     },
     {

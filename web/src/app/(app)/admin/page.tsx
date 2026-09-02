@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import { useAuth } from "@clerk/react";
 
 import { useApi } from "@/lib/api";
 
@@ -41,6 +42,18 @@ type UserCapsule = {
   version: number;
 };
 
+type InternshipApplication = {
+  id: string;
+  name: string;
+  college: string;
+  branch: string;
+  cgpa: string;
+  resumeFilename: string;
+  resumeSize: number;
+  unpaidAcknowledged: boolean;
+  createdAt: string;
+};
+
 function formatBytes(n: number): string {
   if (n < 1024) return `${n} B`;
   if (n < 1024 * 1024) return `${(n / 1024).toFixed(1)} KB`;
@@ -60,6 +73,7 @@ function relativeTime(iso: string): string {
 
 export default function AdminPage() {
   const api = useApi();
+  const { getToken } = useAuth();
   const [allowed, setAllowed] = useState<boolean | null>(null);
   const [stats, setStats] = useState<Stats | null>(null);
   const [users, setUsers] = useState<UserRow[]>([]);
@@ -68,6 +82,7 @@ export default function AdminPage() {
   const [selectedUser, setSelectedUser] = useState<UserRow | null>(null);
   const [userCapsules, setUserCapsules] = useState<UserCapsule[]>([]);
   const [capsulesLoading, setCapsulesLoading] = useState(false);
+  const [applications, setApplications] = useState<InternshipApplication[]>([]);
 
   // Background polls would flash "Failed to fetch" on every transient hiccup.
   // We only surface errors after two consecutive failures, and clear them on
@@ -110,6 +125,14 @@ export default function AdminPage() {
     }
   }, []);
 
+  const loadApplications = useCallback(async () => {
+    try {
+      setApplications((await apiRef.current<InternshipApplication[]>("/api/v1/admin/internship-applications")) ?? []);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Applications load failed");
+    }
+  }, []);
+
   const openUser = useCallback(async (u: UserRow) => {
     setSelectedUser(u);
     setUserCapsules([]);
@@ -136,12 +159,32 @@ export default function AdminPage() {
     if (!allowed) return;
     loadStats(false);
     loadUsers(false);
+    loadApplications();
     const t = setInterval(() => {
       loadStats(true);
       loadUsers(true);
     }, 15000);
     return () => clearInterval(t);
-  }, [allowed, loadStats, loadUsers]);
+  }, [allowed, loadApplications, loadStats, loadUsers]);
+
+  const downloadResume = async (application: InternshipApplication) => {
+    try {
+      const token = await getToken();
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8080"}/api/v1/admin/internship-applications/${application.id}/resume`,
+        { headers: token ? { Authorization: `Bearer ${token}` } : undefined },
+      );
+      if (!response.ok) throw new Error("Resume download failed");
+      const url = URL.createObjectURL(await response.blob());
+      const anchor = document.createElement("a");
+      anchor.href = url;
+      anchor.download = application.resumeFilename;
+      anchor.click();
+      URL.revokeObjectURL(url);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Resume download failed");
+    }
+  };
 
   const ban = async (userId: string) => {
     const reason = prompt("Ban reason (visible to the user on every request):");
@@ -241,6 +284,55 @@ export default function AdminPage() {
           </div>
         </div>
       )}
+
+      <div className="rounded-lg border border-border bg-card overflow-hidden">
+        <div className="border-b border-border px-5 py-3 flex items-center justify-between gap-3">
+          <div>
+            <h2 className="font-heading text-[14px] font-medium">Internship applications · {applications.length}</h2>
+            <p className="mt-1 text-[11px] text-muted-foreground">Most recent applications first.</p>
+          </div>
+          <button onClick={() => loadApplications()} className="text-[12px] text-primary hover:opacity-80">Refresh</button>
+        </div>
+        <div className="overflow-x-auto">
+          <table className="w-full min-w-[920px] text-[12.5px]">
+            <thead className="text-left text-[11px] uppercase tracking-wider text-muted-foreground">
+              <tr className="border-b border-border">
+                <th className="px-5 py-2.5 font-medium">Applicant</th>
+                <th className="px-5 py-2.5 font-medium">College</th>
+                <th className="px-5 py-2.5 font-medium">Branch</th>
+                <th className="px-5 py-2.5 font-medium">CGPA</th>
+                <th className="px-5 py-2.5 font-medium">Resume</th>
+                <th className="px-5 py-2.5 font-medium">Unpaid terms</th>
+                <th className="px-5 py-2.5 font-medium">Received</th>
+              </tr>
+            </thead>
+            <tbody>
+              {applications.map((application) => (
+                <tr key={application.id} className="border-t border-border/60 hover:bg-accent-soft/40">
+                  <td className="px-5 py-3 font-medium">{application.name}</td>
+                  <td className="px-5 py-3">{application.college}</td>
+                  <td className="px-5 py-3">{application.branch}</td>
+                  <td className="px-5 py-3">{application.cgpa}</td>
+                  <td className="px-5 py-3">
+                    <button onClick={() => downloadResume(application)} className="text-primary hover:underline">
+                      {application.resumeFilename} <span className="text-muted-foreground">({formatBytes(application.resumeSize)})</span>
+                    </button>
+                  </td>
+                  <td className="px-5 py-3">
+                    <span className="rounded border border-primary/30 bg-accent-soft px-2 py-1 text-[11px] text-primary">
+                      {application.unpaidAcknowledged ? "Confirmed" : "Missing"}
+                    </span>
+                  </td>
+                  <td className="px-5 py-3 text-muted-foreground" title={application.createdAt}>{relativeTime(application.createdAt)}</td>
+                </tr>
+              ))}
+              {applications.length === 0 && (
+                <tr><td colSpan={7} className="px-5 py-8 text-center text-muted-foreground">No applications yet.</td></tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+      </div>
 
       {/* User capsules drawer */}
       {selectedUser && (
