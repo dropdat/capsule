@@ -27,8 +27,8 @@ const staticRoutes: Array<{
   { path: "/support", changeFrequency: "monthly", priority: 0.5 },
   { path: "/privacy", changeFrequency: "yearly", priority: 0.3 },
   { path: "/terms", changeFrequency: "yearly", priority: 0.3 },
-  { path: "/archive/2026/projects/deepanshus", changeFrequency: "yearly", priority: 0.5 },
-  { path: "/archive/2026/projects/rajveers", changeFrequency: "yearly", priority: 0.5 },
+  { path: "/archive/2026/projects/deepanshus", changeFrequency: "yearly", priority: 0.5, localized: true },
+  { path: "/archive/2026/projects/rajveers", changeFrequency: "yearly", priority: 0.5, localized: true },
 ];
 
 function localizedAlternates(path: string): Record<string, string> {

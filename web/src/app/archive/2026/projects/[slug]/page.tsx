@@ -4,6 +4,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Footer } from "@/components/Footer";
 import { Nav } from "@/components/Nav";
+import { DEFAULT_LOCALE, type Locale } from "@/i18n/config";
 
 type Project = {
   name: string;
@@ -121,7 +122,13 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
   );
 }
 
-export default async function ProjectPage({ params }: { params: Promise<Params> }) {
+export async function ProjectPage({
+  params,
+  locale = DEFAULT_LOCALE,
+}: {
+  params: Promise<Params>;
+  locale?: Locale;
+}) {
   const { slug } = await params;
   const project = PROJECTS[slug];
   if (!project) notFound();
@@ -138,7 +145,7 @@ export default async function ProjectPage({ params }: { params: Promise<Params> 
 
   return (
     <>
-      <Nav />
+      <Nav locale={locale} />
       <main className="relative z-[2] min-h-screen">
         <script
           type="application/ld+json"
@@ -264,7 +271,9 @@ export default async function ProjectPage({ params }: { params: Promise<Params> 
           </section>
         </article>
       </main>
-      <Footer />
+      <Footer locale={locale} />
     </>
   );
 }
+
+export default ProjectPage;
