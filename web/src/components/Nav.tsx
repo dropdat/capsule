@@ -9,10 +9,10 @@ export function Nav({ dict, locale = DEFAULT_LOCALE }: { dict?: Dict; locale?: L
   const t = d.nav;
   return (
     <nav className="fixed top-0 left-0 right-0 z-50 px-3 sm:px-4 pt-3 sm:pt-4">
-      <div className="mx-auto w-full max-w-[1200px] flex items-center justify-between gap-3 px-3 sm:px-4 py-2 sm:py-2.5 bg-white/80 backdrop-blur-md border border-border">
-        <Link href={localePath(locale, "/")} className="flex items-center gap-2 font-heading font-medium text-[16px] sm:text-[18px]">
+      <div className="mx-auto w-full max-w-[1200px] flex items-center justify-between gap-2 sm:gap-3 px-2 sm:px-4 py-2 sm:py-2.5 bg-white/80 backdrop-blur-md border border-border overflow-hidden">
+        <Link href={localePath(locale, "/")} className="flex shrink-0 items-center gap-2 font-heading font-medium text-[16px] sm:text-[18px]">
           <img src="/brand/logo.svg" alt="dropdat" className="w-6 h-6 sm:w-7 sm:h-7" />
-          <span>dropdat</span>
+          <span className="max-[380px]:hidden">dropdat</span>
         </Link>
         <ul className="hidden md:flex items-center gap-7 text-[14px] text-foreground/80">
           <li><a href="#how-it-works" className="hover:text-foreground transition-colors">{t.howItWorks}</a></li>
@@ -31,7 +31,7 @@ export function Nav({ dict, locale = DEFAULT_LOCALE }: { dict?: Dict; locale?: L
           </a>
           <a
             href="https://capsule.dropdat.app/library"
-            className="inline-flex items-center gap-1.5 sm:gap-2 bg-card text-foreground border border-border px-3 sm:px-4 py-1.5 sm:py-2 text-[13px] sm:text-[14px] font-medium whitespace-nowrap hover:bg-accent transition-colors"
+            className="hidden sm:inline-flex items-center gap-1.5 sm:gap-2 bg-card text-foreground border border-border px-3 sm:px-4 py-1.5 sm:py-2 text-[13px] sm:text-[14px] font-medium whitespace-nowrap hover:bg-accent transition-colors"
           >
             {t.console}
           </a>
