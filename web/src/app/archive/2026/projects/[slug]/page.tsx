@@ -18,6 +18,34 @@ type Project = {
 };
 
 const PROJECTS: Record<string, Project> = {
+  abhinaysingh: {
+    name: "Abhinay Singh",
+    title: "Platform Data Analysis",
+    role: "Data Analyst Intern (Full-time, Remote)",
+    duration: "May 20, 2026 – July 20, 2026",
+    certificateDate: "July 20, 2026",
+    technologies: "SQL, PostgreSQL, Data Analysis",
+    topics: "Data Analytics, Reporting, Reliability",
+    summary: (
+      <>
+        <p>
+          Abhinay joined dropdat as a Data Analyst Intern, beginning May 20, 2026 and
+          ending July 20, 2026. Over the course of this full-time, remote internship,
+          they worked closely with our engineering team, taking ownership of assigned
+          tasks and consistently delivering high-quality work.
+        </p>
+        <p>
+          During this period, Abhinay demonstrated strong technical ability and a
+          genuine eagerness to learn, notably through <strong>SQL-based data analysis</strong>
+          work that was a valuable addition to the team.
+        </p>
+        <p>
+          We wish Abhinay continued success in all future endeavours. Should you require
+          any further information, please contact us at support@dropdat.app.
+        </p>
+      </>
+    ),
+  },
   deepanshus: {
     name: "Deepanshu Srivastava",
     title: "dropdat Browser Extension",
