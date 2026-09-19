@@ -30,6 +30,7 @@ const staticRoutes: Array<{
   { path: "/terms", changeFrequency: "yearly", priority: 0.3 },
   { path: "/archive/2026/projects/rahulgo", changeFrequency: "yearly", priority: 0.5, localized: true },
   { path: "/archive/2026/projects/abhinaysingh", changeFrequency: "yearly", priority: 0.5, localized: true },
+  { path: "/archive/2026/projects/priteshkumar", changeFrequency: "yearly", priority: 0.5, localized: true },
   { path: "/archive/2026/projects/deepanshus", changeFrequency: "yearly", priority: 0.5, localized: true },
   { path: "/archive/2026/projects/rajveers", changeFrequency: "yearly", priority: 0.5, localized: true },
 ];

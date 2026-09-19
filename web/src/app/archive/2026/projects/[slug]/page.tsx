@@ -81,6 +81,41 @@ const PROJECTS: Record<string, Project> = {
       </>
     ),
   },
+  priteshkumar: {
+    name: "Pritesh Kumar",
+    title: "RAG-based AI Chatbot",
+    role: "Data Analyst Intern (Full-time, Remote)",
+    duration: "May 20, 2026 – July 20, 2026",
+    certificateDate: "July 20, 2026",
+    technologies: "RAG, AI Chatbots, Knowledge Retrieval",
+    topics: "Response Validation, Testing, Reliability",
+    summary: (
+      <>
+        <p>
+          Pritesh joined dropdat as a Data Analyst Intern, beginning May 20, 2026 and
+          ending July 20, 2026. Over the course of this full-time, remote internship,
+          they worked closely with our engineering team, taking ownership of assigned
+          tasks and consistently delivering high-quality work.
+        </p>
+        <p>
+          For their project, Pritesh worked on a <strong>RAG-based AI chatbot</strong>
+          {" "}for the dropdat platform. They contributed to building a
+          retrieval-augmented generation workflow that identified relevant information
+          from the available knowledge base and used it to produce accurate,
+          context-aware responses.
+        </p>
+        <p>
+          Alongside development, Pritesh supported <strong>testing, response validation,
+          and refinement</strong> of the chatbot to improve its reliability and usefulness
+          for users.
+        </p>
+        <p>
+          We wish Pritesh continued success in all future endeavours. Should you require
+          any further information, please contact us at support@dropdat.app.
+        </p>
+      </>
+    ),
+  },
   deepanshus: {
     name: "Deepanshu Srivastava",
     title: "dropdat Browser Extension",
