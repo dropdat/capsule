@@ -14,8 +14,35 @@ backend/
 └── infra/      Caddyfile + docker-compose + deploy.sh
 ```
 
-<img width="1498" height="860" alt="Dropdat — System Design" src="https://github.com/user-attachments/assets/6e4434ab-fbf4-426e-9c04-a699d38ea588" />
+## System design and workflows
 
+### 1. System overview
+
+![Dropdat system overview](asset/one.svg)
+
+### 2. Drop: reuse a saved conversation
+
+![Drop workflow: select a saved capsule and insert its context into another AI chat](asset/two.svg)
+
+### 3. Generate: capture and save a conversation
+
+![Generate workflow: capture a conversation, save it locally, and attempt sync](asset/three.svg)
+
+### 4. Shared backend: capsule sync, image handling, and embedding generation
+
+![Shared backend workflows for two-way capsule sync, image handling, and asynchronous embedding generation](asset/four.svg)
+
+### 5. Retrieval: hybrid search, indexing, context assembly, and MCP bridge
+
+![Retrieval workflows for hybrid search, capsule indexing, context assembly, and the MCP bridge](asset/five.svg)
+
+### 6. Deployment: infrastructure and external services
+
+![Deployment architecture with Caddy, the Go API, PostgreSQL, Docker Compose, and external services](asset/six.svg)
+
+### 7. Authentication: JWT verification, API keys, and authorization
+
+![Authentication flows for Clerk JWTs and API keys, route authorization, and API key management](asset/seven.svg)
 
 ## Quick start (one terminal each)
 
