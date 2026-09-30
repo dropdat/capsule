@@ -14,6 +14,9 @@ backend/
 └── infra/      Caddyfile + docker-compose + deploy.sh
 ```
 
+<img width="1498" height="860" alt="Dropdat — System Design" src="https://github.com/user-attachments/assets/6e4434ab-fbf4-426e-9c04-a699d38ea588" />
+
+
 ## Quick start (one terminal each)
 
 ```bash
