@@ -49,7 +49,7 @@ export function Platforms({ dict }: { dict: Dict }) {
 
       <p className="mt-6 text-center text-[13px] text-muted-foreground">
         {t.foot}{" "}
-        <a href="https://github.com/dropdat/mcp" className="text-primary underline-offset-4 hover:underline">
+        <a href="https://github.com/dropdat/" className="text-primary underline-offset-4 hover:underline">
           {t.footLink}
         </a>
         .

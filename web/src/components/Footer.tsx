@@ -26,7 +26,7 @@ export function Footer({ dict, locale = DEFAULT_LOCALE }: { dict?: Dict; locale?
         { label: "Cursor", href: "/mcp/cursor" },
         { label: "Cline", href: "/mcp/cline" },
         { label: "Claude Desktop", href: "/mcp/claude-desktop" },
-        { label: "GitHub", href: "https://github.com/dropdat/mcp" },
+        { label: "GitHub", href: "https://github.com/dropdat/" },
       ],
     },
     {
@@ -59,7 +59,7 @@ export function Footer({ dict, locale = DEFAULT_LOCALE }: { dict?: Dict; locale?
             {t.tagline}
           </p>
           <div className="flex items-center gap-2 mt-2">
-            <a href="https://github.com/dropdat/mcp" aria-label="GitHub" className="w-9 h-9 inline-flex items-center justify-center border border-border bg-card text-foreground/70 hover:text-foreground transition-colors">
+            <a href="https://github.com/dropdat/" aria-label="GitHub" className="w-9 h-9 inline-flex items-center justify-center border border-border bg-card text-foreground/70 hover:text-foreground transition-colors">
               <GithubIcon className="w-4 h-4" />
             </a>
             <a href="https://x.com/Dropdat_" aria-label="X" className="w-9 h-9 inline-flex items-center justify-center border border-border bg-card text-foreground/70 hover:text-foreground transition-colors">
